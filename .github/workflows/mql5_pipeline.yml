@@ -31,12 +31,15 @@ jobs:
       - name: Run pipeline
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAI_API_KEY: ${{ vars.MAI_API_KEY }}
+          MAI_BASE_URL: https://azure.com
+          MAI_MODEL: gpt-4.1-mini
         run: |
           python src/main.py
 
       - name: Commit updated state
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.email "github-actions[bot]@://github.com"
           git config --local user.name "github-actions[bot]"
           git add data/
           git diff --quiet && git diff --staged --quiet || (git commit -m "chore: update seen_urls, cursor and passed_edges" && git pull --rebase && git push)
