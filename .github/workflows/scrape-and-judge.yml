@@ -1,0 +1,56 @@
+name: Scrape & Judge — Alibaba Cloud
+
+on:
+  schedule:
+    - cron: '0 0,6,12 * * *'  # 08:00, 14:00, 20:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  scrape-and-judge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install dashscope playwright
+          playwright install chromium
+
+      - name: Run scraper and judge
+        env:
+          DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Optional overrides:
+          # DASHSCOPE_MODEL: qwen-plus
+          # DASHSCOPE_BASE_URL: https://dashscope.aliyuncs.com/api/v1
+        run: |
+          python -m src.main
+
+      - name: Commit updated data files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/*.json* data/*.txt
+          git diff --cached --quiet || (git commit -m "chore(data): update scraped results and cursor [skip ci]" && git push)
+
+      - name: Upload artifacts (fallback)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: passed_edges
+          path: data/passed_edges.jsonl
+          if-no-files-found: ignore
