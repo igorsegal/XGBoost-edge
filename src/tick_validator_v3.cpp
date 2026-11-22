@@ -285,7 +285,7 @@ int main() {
                     int sig = 0;
                     for (const auto& r : best_r) {
                         if (r.dir != eta_dir) continue;
-                        if (r.trend_mode != 0 && d.triple[idx] != r.trend_mode) continue;
+                        if (r.trend_mode != 0 && triple[idx] != r.trend_mode) continue;
                         bool c1 = r.gt1 ? (q[r.f1][idx] >= r.b1) : (q[r.f1][idx] <= r.b1);
                         if (!c1) continue;
                         bool c2 = r.gt2 ? (q[r.f2][idx] >= r.b2) : (q[r.f2][idx] <= r.b2);
