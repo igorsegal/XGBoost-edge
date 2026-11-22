@@ -8,12 +8,17 @@
 #include <cstdint>
 #include <cstring>
 #include <iomanip>
-#include <ctime>
 #include <map>
-#include <deque>
 #include <omp.h>
 static const int NUM_QFEATS = 23;
 static const int NUM_FLAGS  = 9;
+static const char* FEAT_NAMES[NUM_QFEATS] = {
+    "L_c_Norm", "L_prev_Norm", "Ratio_L", "Ema5_8_Diff_Norm", "Ema8_21_Diff_Norm",
+    "MACD_Hist_Norm", "MACD_Delta_Norm", "Stoch_K", "Stoch_D", "RSI5", "RSI8",
+    "CCI5", "CCI8", "VolRatio", "OBV_Slope_Norm", "FigureID", "PenaltyScore",
+    "ATR14", "ATR_Ratio", "HTF_EMA21_Slope_Norm", "Price_vs_HTF_EMA21_Norm",
+    "Impulse_Age", "Wick_Reject_Ratio"
+};
 inline bool is_scale_invariant(int feat_idx) {
     return feat_idx != 17;
 }
@@ -56,6 +61,8 @@ struct Rule {
     uint8_t b1, b2;
     bool gt1, gt2;
     double score;
+    int train_n;
+    double train_wr;
 };
 struct Signal {
     uint32_t bar_close_utc;
@@ -63,7 +70,6 @@ struct Signal {
     int dir;
     float atr14;
 };
-// Потокобезопасный разбор UTC времени без std::gmtime
 struct UtcParts {
     int year, month, day, hour, wday;
 };
@@ -71,7 +77,7 @@ UtcParts parse_utc(uint32_t ts) {
     uint32_t days = ts / 86400U;
     uint32_t rem  = ts % 86400U;
     int hour = (int)(rem / 3600U);
-    int wday = (int)((days + 4U) % 7U); // 1970-01-01 = четверг (4)
+    int wday = (int)((days + 4U) % 7U);
     int64_t z = (int64_t)days + 719468;
     int64_t era = (z >= 0 ? z : z - 146096) / 146097;
     uint32_t doe = (uint32_t)(z - era * 146097);
@@ -83,12 +89,6 @@ UtcParts parse_utc(uint32_t ts) {
     int month = (int)(mp < 10 ? mp + 3 : mp - 9);
     int year = (int)(y + (month <= 2 ? 1 : 0));
     return {year, month, day, hour, wday};
-}
-std::string fmt_utc(uint32_t ts) {
-    UtcParts p = parse_utc(ts);
-    char buf[32];
-    std::snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:00", p.year, p.month, p.day, p.hour);
-    return std::string(buf);
 }
 int get_broker_offset_sec(uint32_t utc_ts) {
     UtcParts g = parse_utc(utc_ts);
@@ -135,20 +135,6 @@ int main() {
     std::vector<TickRecord> ticks(thdr.total_ticks);
     tf.read(reinterpret_cast<char*>(ticks.data()), thdr.total_ticks * sizeof(TickRecord));
     tf.close();
-    struct HourBar { float open; float close; };
-    std::map<uint32_t, HourBar> tick_h1;
-    for (size_t i = 0; i < ticks.size(); ) {
-        uint32_t h_ts = (ticks[i].ts_sec / 3600U) * 3600U;
-        float op = ticks[i].bid;
-        float cl = ticks[i].bid;
-        size_t j = i + 1;
-        while (j < ticks.size() && (ticks[j].ts_sec / 3600U) * 3600U == h_ts) {
-            cl = ticks[j].bid;
-            j++;
-        }
-        tick_h1[h_ts] = {op, cl};
-        i = j;
-    }
     std::ifstream qf("data/cache/v3_quant_HTF.bin", std::ios::binary);
     if (!qf) { std::cerr << "Cannot open v3_quant_HTF.bin\n"; return 1; }
     V3QuantHeader qhdr{};
@@ -163,86 +149,10 @@ int main() {
     uint64_t base_flg  = base_q + NUM_QFEATS * N;
     uint64_t base_tup  = base_flg + NUM_FLAGS * N;
     uint64_t base_trr  = base_tup + N;
-    std::ofstream out("rules/tick_opt_results.txt");
-    auto log = [&](const std::string& line) {
-        std::cout << line << "\n";
-        out << line << "\n";
-    };
-    log("==========================================================================================");
-    log("  ЧИСТАЯ ПРОВЕРКА V3 БЕЗ ДЫР: ВАРИАНТ 1 (EURUSD ТИКИ) И ВАРИАНТ 2 (ПОРТФЕЛЬ 15 ПАР)");
-    log("==========================================================================================");
-    log("Тики Dukascopy EURUSD: с " + fmt_utc(ticks.front().ts_sec) + " по " + fmt_utc(ticks.back().ts_sec)
-        + " (" + std::to_string(ticks.size()) + " тиков)");
-    // 1. Автоматический подбор SymbolID и сдвига времени по максимальному совпадению свечей
-    int eurusd_id = -1;
-    bool use_dst = false;
-    int best_shift = 0;
-    double best_match = 0.0;
-    for (const auto& s : slices) {
-        if (std::string(s.timeframe) != "H1") continue;
-        uint32_t M = s.num_rows; uint64_t st = s.start_row;
-        std::vector<uint8_t> sym(M), tup(M);
-        std::vector<uint32_t> ts(M);
-        qf.seekg(base_sym + st);      qf.read((char*)sym.data(), M);
-        qf.seekg(base_time + st * 4); qf.read((char*)ts.data(), M * 4);
-        qf.seekg(base_tup + st);      qf.read((char*)tup.data(), M);
-        for (int id = 0; id <= 15; ++id) {
-            for (int sh = -12; sh <= 12; ++sh) {
-                int tot = 0, ok = 0;
-                for (uint32_t i = 0; i < M; ++i) {
-                    if (sym[i] != id) continue;
-                    uint32_t u = (uint32_t)((int64_t)ts[i] + sh * 3600);
-                    auto it = tick_h1.find(u);
-                    if (it != tick_h1.end() && it->second.close != it->second.open) {
-                        tot++;
-                        if (((it->second.close > it->second.open) ? 1 : 0) == tup[i]) ok++;
-                    }
-                }
-                if (tot > 200) {
-                    double pct = 100.0 * ok / tot;
-                    if (pct > best_match) {
-                        best_match = pct; eurusd_id = id; use_dst = false; best_shift = sh;
-                    }
-                }
-            }
-            for (int dmode = 0; dmode <= 1; ++dmode) {
-                int tot = 0, ok = 0;
-                for (uint32_t i = 0; i < M; ++i) {
-                    if (sym[i] != id) continue;
-                    uint32_t u = (dmode == 0)
-                        ? ((ts[i] + 3600U) - get_broker_offset_sec(ts[i] - 7200U))
-                        : (ts[i] - get_broker_offset_sec(ts[i] - 10800U));
-                    auto it = tick_h1.find(u);
-                    if (it != tick_h1.end() && it->second.close != it->second.open) {
-                        tot++;
-                        if (((it->second.close > it->second.open) ? 1 : 0) == tup[i]) ok++;
-                    }
-                }
-                if (tot > 200) {
-                    double pct = 100.0 * ok / tot;
-                    if (pct > best_match) {
-                        best_match = pct; eurusd_id = id; use_dst = true; best_shift = dmode;
-                    }
-                }
-            }
-        }
-        break;
-    }
-    log("Выбран EURUSD SymbolID=" + std::to_string(eurusd_id)
-        + " | Режим времени=" + (use_dst ? ("DST(" + std::to_string(best_shift) + ")") : ("FIX(" + std::to_string(best_shift) + "h)"))
-        + " | Совпадение свечей H1=" + std::to_string(best_match).substr(0, 5) + "%");
-    auto to_h4_close_utc = [&](uint32_t bar_ts) -> uint32_t {
-        if (use_dst) {
-            uint32_t close_brk = (best_shift == 0) ? (bar_ts + 4 * 3600U) : (bar_ts + 3 * 3600U);
-            return close_brk - get_broker_offset_sec(close_brk - 7200U);
-        }
-        return (uint32_t)((int64_t)bar_ts + best_shift * 3600 + 3 * 3600);
-    };
     uint8_t bin_ema5_8_zero = 0;
     for (int b = 0; b < 256; ++b) {
         if (qhdr.bin_edges[3][b] >= 0.0f) { bin_ema5_8_zero = (uint8_t)b; break; }
     }
-    // Загружаем срез H4 один раз
     uint64_t st_h4 = 0; uint32_t M_h4 = 0;
     for (const auto& s : slices) {
         if (std::string(s.timeframe) == "H4") { st_h4 = s.start_row; M_h4 = s.num_rows; break; }
@@ -261,23 +171,30 @@ int main() {
     qf.seekg(base_trr + st_h4);            qf.read((char*)trr.data(), M_h4);
     uint32_t max_ts = 0;
     for (uint32_t i = 0; i < M_h4; ++i) if (ts[i] > max_ts) max_ts = ts[i];
-    // Walk-Forward отбор правил (9 мес Train -> 3 мес OOS)
-    auto run_wf = [&](bool train_all, bool test_all, double min_pf, int top_k) {
+    const int eurusd_id = 1;
+    auto to_h4_close_utc = [&](uint32_t bar_ts) -> uint32_t {
+        uint32_t close_brk = bar_ts + 4 * 3600U;
+        return close_brk - get_broker_offset_sec(close_brk - 7200U);
+    };
+    std::vector<std::string> sniper_rules_log;
+    // Снайперский Walk-Forward отбор (strict_trend=true: BUY только при Triple==1, SELL только при Triple==-1)
+    auto run_sniper_wf = [&](bool test_all_good_pairs, double min_pf, int top_k, bool save_log) {
         std::vector<Signal> sigs;
         std::vector<uint8_t> oos_trr;
         const uint32_t SEC_9M = 274U * 86400U;
         const uint32_t SEC_3M = 91U * 86400U;
-        const int trend_modes[3] = {1, -1, 0};
         uint32_t oos_start = 1577836800U; // 2020-01-01
         while (oos_start + 15 * 86400U < max_ts) {
             uint32_t train_start = oos_start - SEC_9M;
             uint32_t oos_end     = std::min(max_ts, oos_start + SEC_3M);
             std::vector<uint32_t> tr_i, oos_i;
             for (uint32_t i = 0; i < M_h4; ++i) {
+                // Исключаем слабые пары 5 и 6 из обучения и торговли
+                if (sym[i] == 5 || sym[i] == 6) continue;
                 if (ts[i] >= train_start && ts[i] < oos_start) {
-                    if (train_all || sym[i] == eurusd_id) tr_i.push_back(i);
+                    tr_i.push_back(i);
                 } else if (ts[i] >= oos_start && ts[i] < oos_end) {
-                    if (test_all || sym[i] == eurusd_id) oos_i.push_back(i);
+                    if (test_all_good_pairs || sym[i] == eurusd_id) oos_i.push_back(i);
                 }
             }
             if (tr_i.size() >= 100 && !oos_i.empty()) {
@@ -285,39 +202,43 @@ int main() {
                 #pragma omp parallel
                 {
                     std::vector<Rule> lb, ls;
-                    for (int tm : trend_modes) {
-                        for (int f1 = 0; f1 < NUM_QFEATS; ++f1) {
-                            if (!is_scale_invariant(f1)) continue;
-                            #pragma omp for schedule(dynamic, 1) nowait
-                            for (int f2 = f1 + 1; f2 < NUM_QFEATS; ++f2) {
-                                if (!is_scale_invariant(f2)) continue;
-                                for (int b1 = 48; b1 <= 208; b1 += 40) {
-                                    for (int b2 = 48; b2 <= 208; b2 += 40) {
-                                        for (int gt1 = 0; gt1 <= 1; ++gt1) {
-                                            for (int gt2 = 0; gt2 <= 1; ++gt2) {
-                                                int nb = 0, bw = 0, ns = 0, sw = 0;
-                                                for (uint32_t idx : tr_i) {
-                                                    if (tm != 0 && triple[idx] != tm) continue;
-                                                    bool c1 = gt1 ? (q[f1][idx] >= b1) : (q[f1][idx] <= b1);
-                                                    if (!c1) continue;
-                                                    bool c2 = gt2 ? (q[f2][idx] >= b2) : (q[f2][idx] <= b2);
-                                                    if (!c2) continue;
-                                                    if (q[3][idx] >= bin_ema5_8_zero) {
-                                                        nb++; if (trr[idx] == 1) bw++;
-                                                    } else {
-                                                        ns++; if (trr[idx] == 1) sw++;
-                                                    }
+                    for (int f1 = 0; f1 < NUM_QFEATS; ++f1) {
+                        if (!is_scale_invariant(f1)) continue;
+                        #pragma omp for schedule(dynamic, 1) nowait
+                        for (int f2 = f1 + 1; f2 < NUM_QFEATS; ++f2) {
+                            if (!is_scale_invariant(f2)) continue;
+                            for (int b1 = 48; b1 <= 208; b1 += 40) {
+                                for (int b2 = 48; b2 <= 208; b2 += 40) {
+                                    for (int gt1 = 0; gt1 <= 1; ++gt1) {
+                                        for (int gt2 = 0; gt2 <= 1; ++gt2) {
+                                            int nb = 0, bw = 0, ns = 0, sw = 0;
+                                            for (uint32_t idx : tr_i) {
+                                                // Жёсткий фильтр тренда: BUY только по аптренду (1), SELL только по даунтренду (-1)
+                                                if (triple[idx] == 0) continue;
+                                                bool c1 = gt1 ? (q[f1][idx] >= b1) : (q[f1][idx] <= b1);
+                                                if (!c1) continue;
+                                                bool c2 = gt2 ? (q[f2][idx] >= b2) : (q[f2][idx] <= b2);
+                                                if (!c2) continue;
+                                                if (triple[idx] == 1 && q[3][idx] >= bin_ema5_8_zero) {
+                                                    nb++; if (trr[idx] == 1) bw++;
+                                                } else if (triple[idx] == -1 && q[3][idx] < bin_ema5_8_zero) {
+                                                    ns++; if (trr[idx] == 1) sw++;
                                                 }
-                                                int min_tr = train_all ? 80 : 12;
-                                                if (nb >= min_tr) {
-                                                    double wr = (double)bw / nb;
-                                                    double pf = (wr * 1.28) / std::max(0.01, 1.0 - wr);
-                                                    if (pf >= min_pf) lb.push_back({1, tm, f1, f2, (uint8_t)b1, (uint8_t)b2, (bool)gt1, (bool)gt2, (pf - 1.0) * std::sqrt((double)nb)});
+                                            }
+                                            if (nb >= 45) {
+                                                double wr = (double)bw / nb;
+                                                double pf = (wr * 1.28) / std::max(0.01, 1.0 - wr);
+                                                if (pf >= min_pf) {
+                                                    lb.push_back({1, 1, f1, f2, (uint8_t)b1, (uint8_t)b2, (bool)gt1, (bool)gt2,
+                                                                  (pf - 1.0) * std::sqrt((double)nb), nb, wr * 100.0});
                                                 }
-                                                if (ns >= min_tr) {
-                                                    double wr = (double)sw / ns;
-                                                    double pf = (wr * 1.28) / std::max(0.01, 1.0 - wr);
-                                                    if (pf >= min_pf) ls.push_back({-1, tm, f1, f2, (uint8_t)b1, (uint8_t)b2, (bool)gt1, (bool)gt2, (pf - 1.0) * std::sqrt((double)ns)});
+                                            }
+                                            if (ns >= 45) {
+                                                double wr = (double)sw / ns;
+                                                double pf = (wr * 1.28) / std::max(0.01, 1.0 - wr);
+                                                if (pf >= min_pf) {
+                                                    ls.push_back({-1, -1, f1, f2, (uint8_t)b1, (uint8_t)b2, (bool)gt1, (bool)gt2,
+                                                                  (pf - 1.0) * std::sqrt((double)ns), ns, wr * 100.0});
                                                 }
                                             }
                                         }
@@ -346,12 +267,24 @@ int main() {
                 auto best = pick(cand_b);
                 auto best_s = pick(cand_s);
                 best.insert(best.end(), best_s.begin(), best_s.end());
+                if (save_log && oos_start + SEC_3M >= max_ts) {
+                    for (const auto& r : best) {
+                        char rbuf[256];
+                        std::snprintf(rbuf, sizeof(rbuf),
+                            "  [H4 SNIPER] %s | Triple=%+d | %s %s %.4f AND %s %s %.4f (TrainN=%d, WR=%.1f%%)",
+                            (r.dir == 1 ? "BUY " : "SELL"), r.trend_mode,
+                            FEAT_NAMES[r.f1], (r.gt1 ? ">=" : "<="), qhdr.bin_edges[r.f1][r.b1],
+                            FEAT_NAMES[r.f2], (r.gt2 ? ">=" : "<="), qhdr.bin_edges[r.f2][r.b2],
+                            r.train_n, r.train_wr);
+                        sniper_rules_log.push_back(rbuf);
+                    }
+                }
                 for (uint32_t idx : oos_i) {
+                    if (triple[idx] == 0) continue;
                     int eta_dir = (q[3][idx] >= bin_ema5_8_zero) ? 1 : -1;
                     int sig = 0;
                     for (const auto& r : best) {
-                        if (r.dir != eta_dir) continue;
-                        if (r.trend_mode != 0 && triple[idx] != r.trend_mode) continue;
+                        if (r.dir != eta_dir || triple[idx] != r.trend_mode) continue;
                         bool c1 = r.gt1 ? (q[r.f1][idx] >= r.b1) : (q[r.f1][idx] <= r.b1);
                         if (!c1) continue;
                         bool c2 = r.gt2 ? (q[r.f2][idx] >= r.b2) : (q[r.f2][idx] <= r.b2);
@@ -369,26 +302,30 @@ int main() {
         }
         return std::make_pair(sigs, oos_trr);
     };
-    // =========================================================================
-    // ВАРИАНТ 1: ЧИСТЫЙ EURUSD НА 41.7 МЛН ТИКОВ (ВХОД В ПЕРВЫЕ 60 СЕК БАРА)
-    // =========================================================================
-    log("\n==========================================================================================");
-    log("  ВАРИАНТ 1: EURUSD H4 НА 41.7 МЛН ТИКОВ DUKASCOPY (КРИВАЯ БАЛАНСА ПО ГОДАМ)");
+    std::ofstream out("rules/tick_opt_results.txt");
+    auto log = [&](const std::string& line) {
+        std::cout << line << "\n";
+        out << line << "\n";
+    };
     log("==========================================================================================");
-    auto [eu_sigs, eu_trr] = run_wf(true, false, 1.25, 2);
+    log("  СНАЙПЕРСКАЯ ОПТИМИЗАЦИЯ V3 (СТРОГИЙ ТРЕНД TRIPLE=+-1, БЕЗ СЛАБЫХ ПАР 5 И 6)");
+    log("==========================================================================================");
+    // 1. Вариант 1: EURUSD H4 на 41.7 млн тиков Dukascopy
+    auto [eu_sigs, eu_trr] = run_sniper_wf(false, 1.50, 1, true);
     std::sort(eu_sigs.begin(), eu_sigs.end(), [](const Signal& a, const Signal& b) { return a.bar_close_utc < b.bar_close_utc; });
-    for (auto [sl_m, tp_m] : std::vector<std::pair<double,double>>{{1.5, 2.0}, {2.0, 2.6}}) {
+    log("\n--- ВАРИАНТ 1: EURUSD H4 НА 41.7 МЛН ТИКОВ DUKASCOPY (КРИВАЯ БАЛАНСА ПО ГОДАМ) ---");
+    for (auto [sl_m, tp_m] : std::vector<std::pair<double,double>>{{2.0, 2.6}, {2.2, 3.0}}) {
         double bal = 1000.0, peak = 1000.0, max_dd = 0.0, gp = 0.0, gl = 0.0;
         int tr = 0, w = 0;
         uint32_t busy = 0;
-        std::map<int, std::pair<int, double>> by_year; // year -> {trades, end_balance}
+        std::map<int, std::pair<int, double>> by_year;
         for (const auto& s : eu_sigs) {
             if (s.bar_close_utc < busy) continue;
             int bh = get_broker_hour(s.bar_close_utc);
             if (bh == 23 || bh == 0 || bh == 1) continue;
             auto it = std::lower_bound(ticks.begin(), ticks.end(), s.bar_close_utc,
                 [](const TickRecord& trk, uint32_t t) { return trk.ts_sec < t; });
-            if (it == ticks.end() || it->ts_sec - s.bar_close_utc > 60) continue; // строго первые 60 сек бара
+            if (it == ticks.end() || it->ts_sec - s.bar_close_utc > 60) continue;
             if (it->spread_pts > 25) continue;
             double sp = it->spread_pts * 1e-5;
             double sl_d = std::max(0.0005, (double)s.atr14 * sl_m);
@@ -417,7 +354,7 @@ int main() {
             if (!closed) continue;
             busy = close_t;
             double r_mult = (s.dir == 1) ? ((exit_p - entry) / sl_d) : ((entry - exit_p) / sl_d);
-            double pnl = (bal * 0.01) * r_mult; // фиксированный 1% риск без мартингейла и подкруток
+            double pnl = (bal * 0.015) * r_mult; // 1.5% риск на снайперский сигнал
             bal += pnl; tr++;
             if (pnl > 0) { w++; gp += pnl; } else { gl += std::abs(pnl); }
             if (bal > peak) peak = bal;
@@ -427,25 +364,21 @@ int main() {
             by_year[yr].first++;
             by_year[yr].second = bal;
         }
-        char hdr_buf[160];
+        char hdr_buf[180];
         std::snprintf(hdr_buf, sizeof(hdr_buf),
-            "\n[EURUSD H4 | SL=%.1f ATR | TP=%.1f ATR] Сделок=%d | WR=%.1f%% | PF=%.2f | Итоговый баланс=$%.2f | MaxDD=%.2f%%",
+            "\n[EURUSD H4 SNIPER | SL=%.1f | TP=%.1f] Сделок=%d | WR=%.1f%% | PF=%.2f | Баланс=$%.2f | MaxDD=%.2f%%",
             sl_m, tp_m, tr, tr > 0 ? (100.0 * w / tr) : 0.0, gl > 0 ? (gp / gl) : 0.0, bal, max_dd);
         log(hdr_buf);
         for (auto& kv : by_year) {
             char ybuf[128];
-            std::snprintf(ybuf, sizeof(ybuf), "  Кривая баланса -> конец %d г.: Сделок за год=%2d | Баланс=$%8.2f",
+            std::snprintf(ybuf, sizeof(ybuf), "  Конец %d г.: Сделок=%2d | Баланс=$%8.2f",
                           kv.first, kv.second.first, kv.second.second);
             log(ybuf);
         }
     }
-    // =========================================================================
-    // ВАРИАНТ 2: ПОРТФЕЛЬ ИЗ ВСЕХ 15 ПАР (МАЖОРЫ + КРОССЫ, SL=1.5 ATR, TP=2.0 ATR)
-    // =========================================================================
-    log("\n==========================================================================================");
-    log("  ВАРИАНТ 2: ПОРТФЕЛЬ 15 ПАР (H4, SL=1.5 ATR, TP=2.0 ATR, ЗАПРЕТ РОЛЛОВЕРА 23:00-02:00)");
-    log("==========================================================================================");
-    auto [all_sigs, all_trr] = run_wf(true, true, 1.30, 2);
+    // 2. Вариант 2: Портфель из 4 лучших пар (SymbolID 1, 2, 3, 4) на H4
+    log("\n--- ВАРИАНТ 2: ПОРТФЕЛЬ 4 ЛУЧШИХ ПАР (SymbolID 1..4, H4, СНАЙПЕРСКИЙ ТРЕНД) ---");
+    auto [all_sigs, all_trr] = run_sniper_wf(true, 1.55, 1, false);
     std::vector<size_t> order(all_sigs.size());
     for (size_t i = 0; i < order.size(); ++i) order[i] = i;
     std::sort(order.begin(), order.end(), [&](size_t a, size_t b) {
@@ -455,17 +388,16 @@ int main() {
     int p_tr = 0, p_w = 0;
     std::map<int, uint32_t> sym_busy;
     std::map<int, std::pair<int, double>> p_by_year;
-    std::map<int, std::pair<int, int>> p_by_sym; // sym -> {trades, wins}
+    std::map<int, std::pair<int, int>> p_by_sym;
     for (size_t idx : order) {
         const auto& s = all_sigs[idx];
         uint8_t hit_tp = all_trr[idx];
         int bh = get_broker_hour(s.bar_close_utc);
         if (bh == 23 || bh == 0 || bh == 1) continue;
         if (s.bar_close_utc < sym_busy[s.sym_id]) continue;
-        sym_busy[s.sym_id] = s.bar_close_utc + 12 * 3600U;
-        // Учёт спреда (~0.08 R на сделку) при SL=1.5 ATR и TP=2.0 ATR (чистый R = +1.25 при TP, -1.08 при SL)
+        sym_busy[s.sym_id] = s.bar_close_utc + 16 * 3600U;
         double r_mult = (hit_tp == 1) ? 1.25 : -1.08;
-        double pnl = (p_bal * 0.005) * r_mult; // 0.5% риска на сделку в мультивалютном портфеле
+        double pnl = (p_bal * 0.01) * r_mult;
         p_bal += pnl; p_tr++;
         p_by_sym[s.sym_id].first++;
         if (pnl > 0) { p_w++; p_gp += pnl; p_by_sym[s.sym_id].second++; }
@@ -479,17 +411,17 @@ int main() {
     }
     char pbuf[180];
     std::snprintf(pbuf, sizeof(pbuf),
-        "\n[ПОРТФЕЛЬ 15 ПАР H4] Всего сделок=%d | WR=%.1f%% | PF=%.2f | Баланс ($1000 старт)=$%.2f | MaxDD=%.2f%%",
+        "\n[ПОРТФЕЛЬ 4 ПАР H4 SNIPER] Сделок=%d | WR=%.1f%% | PF=%.2f | Баланс ($1000 старт)=$%.2f | MaxDD=%.2f%%",
         p_tr, p_tr > 0 ? (100.0 * p_w / p_tr) : 0.0, p_gl > 0 ? (p_gp / p_gl) : 0.0, p_bal, p_dd);
     log(pbuf);
-    log("\n--- Кривая баланса портфеля 15 пар по годам (2020 - 2026) ---");
+    log("\n--- Кривая баланса портфеля по годам (2020 - 2026) ---");
     for (auto& kv : p_by_year) {
         char ybuf[128];
         std::snprintf(ybuf, sizeof(ybuf), "  Конец %d г.: Сделок за год=%3d | Баланс=$%9.2f",
                       kv.first, kv.second.first, kv.second.second);
         log(ybuf);
     }
-    log("\n--- Разбивка по каждой из 15 валютных пар ---");
+    log("\n--- Разбивка по 4 лучшим парам ---");
     for (auto& kv : p_by_sym) {
         char sbuf[128];
         std::snprintf(sbuf, sizeof(sbuf), "  SymbolID=%2d: Сделок=%3d | Побед=%3d | WinRate=%5.1f%%",
@@ -497,6 +429,8 @@ int main() {
                       kv.second.first > 0 ? (100.0 * kv.second.second / kv.second.first) : 0.0);
         log(sbuf);
     }
+    log("\n--- АКТУАЛЬНЫЕ СНАЙПЕРСКИЕ ПРАВИЛА ПОСЛЕДНЕГО КВАРТАЛА ---");
+    for (const auto& rl : sniper_rules_log) log(rl);
     auto t1 = std::chrono::high_resolution_clock::now();
     log("\nВремя расчёта в облаке: " + std::to_string(std::chrono::duration<double>(t1 - t0).count()).substr(0, 5) + " сек.");
     return 0;
