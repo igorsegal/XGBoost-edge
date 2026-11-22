@@ -1,4 +1,5 @@
-﻿#include <iostream>
+﻿#include <cmath>
+#include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
@@ -172,3 +173,4 @@ int main(int argc, char** argv) {
     mqh.close();
     return 0;
 }
+
