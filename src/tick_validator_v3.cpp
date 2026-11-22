@@ -12,12 +12,6 @@
 #include <omp.h>
 static const int NUM_QFEATS = 23;
 static const int NUM_FLAGS  = 9;
-// Индексы признаков в v3_quant_HTF.bin:
-// 0:L_c_Norm, 1:L_prev_Norm, 2:Ratio_L, 3:Ema5_8_Diff_Norm, 4:Ema8_21_Diff_Norm,
-// 5:MACD_Hist_Norm, 6:MACD_Delta_Norm, 7:Stoch_K, 8:Stoch_D, 9:RSI5, 10:RSI8,
-// 11:CCI5, 12:CCI8, 13:VolRatio, 14:OBV_Slope_Norm, 15:FigureID, 16:PenaltyScore,
-// 17:ATR14, 18:ATR_Ratio, 19:HTF_EMA21_Slope_Norm, 20:Price_vs_HTF_EMA21_Norm,
-// 21:Impulse_Age, 22:Wick_Reject_Ratio
 #pragma pack(push, 1)
 struct V3SliceEntry {
     char timeframe[8];
@@ -139,200 +133,154 @@ int main() {
     uint64_t base_flg  = base_q + NUM_QFEATS * N;
     uint64_t base_tup  = base_flg + NUM_FLAGS * N;
     uint64_t base_trr  = base_tup + N;
-    uint64_t st_h4 = 0; uint32_t M_h4 = 0;
-    for (const auto& s : slices) {
-        if (std::string(s.timeframe) == "H4") { st_h4 = s.start_row; M_h4 = s.num_rows; break; }
-    }
-    std::vector<uint8_t> sym(M_h4), trr(M_h4);
-    std::vector<uint32_t> ts(M_h4);
-    std::vector<std::vector<uint8_t>> q(NUM_QFEATS, std::vector<uint8_t>(M_h4));
-    std::vector<std::vector<int8_t>> flg(NUM_FLAGS, std::vector<int8_t>(M_h4));
-    qf.seekg(base_sym + st_h4);      qf.read((char*)sym.data(), M_h4);
-    qf.seekg(base_time + st_h4 * 4); qf.read((char*)ts.data(), M_h4 * 4);
-    for (int f = 0; f < NUM_QFEATS; ++f) {
-        qf.seekg(base_q + f * N + st_h4);
-        qf.read((char*)q[f].data(), M_h4);
-    }
-    for (int g = 0; g < NUM_FLAGS; ++g) {
-        qf.seekg(base_flg + g * N + st_h4);
-        qf.read((char*)flg[g].data(), M_h4);
-    }
-    qf.seekg(base_trr + st_h4); qf.read((char*)trr.data(), M_h4);
-    auto to_h4_close_utc = [&](uint32_t bar_ts) -> uint32_t {
-        uint32_t close_brk = bar_ts + 4 * 3600U;
-        return close_brk - get_broker_offset_sec(close_brk - 7200U);
-    };
     std::ofstream out("rules/tick_opt_results.txt");
     auto log = [&](const std::string& line) {
         std::cout << line << "\n";
         out << line << "\n";
     };
     log("==========================================================================================");
-    log("  ПРОВЕРКА СТРУКТУРНЫХ ПРАВИЛ БЕЛЯЕВА V3 (БЕЗ ПЕРЕОБУЧЕНИЯ И ПОДГОНКИ ПОРОГОВ)");
-    log("  Фильтры: PenaltyScore <= 1.0 | Свежий импульс Impulse_Age <= 5 | FigureID > 0");
+    log("  ПОИСК РЕАЛЬНОГО ПЕРЕВЕСА V3: MEAN-REVERSION + БЕЗУБЫТОК НА ТИКАХ DUKASCOPY И 6 ПАРАХ");
     log("==========================================================================================");
-    // 1. Сначала проверим каждый FigureID Беляева по всем 6 парам (на H4, SL=1.5 ATR, TP=2.0 ATR)
-    struct FigStat { int tr = 0, w = 0; };
-    std::map<int, FigStat> fig_stats;
-    for (uint32_t i = 0; i < M_h4; ++i) {
-        if (ts[i] < 1577836800U) continue; // 2020-2026 OOS период
-        float fig = val_of(qhdr, 15, q[15][i]);
-        float pen = val_of(qhdr, 16, q[16][i]);
-        float age = val_of(qhdr, 21, q[21][i]);
-        int fig_id = (int)std::round(fig);
-        if (fig_id == 0) continue;
-        if (pen <= 1.0f && age <= 5.0f) {
-            fig_stats[fig_id].tr++;
-            if (trr[i] == 1) fig_stats[fig_id].w++;
+    // Проверяем все таймфреймы в v3_quant_HTF.bin (H1, H4, D1)
+    for (const auto& s : slices) {
+        std::string tf_name(s.timeframe);
+        uint64_t st = s.start_row;
+        uint32_t M  = s.num_rows;
+        int tf_h = (tf_name == "D1") ? 24 : ((tf_name == "H4") ? 4 : 1);
+        std::vector<uint8_t> sym(M), tup(M), trr(M);
+        std::vector<uint32_t> ts(M);
+        std::vector<std::vector<uint8_t>> q(NUM_QFEATS, std::vector<uint8_t>(M));
+        std::vector<std::vector<int8_t>> flg(NUM_FLAGS, std::vector<int8_t>(M));
+        qf.seekg(base_sym + st);      qf.read((char*)sym.data(), M);
+        qf.seekg(base_time + st * 4); qf.read((char*)ts.data(), M * 4);
+        for (int f = 0; f < NUM_QFEATS; ++f) {
+            qf.seekg(base_q + f * N + st);
+            qf.read((char*)q[f].data(), M);
         }
-    }
-    log("\n--- 1. СТАТИСТИКА ПО ФИГУРАМ БЕЛЯЕВА (FigureID, 2020-2026, 6 ПАР H4) ---");
-    for (auto& kv : fig_stats) {
-        double wr = kv.second.tr > 0 ? (100.0 * kv.second.w / kv.second.tr) : 0.0;
-        double pf = (wr / 100.0 * 1.25) / std::max(0.01, (1.0 - wr / 100.0) * 1.08);
-        char buf[140];
-        std::snprintf(buf, sizeof(buf), "  FigureID=%3d | Сделок=%4d | WinRate=%5.1f%% | Ожид. PF (с учётом спреда)=%4.2f",
-                      kv.first, kv.second.tr, wr, pf);
-        log(buf);
-    }
-    // 2. Тестируем 3 чистых, фиксированных (непереобучаемых) режима Беляева на EURUSD (41.7 млн тиков) и на 6 парах
-    struct StrategyDef {
-        std::string name;
-        int mode;
-    };
-    std::vector<StrategyDef> modes = {
-        {"Модель A: Фигуры Беляева (Penalty<=1, Age<=4, L_c>=0.35)", 1},
-        {"Модель B: Импульс по тренду (Triple=+-1, MACD_Delta>0, Age<=3)", 2},
-        {"Модель C: Отбой от HTF_EMA21 с длинным хвостом (Wick>=0.45, Penalty<=1)", 3}
-    };
-    for (const auto& m : modes) {
-        std::vector<Signal> sigs;
-        for (uint32_t i = 0; i < M_h4; ++i) {
-            if (ts[i] < 1577836800U) continue;
-            float lc      = val_of(qhdr, 0,  q[0][i]);
-            float ema5_8  = val_of(qhdr, 3,  q[3][i]);
-            float macd_d  = val_of(qhdr, 6,  q[6][i]);
-            float fig     = val_of(qhdr, 15, q[15][i]);
-            float pen     = val_of(qhdr, 16, q[16][i]);
-            float p_htf   = val_of(qhdr, 20, q[20][i]);
-            float age     = val_of(qhdr, 21, q[21][i]);
-            float wick    = val_of(qhdr, 22, q[22][i]);
-            int triple    = flg[8][i];
-            int dir = (ema5_8 >= 0.0f) ? 1 : -1;
-            bool ok = false;
-            if (m.mode == 1) {
-                ok = ((int)std::round(fig) != 0 && pen <= 1.0f && age <= 4.0f && lc >= 0.35f);
-            } else if (m.mode == 2) {
-                ok = (triple == dir && pen <= 1.5f && age <= 3.0f &&
-                      ((dir == 1 && macd_d > 0.0f) || (dir == -1 && macd_d < 0.0f)));
-            } else if (m.mode == 3) {
-                ok = (pen <= 1.0f && wick >= 0.45f && age <= 5.0f &&
-                      ((dir == 1 && p_htf <= 0.15f) || (dir == -1 && p_htf >= -0.15f)));
-            }
-            if (ok) {
-                sigs.push_back({to_h4_close_utc(ts[i]), sym[i], dir, mid_atr(qhdr, q[17][i]), trr[i]});
-            }
+        for (int g = 0; g < NUM_FLAGS; ++g) {
+            qf.seekg(base_flg + g * N + st);
+            qf.read((char*)flg[g].data(), M);
         }
-        std::sort(sigs.begin(), sigs.end(), [](const Signal& a, const Signal& b) {
-            return a.bar_close_utc < b.bar_close_utc;
-        });
-        log("\n==========================================================================================");
-        log("  " + m.name);
-        log("==========================================================================================");
-        // Прогон на 41.7 млн тиков EURUSD (SL=2.0 ATR, TP=2.6 ATR)
-        {
-            double bal = 1000.0, peak = 1000.0, max_dd = 0.0, gp = 0.0, gl = 0.0;
-            int tr = 0, w = 0;
-            uint32_t busy = 0;
-            std::map<int, std::pair<int, double>> by_year;
-            for (const auto& s : sigs) {
-                if (s.sym_id != 1) continue;
-                if (s.bar_close_utc < busy) continue;
-                int bh = get_broker_hour(s.bar_close_utc);
-                if (bh == 23 || bh == 0 || bh == 1) continue;
-                auto it = std::lower_bound(ticks.begin(), ticks.end(), s.bar_close_utc,
-                    [](const TickRecord& trk, uint32_t t) { return trk.ts_sec < t; });
-                if (it == ticks.end() || it->ts_sec - s.bar_close_utc > 60) continue;
-                if (it->spread_pts > 25) continue;
-                double sp = it->spread_pts * 1e-5;
-                double sl_d = std::max(0.0005, (double)s.atr14 * 2.0);
-                double tp_d = std::max(0.0007, (double)s.atr14 * 2.6);
-                double entry = (s.dir == 1) ? (it->bid + sp) : it->bid;
-                double sl_p  = (s.dir == 1) ? (entry - sl_d) : (entry + sl_d);
-                double tp_p  = (s.dir == 1) ? (entry + tp_d) : (entry - tp_d);
-                double exit_p = entry;
-                uint32_t close_t = it->ts_sec;
-                bool closed = false;
-                for (auto cur = it + 1; cur != ticks.end(); ++cur) {
-                    double csp = cur->spread_pts * 1e-5;
-                    if (trading_elapsed_sec(it->ts_sec, cur->ts_sec) >= 4U * 50U * 3600U) {
-                        exit_p = (s.dir == 1) ? cur->bid : (cur->bid + csp);
-                        close_t = cur->ts_sec; closed = true; break;
+        qf.seekg(base_tup + st); qf.read((char*)tup.data(), M);
+        qf.seekg(base_trr + st); qf.read((char*)trr.data(), M);
+        log("\n--- ТАЙМФРЕЙМ: " + tf_name + " (Строк=" + std::to_string(M) + ") ---");
+        // Тестируем 4 непереобучаемых архетипа (2020-2026) по Target_RR (SL=1.5 ATR, TP=2.0 ATR)
+        struct Arch { std::string name; int id; };
+        std::vector<Arch> archs = {
+            {"1. Возврат из перекупленности/перепроданности (RSI5 экстремум + CCI8 разворот)", 1},
+            {"2. Отбой от границы канала во флэте (Triple==0 + Wick_Reject>=0.50)", 2},
+            {"3. Сильный разворотный паттерн Беляева (FigureID==20 или Ratio_L>=1.8 + Wick>=0.4)", 3},
+            {"4. Контртрендовый сквиз (Price_vs_HTF_EMA21 экстремум + MACD_Delta разворот)", 4}
+        };
+        for (const auto& a : archs) {
+            int tot = 0, wins = 0;
+            std::vector<Signal> eu_sigs;
+            std::vector<Signal> port_sigs;
+            for (uint32_t i = 0; i < M; ++i) {
+                if (ts[i] < 1577836800U) continue;
+                float ratio_l = val_of(qhdr, 2,  q[2][i]);
+                float ema5_8  = val_of(qhdr, 3,  q[3][i]);
+                float macd_d  = val_of(qhdr, 6,  q[6][i]);
+                float rsi5    = val_of(qhdr, 9,  q[9][i]);
+                float cci8    = val_of(qhdr, 12, q[12][i]);
+                float fig     = val_of(qhdr, 15, q[15][i]);
+                float pen     = val_of(qhdr, 16, q[16][i]);
+                float p_htf   = val_of(qhdr, 20, q[20][i]);
+                float wick    = val_of(qhdr, 22, q[22][i]);
+                int triple    = flg[8][i];
+                int eta_dir = (ema5_8 >= 0.0f) ? 1 : -1;
+                bool match = false;
+                if (a.id == 1) {
+                    // Вход по направлению разворота (eta_dir), когда RSI5 и CCI8 выходят из экстремума
+                    if (eta_dir == 1 && rsi5 <= 30.0f && cci8 <= -100.0f) match = true;
+                    if (eta_dir == -1 && rsi5 >= 70.0f && cci8 >= 100.0f) match = true;
+                } else if (a.id == 2) {
+                    if (triple == 0 && wick >= 0.50f && pen <= 1.0f) match = true;
+                } else if (a.id == 3) {
+                    if ((int)std::round(fig) == 20 || (ratio_l >= 1.8f && wick >= 0.40f && pen <= 1.0f)) match = true;
+                } else if (a.id == 4) {
+                    if (eta_dir == 1 && p_htf <= -1.2f && macd_d > 0.0f) match = true;
+                    if (eta_dir == -1 && p_htf >= 1.2f && macd_d < 0.0f) match = true;
+                }
+                if (match) {
+                    tot++;
+                    if (trr[i] == 1) wins++;
+                    uint32_t close_brk = ts[i] + tf_h * 3600U;
+                    uint32_t close_utc = close_brk - get_broker_offset_sec(close_brk - 7200U);
+                    Signal sig{close_utc, sym[i], eta_dir, mid_atr(qhdr, q[17][i]), trr[i]};
+                    port_sigs.push_back(sig);
+                    if (sym[i] == 1) eu_sigs.push_back(sig);
+                }
+            }
+            double wr = tot > 0 ? (100.0 * wins / tot) : 0.0;
+            double pf_est = (wr / 100.0 * 1.25) / std::max(0.01, (1.0 - wr / 100.0) * 1.08);
+            char buf[180];
+            std::snprintf(buf, sizeof(buf), "  %-78s | N=%4d | WR=%5.1f%% | PF=%4.2f",
+                          a.name.c_str(), tot, wr, pf_est);
+            log(buf);
+            // Если это H4 и стратегия перспективна (или это модель 2/3/4), прогоняем на 41.7 млн тиков EURUSD с безубытком!
+            if (tf_name == "H4" && !eu_sigs.empty()) {
+                std::sort(eu_sigs.begin(), eu_sigs.end(), [](const Signal& x, const Signal& y) {
+                    return x.bar_close_utc < y.bar_close_utc;
+                });
+                for (bool use_be : {false, true}) {
+                    double bal = 1000.0, peak = 1000.0, max_dd = 0.0, gp = 0.0, gl = 0.0;
+                    int tr = 0, w = 0;
+                    uint32_t busy = 0;
+                    for (const auto& sg : eu_sigs) {
+                        if (sg.bar_close_utc < busy) continue;
+                        int bh = get_broker_hour(sg.bar_close_utc);
+                        if (bh == 23 || bh == 0 || bh == 1) continue;
+                        auto it = std::lower_bound(ticks.begin(), ticks.end(), sg.bar_close_utc,
+                            [](const TickRecord& trk, uint32_t t) { return trk.ts_sec < t; });
+                        if (it == ticks.end() || it->ts_sec - sg.bar_close_utc > 60) continue;
+                        if (it->spread_pts > 25) continue;
+                        double sp = it->spread_pts * 1e-5;
+                        double sl_d = std::max(0.0005, (double)sg.atr14 * 2.0);
+                        double tp_d = std::max(0.0007, (double)sg.atr14 * 2.6);
+                        double be_trig = (double)sg.atr14 * 1.1; // перевод в безубыток при +1.1 ATR
+                        double entry = (sg.dir == 1) ? (it->bid + sp) : it->bid;
+                        double sl_p  = (sg.dir == 1) ? (entry - sl_d) : (entry + sl_d);
+                        double tp_p  = (sg.dir == 1) ? (entry + tp_d) : (entry - tp_d);
+                        double exit_p = entry;
+                        uint32_t close_t = it->ts_sec;
+                        bool closed = false;
+                        for (auto cur = it + 1; cur != ticks.end(); ++cur) {
+                            double csp = cur->spread_pts * 1e-5;
+                            if (trading_elapsed_sec(it->ts_sec, cur->ts_sec) >= 4U * 50U * 3600U) {
+                                exit_p = (sg.dir == 1) ? cur->bid : (cur->bid + csp);
+                                close_t = cur->ts_sec; closed = true; break;
+                            }
+                            if (sg.dir == 1) {
+                                if (use_be && cur->bid >= entry + be_trig && sl_p < entry) sl_p = entry + 0.00005;
+                                if (cur->bid <= sl_p) { exit_p = sl_p; close_t = cur->ts_sec; closed = true; break; }
+                                if (cur->bid >= tp_p) { exit_p = tp_p; close_t = cur->ts_sec; closed = true; break; }
+                            } else {
+                                double ask = cur->bid + csp;
+                                if (use_be && ask <= entry - be_trig && sl_p > entry) sl_p = entry - 0.00005;
+                                if (ask >= sl_p) { exit_p = sl_p; close_t = cur->ts_sec; closed = true; break; }
+                                if (ask <= tp_p) { exit_p = tp_p; close_t = cur->ts_sec; closed = true; break; }
+                            }
+                        }
+                        if (!closed) continue;
+                        busy = close_t;
+                        double r_mult = (sg.dir == 1) ? ((exit_p - entry) / sl_d) : ((entry - exit_p) / sl_d);
+                        double pnl = (bal * 0.01) * r_mult;
+                        bal += pnl; tr++;
+                        if (pnl > 0) { w++; gp += pnl; } else { gl += std::abs(pnl); }
+                        if (bal > peak) peak = bal;
+                        double dd = (peak - bal) / peak * 100.0;
+                        if (dd > max_dd) max_dd = dd;
                     }
-                    if (s.dir == 1) {
-                        if (cur->bid <= sl_p) { exit_p = sl_p; close_t = cur->ts_sec; closed = true; break; }
-                        if (cur->bid >= tp_p) { exit_p = tp_p; close_t = cur->ts_sec; closed = true; break; }
-                    } else {
-                        double ask = cur->bid + csp;
-                        if (ask >= sl_p) { exit_p = sl_p; close_t = cur->ts_sec; closed = true; break; }
-                        if (ask <= tp_p) { exit_p = tp_p; close_t = cur->ts_sec; closed = true; break; }
+                    if (tr > 0) {
+                        char tbuf[160];
+                        std::snprintf(tbuf, sizeof(tbuf),
+                            "     -> EURUSD ТИКИ (%s): Сделок=%2d | WR=%5.1f%% | PF=%4.2f | Баланс=$%8.2f | MaxDD=%5.2f%%",
+                            use_be ? "С БЕЗУБЫТКОМ +1.1 ATR" : "БЕЗ БЕЗУБЫТКА       ",
+                            tr, 100.0 * w / tr, gl > 0 ? (gp / gl) : 0.0, bal, max_dd);
+                        log(tbuf);
                     }
                 }
-                if (!closed) continue;
-                busy = close_t;
-                double r_mult = (s.dir == 1) ? ((exit_p - entry) / sl_d) : ((entry - exit_p) / sl_d);
-                double pnl = (bal * 0.01) * r_mult;
-                bal += pnl; tr++;
-                if (pnl > 0) { w++; gp += pnl; } else { gl += std::abs(pnl); }
-                if (bal > peak) peak = bal;
-                double dd = (peak - bal) / peak * 100.0;
-                if (dd > max_dd) max_dd = dd;
-                int yr = parse_utc(it->ts_sec).year;
-                by_year[yr].first++;
-                by_year[yr].second = bal;
-            }
-            char b1[180];
-            std::snprintf(b1, sizeof(b1),
-                "[EURUSD ТИКИ H4 | SL=2.0 | TP=2.6] Сделок=%3d | WR=%5.1f%% | PF=%4.2f | Баланс=$%8.2f | MaxDD=%5.2f%%",
-                tr, tr > 0 ? (100.0 * w / tr) : 0.0, gl > 0 ? (gp / gl) : 0.0, bal, max_dd);
-            log(b1);
-            for (auto& kv : by_year) {
-                char yb[120];
-                std::snprintf(yb, sizeof(yb), "    EURUSD %d г.: Сделок=%2d | Баланс=$%8.2f", kv.first, kv.second.first, kv.second.second);
-                log(yb);
-            }
-        }
-        // Прогон на всех 6 парах (H4, SL=1.5, TP=2.0)
-        {
-            double bal = 1000.0, peak = 1000.0, max_dd = 0.0, gp = 0.0, gl = 0.0;
-            int tr = 0, w = 0;
-            std::map<int, uint32_t> sym_busy;
-            std::map<int, std::pair<int, double>> by_year;
-            for (const auto& s : sigs) {
-                int bh = get_broker_hour(s.bar_close_utc);
-                if (bh == 23 || bh == 0 || bh == 1) continue;
-                if (s.bar_close_utc < sym_busy[s.sym_id]) continue;
-                sym_busy[s.sym_id] = s.bar_close_utc + 16 * 3600U;
-                double r_mult = (s.hit_trr == 1) ? 1.25 : -1.08;
-                double pnl = (bal * 0.005) * r_mult;
-                bal += pnl; tr++;
-                if (pnl > 0) { w++; gp += pnl; } else { gl += std::abs(pnl); }
-                if (bal > peak) peak = bal;
-                double dd = (peak - bal) / peak * 100.0;
-                if (dd > max_dd) max_dd = dd;
-                int yr = parse_utc(s.bar_close_utc).year;
-                by_year[yr].first++;
-                by_year[yr].second = bal;
-            }
-            char b2[180];
-            std::snprintf(b2, sizeof(b2),
-                "[ПОРТФЕЛЬ 6 ПАР H4 | SL=1.5 | TP=2.0] Сделок=%4d | WR=%5.1f%% | PF=%4.2f | Баланс=$%8.2f | MaxDD=%5.2f%%",
-                tr, tr > 0 ? (100.0 * w / tr) : 0.0, gl > 0 ? (gp / gl) : 0.0, bal, max_dd);
-            log(b2);
-            for (auto& kv : by_year) {
-                char yb[120];
-                std::snprintf(yb, sizeof(yb), "    6 Пар %d г.: Сделок=%3d | Баланс=$%8.2f", kv.first, kv.second.first, kv.second.second);
-                log(yb);
             }
         }
     }
