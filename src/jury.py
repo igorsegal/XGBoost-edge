@@ -11,6 +11,15 @@ PASSED_PATH = "data/passed_edges.jsonl"
 SPEC_DIR = "data/specs"
 JURY_LIMIT = int(os.getenv("JURY_LIMIT", "0"))  # 0 = по умолчанию для провайдера
 PAUSE_SEC = float(os.getenv("JURY_PAUSE", "6"))
+LOG_PATH = "data/jury_log.txt"
+
+
+def _log(msg: str) -> None:
+    """Печать + файл в репозитории: итог каждого запуска виден без захода в журнал GitHub."""
+    print(msg)
+    os.makedirs("data", exist_ok=True)
+    with open(LOG_PATH, "a", encoding="utf-8") as f:
+        f.write(time.strftime("%Y-%m-%d %H:%M:%S ") + str(msg) + "\n")
 
 ROLES = {
     "advocate": "Ты адвокат. Найди в статье всё, что говорит за наличие устойчивого преимущества (edge) на спот-форексе: замкнутая математика, правила на закрытых барах, тест вне выборки. Ответ: JSON {\"for\": [\"...\"], \"strength\": 0-10}.",
@@ -24,7 +33,7 @@ def _client():
     try:
         from openai import OpenAI
     except Exception as e:
-        print(f"[JURY] библиотека openai недоступна: {e}")
+        _log(f"[JURY] библиотека openai недоступна: {e}")
         return None
     if os.getenv("DASHSCOPE_API_KEY"):
         return OpenAI(api_key=os.environ["DASHSCOPE_API_KEY"],
@@ -60,12 +69,12 @@ def run_pending() -> None:
             d = json.load(fh)
         if d.get("status") == "pending":
             pending.append((f, d))
-    print(f"[JURY] в очереди: {len(pending)}")
+    _log(f"[JURY] в очереди: {len(pending)}")
     if not pending:
         return
     cl = _client()
     if cl is None:
-        print("[JURY] ключа нет - суд пропущен, кандидаты ждут. Сбор статей не затронут.")
+        _log("[JURY] ключа нет - суд пропущен, кандидаты ждут. Сбор статей не затронут.")
         return
     client, model, default_limit = cl
     limit = JURY_LIMIT or default_limit
@@ -95,12 +104,12 @@ def run_pending() -> None:
                 with open(os.path.join(SPEC_DIR, os.path.basename(f)), "w", encoding="utf-8") as fh:
                     json.dump({"url": d["url"], "title": d["title"], "published_year": d.get("published_year"), **ver},
                               fh, ensure_ascii=False, indent=1)
-            print(f"[JURY] {verdict}: {d['title']}")
+            _log(f"[JURY] {verdict}: {d['title']}")
             done += 1
             time.sleep(PAUSE_SEC)
         except Exception as e:
-            print(f"[JURY] сбой на {d.get('url')}: {e} - останется в очереди")
+            _log(f"[JURY] сбой на {d.get('url')}: {e} - останется в очереди")
             if "429" in str(e) or "rate" in str(e).lower():
-                print("[JURY] лимит запросов исчерпан - остановка, продолжим в следующий запуск")
+                _log("[JURY] лимит запросов исчерпан - остановка, продолжим в следующий запуск")
                 break
-    print(f"[JURY] обработано: {done}")
+    _log(f"[JURY] обработано: {done}")
