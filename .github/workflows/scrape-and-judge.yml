@@ -1,10 +1,11 @@
-name: Scrape & Judge
+﻿name: Scrape & Judge
 on:
   schedule:
     - cron: '0 0,6,12 * * *'
   workflow_dispatch:
 permissions:
   contents: write
+  models: read
 concurrency:
   group: scrape-and-judge
   cancel-in-progress: false
@@ -26,6 +27,7 @@ jobs:
         env:
           DASHSCOPE_API_KEY: ${{ secrets.DASHSCOPE_API_KEY }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python -m src.main
       - name: Commit data
         if: always()

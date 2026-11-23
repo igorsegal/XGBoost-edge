@@ -70,12 +70,7 @@ def extract_article_links(list_html: str) -> List[str]:
                 links.append(full_url)
     return links
 def _find_year(html: str, soup) -> Optional[int]:
-    """Год публикации. Если надёжно найти нельзя - None (а не текущий год)."""
-    time_tag = soup.find("time")
-    if time_tag:
-        m = re.search(r"(20\d{2})", time_tag.get("datetime") or time_tag.get_text(strip=True))
-        if m:
-            return int(m.group(1))
+    """Год публикации. Надёжные источники первыми; если нет - None."""
     for pat in (
         r'article:published_time"\s+content="(20\d{2})',
         r'"datePublished"\s*:\s*"(20\d{2})',
@@ -84,18 +79,43 @@ def _find_year(html: str, soup) -> Optional[int]:
         m = re.search(pat, html)
         if m:
             return int(m.group(1))
+    time_tag = soup.find("time")
+    if time_tag:
+        m = re.search(r"(20\d{2})", time_tag.get("datetime") or time_tag.get_text(strip=True))
+        if m:
+            return int(m.group(1))
     return None
+
+
+def _find_title(soup) -> str:
+    og = soup.find("meta", property="og:title")
+    if og and og.get("content"):
+        return og["content"].strip()
+    h1 = soup.find("h1")
+    if h1 and h1.get_text(strip=True):
+        return h1.get_text(strip=True)
+    if soup.title and soup.title.get_text(strip=True):
+        return soup.title.get_text(strip=True).split(" - ")[0]
+    return "Untitled"
+
+
+def _find_body(soup) -> str:
+    """Самый вложенный блок с большим текстом (без боковых меню и шапки)."""
+    best = None
+    for div in soup.find_all("div", class_=re.compile(r"(article|content|text)", re.I)):
+        t = div.get_text("\n", strip=True)
+        if len(t) >= 3000 and (best is None or len(t) < len(best)):
+            best = t
+    return best if best else soup.get_text("\n", strip=True)
 
 
 def parse_article_page(html: str, url: str) -> Optional[Dict]:
     soup = BeautifulSoup(html, "lxml")
     pub_year = _find_year(html, soup)
-    for tag in soup(["script", "style", "nav", "footer", "header"]):
+    title = _find_title(soup)
+    for tag in soup(["script", "style", "nav", "footer"]):
         tag.decompose()
-    title_tag = soup.find("h1")
-    title = title_tag.get_text(strip=True) if title_tag else "Untitled"
-    content_div = soup.find("div", class_=re.compile(r"(article|content|text)", re.I))
-    raw_text = content_div.get_text("\n", strip=True) if content_div else soup.get_text("\n", strip=True)
+    raw_text = _find_body(soup)
     if len(raw_text) < 500:
         return None
     return {
@@ -106,6 +126,19 @@ def parse_article_page(html: str, url: str) -> Optional[Dict]:
     }
 
 
+DEBUG_DIR = "data/debug"
+
+
+def _debug_dump(link: str, html: str, n: int) -> None:
+    """Сырой HTML первых двух статей запуска: чтобы видеть реальную вёрстку MQL5."""
+    if n >= 2:
+        return
+    os.makedirs(DEBUG_DIR, exist_ok=True)
+    m = re.search(r"/articles/(\d+)", link)
+    with open(os.path.join(DEBUG_DIR, f"sample{n}_{m.group(1) if m else n}.html"), "w", encoding="utf-8") as f:
+        f.write(html)
+
+
 def collect_batch() -> Tuple[List[Dict], Dict]:
     from playwright.sync_api import sync_playwright
     seen_urls = load_seen_urls()
@@ -114,6 +147,7 @@ def collect_batch() -> Tuple[List[Dict], Dict]:
     collected: List[Dict] = []
     request_counter = 0
     consecutive_blocks = 0
+    dumped = 0
     with sync_playwright() as p:
         executable = "/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None
         browser = p.chromium.launch(
@@ -178,6 +212,8 @@ def collect_batch() -> Tuple[List[Dict], Dict]:
                     if not article_html:
                         continue
                     consecutive_blocks = 0
+                    _debug_dump(link, article_html, dumped)
+                    dumped += 1
                     parsed = parse_article_page(article_html, link)
                     if not parsed:
                         append_seen_url(link)
