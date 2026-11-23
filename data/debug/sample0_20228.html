@@ -1,0 +1,1667 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="x-dns-prefetch-control" content="on">
+  <link rel="dns-prefetch" href="https://c.mql5.com">
+  <meta name="robots" content="max-snippet:250,max-image-preview:large">
+  <meta name="description" content="Introducing the TMA framework — an intelligent system capable of forecasting market dynamics with sufficient accuracy. In this article, we have integrated all the components into a single architecture and transformed it into a fully-fledged trading agent that analyzes the market and makes decisions in real time.">
+  <meta property="og:url" content="https://www.mql5.com/en/articles/20228">
+  <meta property="og:title" content="Neural Networks in Trading: Temporal Motion Aggregation (Conclusion)">
+  <meta property="og:description" content="Introducing the TMA framework — an intelligent system capable of forecasting market dynamics with sufficient accuracy. In this article, we have integrated all the components into a single architecture and transformed it into a fully-fledged trading agent that analyzes the market and makes decisions in real time.">
+  <meta property="og:image" content="https://c.mql5.com/2/180/20228-neyroseti-v-treydinge-agregaciya-dvizheniya-po-vremeni-okonchanie_1200x628__1.jpg">
+  <meta property="og:image:secure_url" content="https://c.mql5.com/2/180/20228-neyroseti-v-treydinge-agregaciya-dvizheniya-po-vremeni-okonchanie_1200x628__1.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:type" content="article">
+  <meta property="article:published_time" content="2026-11-02T09:30:22.0000000Z">
+  <meta property="article:author" content="https://www.mql5.com/en/users/dng">
+  <meta property="article:section" content="MetaTrader 5">
+  <meta property="article:tag" content="Trading systems">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@mql5com">
+  <meta name="twitter:image" content="https://c.mql5.com/2/180/20228-neyroseti-v-treydinge-agregaciya-dvizheniya-po-vremeni-okonchanie_1200x628__1.jpg">
+  <meta name="theme-color" content="#4a76b8">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="https://www.mql5.com/manifest.json">
+  <link rel="apple-touch-icon" sizes="57x57" href="https://www.mql5.com/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://www.mql5.com/apple-touch-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="https://www.mql5.com/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="https://www.mql5.com/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="https://www.mql5.com/apple-touch-icon-167x167.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://www.mql5.com/apple-touch-icon-180x180.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="https://www.mql5.com/apple-touch-icon-192x192.png">
+  <link rel="icon" sizes="192x192" href="https://www.mql5.com/android-touch-icon-192x192.png">
+  <link rel="icon" sizes="128x128" href="https://www.mql5.com/android-touch-icon-128x128.png">
+  <link rel="shortcut icon" href="https://c.mql5.com/i/favicon4.ico">
+  <link rel="describedby" href="https://www.mql5.com/llms.txt" type="text/markdown">
+  <meta name="msapplication-config" content="none">
+  <meta name="referrer" content="no-referrer-when-downgrade">
+  <meta property="qc:admins" content="36367170677651456375">
+  <meta property="wb:webmaster" content="073d7690269bcd81">
+  <link href="https://c.mql5.com/styles/core.014c88f485403b7cba7e3a47af5df221.css" type="text/css" rel="stylesheet" media="all">
+  <link href="https://c.mql5.com/styles/all.a5418197f583e92c77667d6e88d3bfa3.css" type="text/css" rel="stylesheet" media="all">
+  <link href="https://c.mql5.com/styles/articles.aa7cb07010062a9d4f26dbad7eb36197.css" type="text/css" rel="stylesheet" media="all">
+  <link href="/en/articles/rss" rel="alternate" type="application/rss+xml" title="Articles on the development and application of MetaTrader 5 trading robots and technical indicators">
+  <link rel="canonical" href="https://www.mql5.com/en/articles/20228">
+  <link rel="alternate" hreflang="en" href="https://www.mql5.com/en/articles/20228">
+  <link rel="alternate" hreflang="ru" href="https://www.mql5.com/ru/articles/20228">
+  <link rel="alternate" hreflang="es" href="https://www.mql5.com/es/articles/20228">
+  <link rel="alternate" hreflang="pt" href="https://www.mql5.com/pt/articles/20228">
+  <title>Neural Networks in Trading: Temporal Motion Aggregation (Conclusion) - MQL5 Articles</title>
+  <script async="" src="https://www.mql5.com/ff/rq?tz_offset=0&amp;ids=wdausxxqrpvhekbwjrjlhqjghyhesrqqau%2Cbfogggabsofabcpxuzmgaibarmaxasdrj%2Cvgckrufggwxdtfscpyalmenexmvhljduja&amp;ssn=1795454667982388524&amp;ssn_dr=11&amp;ssn_sr=0&amp;fv_date=1795454667&amp;ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F20228&amp;title=Neural%20Networks%20in%20Trading%3A%20Temporal%20Motion%20Aggregation%20(Conclusion)%20-%20MQL5%20Articles&amp;scr_res=1366x768&amp;ac=179545467850822927&amp;fz_uniq=5049974610882193610&amp;sv=2552"></script><script async="" defer="" src="/ff/core.js"></script><script>
+    (function(a,e,f,g,b,c,d){a[b]||(a.FintezaCoreObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=!0,c.defer=!0,c.src=g,d&&d.parentNode&&d.parentNode.insertBefore(c,d))})
+      (window, document, "script", "/ff/core.js", "fz");
+    window.fz("register", "website", {id: "sqjxkxkswybhifrohpyooonwgbvsfzmayq",trackLinks: true,sendEventsByBeacon: true,});
+  </script>
+  <script>
+    !function(){window.mqGlobal={};var t=!1,n=!1,e=[],o=[],i=[];function d(t){var n;for(n=0;n<t.length;n+=1)t[n]()}function c(){t||(t=!0,d(e),d(o),o=[],e=[])}function a(){c(),n||(n=!0,d(i),i=[])}if(mqGlobal.AddOnReady=function(n,i){t?n(document):i?e.push(n):o.push(n)},mqGlobal.AddOnLoad=function(t){n?t(document):i.push(t)},mqGlobal.AddOnActiveWindowChange=function(t){this._onvisibility||(this._onvisibility=[]),this._onvisibility[this._onvisibility.length]=t},document.addEventListener)document.addEventListener("DOMContentLoaded",c,!1),window.addEventListener("load",a,!1);else if(document.attachEvent&&(document.attachEvent("onreadystatechange",(function(){switch(document.readyState){case"interactive":c();break;case"complete":a()}})),window.attachEvent("onload",a),document.documentElement.doScroll&&window==window.top)){!function n(){if(!t&&document.body)try{document.documentElement.doScroll("left"),c()}catch(t){setTimeout(n,0)}}()}}();
+    mqGlobal.CookieDomain = ".mql5.com";
+    mqGlobal.Language = 'en';
+    mqGlobal.IsMobile = false;
+    mqGlobal.ClearRteStorage = function (e) { if (window.GStorage || (window.GStorage = globalStorage()), window.GStorage.supported) try { var o = e; window.GStorage.getItem("rte_autosave_uid", function (e, t) { t == o && (window.GStorage.removeItem("rte_autosave_text"), window.GStorage.removeItem("rte_autosave_date"), window.GStorage.removeItem("rte_autosave_uid")) }) } catch (e) { } };
+  </script>
+  
+  <script src="https://c.mql5.com/js/all.33b519888d8f16d7894ad5f6e870daa4.js" defer="defer"></script>
+  <script src="https://c.mql5.com/js/vendor.255ec4ae38267278c2823d8c90fea431.js" defer="defer"></script>
+  <script src="https://c.mql5.com/js/articles.c443d16c59e317d536ae7477d0c6f7e6.js" defer="defer"></script>
+<style id="c-nvz9zt">.s-suggestions.c-nvz9zt {position:absolute;left:0;right:0;top:100%;z-index:100;background:#fff;box-shadow:0 2px 6px rgba(0, 0, 0, 0.1);border-top:1px solid #dadada;}</style><style id="c-b8amxo">.copy-code-btn.c-b8amxo {background:#fbf9f5;padding:0;border:0;position:absolute;right:8px;top:8px;}
+@media (hover: hover) and (pointer: fine) {.copy-code-btn.c-b8amxo:hover {cursor:pointer;}.copy-code-btn.c-b8amxo:hover svg path {stroke:#707070;}
+}</style></head>
+<body class="cover" id="cover">
+    <header class="head">
+      <a href="https://www.mql5.com" class="head__logo" title="MQL5 - Language of trade strategies built-in the MetaTrader 5 client terminal" aria-label="MQL5 - Language of trade strategies built-in the MetaTrader 5 client terminal"></a>
+        <div class="head__content">
+<nav class="main-menu" id="mainmenu" aria-label="Sections">
+  <ul class="main-menu__top-level" id="menuTopLevel">
+      <li><a href="/en/forum" data-fz-event="MQL5+Menu+Forum">Forum</a></li>
+      <li><a href="/en/market" data-fz-event="MQL5+Menu+Market">Market</a></li>
+      <li><a href="/en/signals" data-fz-event="MQL5+Menu+Signals">Signals</a></li>
+      <li><a href="/en/job" data-fz-event="MQL5+Menu+Job">Freelance</a></li>
+      <li><a href="/en/vps" data-fz-event="MQL5+Menu+VPS">VPS</a></li>
+      <li><a href="/en/quotes/overview" data-fz-event="MQL5+Menu+Overview">Quotes</a></li>
+      <li><a href="https://www.metatrader.com" target="_blank" rel="noopener" data-fz-event="MQL5+Menu+MetaTrader">MetaTrader</a></li>
+        </ul>
+        <ul class="main-menu__second-level" id="menuSecondLevel">
+      <li class="main-menu__selected"><a href="/en/articles" data-fz-event="MQL5+Menu+Articles"> <img src="https://c.mql5.com/i/menu/icon-articles4.svg" alt="" width="16" height="16"> Articles</a></li>
+      <li><a href="/en/code" data-fz-event="MQL5+Menu+CodeBase"> <img src="https://c.mql5.com/i/menu/icon-code4.svg" alt="" width="16" height="16"> CodeBase</a></li>
+      <li><a href="https://forge.mql5.io/?lang=en" target="_blank" rel="noopener" data-fz-event="MQL5+Menu+AlgoForge"> <img src="https://c.mql5.com/i/menu/icon-algoforge4.svg" alt="" width="16" height="16"> Algo Forge</a></li>
+      <li><a href="/en/docs" data-fz-event="MQL5+Menu+Docs"> <img src="https://c.mql5.com/i/menu/icon-docs4.svg" alt="" width="16" height="16"> Documentation</a></li>
+      <li><a href="/en/book" data-fz-event="MQL5+Menu+Book"> <img src="https://c.mql5.com/i/menu/icon-book4.svg" alt="" width="16" height="16"> AlgoBook</a></li>
+      <li><a href="/en/neurobook" data-fz-event="MQL5+Menu+Neurobook"> <img src="https://c.mql5.com/i/menu/icon-neurobook4.svg" alt="" width="16" height="16"> NeuroBook</a></li>
+      <li><a href="/en/economic-calendar" data-fz-event="MQL5+Menu+Economic+Calendar"> <img src="https://c.mql5.com/i/menu/icon-economic-calendar4.svg" alt="" width="16" height="16"> Calendar</a></li>
+      <li><a href="https://web.metatrader.app/terminal?mode=demo&amp;lang=en" target="_blank" rel="nofollow noopener" data-fz-event="MQL5+Menu+Trading"> <img src="https://c.mql5.com/i/menu/icon-trading4.svg" alt="" width="16" height="16"> WebTerminal</a></li>
+      <li><a href="/en/tools" data-fz-event="MQL5+Menu+Tools"> <img src="https://c.mql5.com/i/menu/icon-tools4.svg" alt="" width="16" height="16"> Tools</a></li>
+
+
+    <li class="main-menu__mobile"><a href="/en/about">About</a></li>
+
+          <li class="main-menu__second-tools"><a rel="noopener" href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/mt5setup.exe?utm_source=www.mql5.com&amp;utm_campaign=download" title="Get the latest version of the trading platform for free" class="button-mt" data-vars-fz="MetaTrader+5+Desktop+Download+Submenu"><img width="18" height="18" src="https://c.mql5.com/i/sidebar/download.svg" alt="" loading="lazy">Download MetaTrader 5</a></li>
+  </ul>
+</nav>
+<div class="main-menu__active">
+  <a id="mainMenuSelected" href="#">
+    <span class="main-menu__primary">Articles</span><span class="main-menu__secondary">Sections</span>
+  </a>
+</div>
+  <form action="https://www.mql5.com/en/search" onsubmit="return false;" autocomplete="off" id="headerSearchForm" class="header-search" method="post">
+    <button type="button" id="headerSearchButton" title="Search" aria-label="Search" class="header-search__button"></button>
+    <div class="header-search__input">
+      <input name="keyword" type="text" enterkeyhint="search" title="Enter search text" placeholder="Search" id="headerSearchKeyword" autocomplete="off">
+      <label for="headerSearchKeyword" class="header-search__placeholder">Type <span>/</span> to search:  @user, $symbol, ...</label>
+      <button type="submit" id="headerSearchSubmit" aria-label="Search" class="header-search__submit"></button>
+    <!----></div>
+    <button type="button" id="headerSearchClean" title="Close" aria-label="Close" class="header-search__clean"></button>
+  </form>
+  <script>mqGlobal.AddOnReady(function(){window.initHeaderSearch('', 'https://www.mql5.com/en/search');});</script>
+  <script>mqGlobal.AddOnReady(function(){window.initSuggestions("headerSearchKeyword","en","https://search.mql5.com/api/query","https://www.mql5.com/en/users_search/suggestion");});</script>
+          <input class="blurHandler" id="mainMenuBlurHandler" type="checkbox">
+        </div>
+        <div class="head__toolbar" id="headerToolbar">
+<div class="container loginRegister">
+  <nav aria-label="Account">
+    <ul id="loginRegisterButtons">
+      <li><a class="login" title="Please sign in. OpenID supported" href="/en/auth_login" rel="nofollow" data-fz-event="MQL5+Menu+Siginin">Log in</a></li>
+      <li><a class="registration en" title="Please register" href="/en/auth_register" rel="nofollow" data-fz-event="MQL5+Menu+Register" onclick="window.fpush('MQL5+Button+Click');">Create an account</a></li>
+    </ul>
+  </nav>
+</div>
+          <div class="container">
+            <div class="toggle-button" id="sidebarToggleButton">
+              <i></i>
+            </div>
+          </div>
+
+          <div class="group-menu" id="groupMenu">
+            <div class="container lang-menu-container">
+              <div id="langMenuContainer" class="lang-menu">
+                <input class="blurHandler" id="langmenuBlurHandler" type="checkbox">
+                <nav aria-label="Language">
+                  <ul class="lang-menu__list" id="langmenu">
+  <li class="lang-menu__list-item lang-menu__list-item_selected"><a href="/en/articles" aria-label="English (English)"><i class="icons-languages icons-languages_en"></i><span>English</span></a></li>
+  <li class="lang-menu__list-item"><a href="/ru/articles" aria-label="Русский (Russian)"><i class="icons-languages icons-languages_ru"></i><span>Русский</span></a></li>
+  <li class="lang-menu__list-item"><a href="/zh/articles" aria-label="中文 (Chinese)"><i class="icons-languages icons-languages_zh"></i><span>中文</span></a></li>
+  <li class="lang-menu__list-item"><a href="/es/articles" aria-label="Español (Spanish)"><i class="icons-languages icons-languages_es"></i><span>Español</span></a></li>
+  <li class="lang-menu__list-item"><a href="/pt/articles" aria-label="Português (Portuguese)"><i class="icons-languages icons-languages_pt"></i><span>Português</span></a></li>
+  <li class="lang-menu__list-item"><a href="/ja/articles" aria-label="日本語 (Japanese)"><i class="icons-languages icons-languages_ja"></i><span>日本語</span></a></li>
+  <li class="lang-menu__list-item"><a href="/de/articles" aria-label="Deutsch (German)"><i class="icons-languages icons-languages_de"></i><span>Deutsch</span></a></li>
+  <li class="lang-menu__list-item"><a href="/ko/articles" aria-label="한국어 (Korean)"><i class="icons-languages icons-languages_ko"></i><span>한국어</span></a></li>
+  <li class="lang-menu__list-item"><a href="/fr/articles" aria-label="Français (French)"><i class="icons-languages icons-languages_fr"></i><span>Français</span></a></li>
+  <li class="lang-menu__list-item"><a href="/it/articles" aria-label="Italiano (Italian)"><i class="icons-languages icons-languages_it"></i><span>Italiano</span></a></li>
+  <li class="lang-menu__list-item"><a href="/tr/articles" aria-label="Türkçe (Turkish)"><i class="icons-languages icons-languages_tr"></i><span>Türkçe</span></a></li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
+    </header>
+  <main class="site-main">
+<div id="bfogggabsofabcpxuzmgaibarmaxasdrj" class="rclnd1pm17phgt3ha ghky8ic0v"><iframe width="800" height="80" frameborder="0" style="vertical-align: top; max-width: 100% !important; display: block;" scrolling="no" src="https://www.mql5.com/ff/sh/9nb0c8df2rmwfn89z2/index.html?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fforum%2F450486&amp;a=dgmsfszgoedimaicrqqmagvqzpwuxkur&amp;s=c59e3617ccf44fd54d4c50a03b44fd689ff7507b8fe4990c83772cc5419e627d&amp;v=1&amp;w=800&amp;h=80&amp;r=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F20228&amp;host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&amp;id=bfogggabsofabcpxuzmgaibarmaxasdrj&amp;fz_uniq=5049974610882193610&amp;custom="></iframe></div>    <div class="body" id="bodyContent">
+
+  <div id="left-sidebar-selector" class="left-sidebar__selector left-sidebar__selector_padding">
+    <div class="left-sidebar__title">
+MetaTrader 5 /     Trading systems
+    </div>
+    <i class="icons-ux icons-ux_arrow-down-black"></i>
+  </div>
+          <div class="articles-container block-with-sidebar">
+            <aside class="left-sidebar left-sidebar_270" id="left-sidebar">
+              
+
+    <ul class="tree-menu-ul">
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/examples">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/examples.svg" alt="" loading="lazy">
+            Examples
+          </a>
+            <ul class="tree-menu__list tree-menu__list_nested">
+                <li class="tree-menu__item">
+                  <a class="tree-menu__link" href="/en/articles/examples_indicators">
+                      <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/examples_indicators.svg" alt="" loading="lazy">
+                    Indicators
+                  </a>
+                </li>
+                <li class="tree-menu__item">
+                  <a class="tree-menu__link" href="/en/articles/examples_experts">
+                      <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/examples_experts.svg" alt="" loading="lazy">
+                    Experts
+                  </a>
+                </li>
+            </ul>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/strategy_tester">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/strategy_tester.svg" alt="" loading="lazy">
+            Tester
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/trading">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/trading.svg" alt="" loading="lazy">
+            Trading
+          </a>
+        </li>
+        <li class="tree-menu__item tree-menu__item_selected">
+          <a class="tree-menu__link" href="/en/articles/trading_systems">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/trading_systems.svg" alt="" loading="lazy">
+            Trading systems
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/integration">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/integration.svg" alt="" loading="lazy">
+            Integration
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/indicators">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/indicator.svg" alt="" loading="lazy">
+            Indicators
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/expert_advisors">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/expert.svg" alt="" loading="lazy">
+            Expert Advisors
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/statistics">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/statistics.svg" alt="" loading="lazy">
+            Statistics and analysis
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/machine_learning">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/machine_learning.svg" alt="" loading="lazy">
+            Machine learning
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/interviews">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/interviews.svg" alt="" loading="lazy">
+            Interviews
+          </a>
+        </li>
+    </ul>
+  
+
+    <div class="hints-panel">
+      <div class="hints-panel__item">
+        <i class="icons-hints icons-hints_like"></i>
+        <div class="hints-panel__content">
+          Do you like the article?<br>
+          Share it with others —<br>post a <a href="https://www.mql5.com/en/articles/20228" target="_blank">link</a> to it!
+        </div>
+      </div>
+
+      <div class="hints-panel__item">
+        <i class="icons-hints icons-hints_fb-square icons-hints_24px"></i><div class="hints-panel__content">
+Find us on <a href="https://www.facebook.com/mql5.community/" target="_blank" rel="nofollow">Facebook</a>!<br> Join our fan page</div>
+      </div>
+
+      <div class="hints-panel__item">
+        <i class="icons-hints icons-hints_mt-5"></i>
+        <div class="hints-panel__content">
+          Use new possibilities of <a href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/mt5setup.exe?utm_source=www.mql5.com&amp;utm_campaign=download" data-fz-event="MetaTrader+5+Desktop+Download+Article" rel="nofollow sponsored noopener noreferrer">MetaTrader 5</a>
+        </div>
+      </div>
+    </div>
+<div id="vgckrufggwxdtfscpyalmenexmvhljduja" class="rnbn5s4ly03dyhm81 ghky8ic0v"><a target="_blank" href="https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F1171%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.left.margin%26utm_term%3Dbest.vps%26utm_content%3Drent.vps%26utm_campaign%3D0622.MQL5.com.Internal&amp;a=nfwequzqsgqhotoqjzfnhqaannbrfxop&amp;s=535513c98ae39a487251b6b9a78c7c062812bda2382c8fe2e2582945db286791&amp;v=1&amp;host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&amp;id=vgckrufggwxdtfscpyalmenexmvhljduja&amp;uid=kzmlgumreztjkfozwucrubjyvwzfyhqs&amp;ssn=1795454667982388524&amp;ssn_dr=11&amp;ssn_sr=0&amp;fv_date=1795454667&amp;ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F20228&amp;title=Neural%20Networks%20in%20Trading%3A%20Temporal%20Motion%20Aggregation%20(Conclusion)%20-%20MQL5%20Articles&amp;scr_res=1366x768&amp;ac=179545467875130691&amp;fz_uniq=5049974610882193610&amp;sv=2552"><img src="https://www.mql5.com/ff/si/txatb6zzj3sbgqpn82.png" width="220" style="width: 220px; overflow: hidden; vertical-align: top; height: auto; border: 0px;" height="400"></a></div>      <div class="similar-author-articles ui">
+        <h4 class="similar-author-articles__title">Similar articles</h4>
+        <ul class="similar-author-articles__list">
+            <li>
+              <a href="/en/articles/20208" data-fz-event="MQL5+Article+Similar+Article">Neural Networks in Trading: Temporal Motion Aggregation (Key Components)</a>
+            </li>
+            <li>
+              <a href="/en/articles/20189" data-fz-event="MQL5+Article+Similar+Article">Neural Networks in Trading: Temporal Motion Aggregation (TMA)</a>
+            </li>
+            <li>
+              <a href="/en/articles/20095" data-fz-event="MQL5+Article+Similar+Article">Neural Networks in Trading: Iterative Forecast Refinement Models (RAFT)</a>
+            </li>
+            <li>
+              <a href="/en/articles/19181" data-fz-event="MQL5+Article+Similar+Article">Neural Networks in Trading: The Temporal Query Model (Conclusion)</a>
+            </li>
+            <li>
+              <a href="/en/articles/19157" data-fz-event="MQL5+Article+Similar+Article">Neural Networks in Trading: The Temporal Query Model (TQNet)</a>
+            </li>
+        </ul>
+      </div>
+    <div class="freelance-hint">
+      <img src="https://c.mql5.com/i/articles/icon_freelance.svg" width="24" height="24" alt="" loading="lazy">
+      <div class="freelance-hint__text">
+        Use the ideas from this article<br>to order your own robot<br>on Freelance
+      </div>
+        <a target="_blank" class="button button_blue-gray-border" title="Go to Freelance" href="/en/job/new" data-fz-event="MQL5+Article+New+Job">Go to Freelance</a>
+    </div>
+
+            </aside>
+            <div class="content-with-sidebar articles-content splashed">
+              
+
+
+<article>
+  <header class="article-header article-header_light">
+    <section class="article-tools-panel">
+        <div class="article-tools-panel__item">
+          <span class="popup framed client flags">
+            <a class="dropdown" href="javascript:void(false);" aria-label="Language">
+              <span class="icons-languages icons-languages_en"></span><i></i>
+            </a>
+            <span class="popup">
+              <span class="tip">
+                <span></span>
+              </span>
+              <span class="items">
+                    <a href="/ru/articles/20228">Русский</a>
+                    <a href="/es/articles/20228">Español</a>
+                    <a href="/pt/articles/20228">Português</a>
+              </span>
+            </span>
+          </span>
+        </div>
+        
+      <div class="article-tools-panel__item">
+        <a href="#pocket" title="Pocket allows you to insert a complete content description to the appropriate comment" aria-label="to pocket" onclick="return Pocket.Add(this,'en',2,1,20228);" class="article-tools-panel__rounded">
+          <i class="article-pocket-icon"></i>
+        </a>
+      </div>
+      <div class="article-tools-panel__item">
+        <a href="/en/articles/20228?print=" target="_blank" class="article-tools-panel__rounded" rel="nofollow" title="Printer friendly version" aria-label="Printer friendly version">
+          <i class="article-print-icon"></i>
+        </a>
+      </div>
+
+    </section>
+    <section class="article-header__image-box" style="background-color: rgb(70,66,47)">
+        <img class="article-header__image-preview" loading="lazy" width="32" height="16" alt="preview" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAsICAoIBwsKCQoNDAsNERwSEQ8PESIZGhQcKSQrKigkJyctMkA3LTA9MCcnOEw5PUNFSElIKzZPVU5GVEBHSEX/2wBDAQwNDREPESESEiFFLicuRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUX/wAARCAAQACADASIAAhEBAxEB/8QAFwABAQEBAAAAAAAAAAAAAAAABAUDBv/EACAQAQACAgEEAwAAAAAAAAAAAAECEQADBBIUMUEhYaH/xAAVAQEBAAAAAAAAAAAAAAAAAAADBP/EABkRAAMBAQEAAAAAAAAAAAAAAAABAiEDEf/aAAwDAQACEQMRAD8A5w6FKoPZWKNcIeIxD01kfXy5h8tfua97NKUrJLdMWUhHLqQkCP3kTdoOvwOO2cizBynb4yjlb80K53D/2Q==">
+      <div class="article-header__gradient" style="background: linear-gradient(90deg, rgba(70,66,47, 1) 0%, rgba(70,66,47, 0.72) 8.31%, rgba(70,66,47, 0) 17.1%), linear-gradient(270deg, rgba(70,66,47, 1) 0%, rgba(70,66,47, 0.72) 8.06%, rgba(70,66,47, 0) 16.59%), linear-gradient(0deg, rgba(70,66,47, 1) 8.26%, rgba(70,66,47, 0.8) 65%, rgba(70,66,47, 0) 100%);"></div>
+        <picture>
+          <source srcset="https://c.mql5.com/2/180/20228-neyroseti-v-treydinge-agregaciya-dvizheniya-po-vremeni-okonchanie_600x314__1.jpg, https://c.mql5.com/2/180/20228-neyroseti-v-treydinge-agregaciya-dvizheniya-po-vremeni-okonchanie_1200x628__1.jpg 2x" media="(min-width:700px)">
+          <img class="article-header__image" loading="lazy" width="600" height="314" srcset="https://c.mql5.com/2/180/20228-neyroseti-v-treydinge-agregaciya-dvizheniya-po-vremeni-okonchanie_300x157__1.jpg, https://c.mql5.com/2/180/20228-neyroseti-v-treydinge-agregaciya-dvizheniya-po-vremeni-okonchanie_600x314__1.jpg 2x" src="https://c.mql5.com/2/180/20228-neyroseti-v-treydinge-agregaciya-dvizheniya-po-vremeni-okonchanie_600x314__1.jpg" alt="Neural Networks in Trading: Temporal Motion Aggregation (Conclusion)" onerror="this.style.display='none';">
+        </picture>
+    </section>
+    <section class="article-header__content">
+      <h1>Neural Networks in Trading: Temporal Motion Aggregation (Conclusion)</h1>
+      <div class="article-header__info">
+        <a href="/en/articles/mt5">MetaTrader 5</a>
+          —
+          <a href="/en/articles/mt5/trading_systems">Trading systems</a>
+        | <time datetime="2026-11-02T09:30Z" title="2026.11.02 09:30" datetime-type="datetime">2 November 2026 at 09:30</time>
+      </div>
+      <div class="article-header__indicators">
+        <span title="Views">
+          <img src="https://c.mql5.com/i/icons.svg#views-white-usage" width="20" height="20" alt="">
+          793
+        </span>
+        
+          <a title="Comments" href="/en/forum/519695">
+            <img src="https://c.mql5.com/i/icons.svg#comments-white-usage" width="20" height="20" alt="">
+            0
+          </a>
+      </div>
+      <div class="article-header__author">
+          <div class="article-header__avatar">
+            <img src="https://c.mql5.com/avatar/2014/8/53E8CB77-1C48.png" srcset="https://c.mql5.com/avatar/2014/8/53E8CB77-1C48_big.png 2x" data-user-login="DNG" title="Dmitriy Gizlyk" alt="Dmitriy Gizlyk" loading="lazy" width="60" height="60">
+          </div>
+<a class="author" href="/en/users/dng" data-user-login="DNG">Dmitriy Gizlyk</a>      </div>
+    </section>
+  </header>
+
+    <div class="content">
+      <div class="inner formatted-content">
+        <h3 id="para1">Introduction</h3> <p style="text-align:justify;">Financial markets are like a living organism, pulsing to the rhythm of expectations, fear, and hope. Quote streams, like blood in the veins of the system, carry information encoded in every price movement, every surge of liquidity, and every minor fluctuation that, to an outside observer, may seem random. However, a careful observer knows that nothing here is random. There are only patterns hidden within the chaos. It is precisely this fine line between noise and structure that the Temporal Motion Aggregation (TMA) framework — one of the most interesting and conceptually fresh approaches to time-series analysis to emerge in recent years — seeks to capture this fine line between noise and structure.</p> <p style="text-align:justify;">The main idea behind <i>TMA</i> is not to view a data sequence as a static stream of values, but to perceive it in terms of movement dynamics, where what matters is not the numbers themselves, but their changes and interrelationships over time. This movement through time is the foundation of the entire architecture. Here, the focus is not on forms, but on pace. Not on points, but on transitions. Not on the data themselves, but on the energy of their movement. On the one hand, this approach is closer to a physical understanding of the market as a system of forces; on the other hand, it is deeply mathematical, as it operates within a space of temporal patterns that can be processed and combined into larger structures describing price behavior.</p> <p style="text-align:justify;">Architecturally, the framework is built around modules for preprocessing, analysis, and aggregation. At the first level, data is filtered and normalized, bringing it to a common rhythm and scale. Redundant copying and delays are also eliminated at this level to ensure the cleanest possible stream of information. The second level is responsible for forming basic movement patterns — the building blocks of market dynamics. It is here that the system learns to recognize the simplest forms of transitions, upon which more complex structures are then built. Finally, the third level brings all of this together into a single whole — it aggregates patterns to create generalized representations of price movement that can be used for forecasting and making trading decisions.</p> <p style="text-align:justify;">What sets <i>TMA</i> apart is that it operates not on instantaneous states, but on continuity. In traditional neural network architectures, each time step is treated separately as a static vector of input data. In TMA, the model takes into account the smoothness of transitions, as well as the direction and rate of change. This makes the model sensitive to those hidden rhythms that often elude standard algorithms. In essence, <i>TMA</i> constructs a new perceptual space in which time becomes a structural axis and movement becomes a meaningful unit of analysis.</p> <p style="text-align:justify;">To put it simply, the <i>TMA</i> framework can be thought of as a bridge between the world of classical time series and the concept of spatial dynamics. It combines a physical sense of <i>market flow</i> with the mathematical rigor of analysis. This is where its unique strength lies. This architecture does not just predict — it explains. It helps you understand why the price moves the way it does and not otherwise. Why certain movements recur while others disappear. Why the market sometimes behaves like a living organism that reacts to internal impulses rather than external events.</p> <p style="text-align:justify;">The author's visualization of the <i>TMA</i> framework is shown below.</p> <p style="text-align:center;"><img loading="lazy" src="https://c.mql5.com/2/179/2969760514603__2.png" style="vertical-align:middle;" title="The Author's Visualization of the TMA Framework" width="950"></p> <p style="text-align:justify;">For us, as researchers and developers, <i>TMA</i> has become a starting point for finding new solutions in the field of algorithmic forecasting. Implementing this approach using <i>MQL5</i> makes it possible not only to test the viability of the authors' ideas but also to adapt them to the real-world conditions of trading systems.</p> <p style="text-align:justify;">In previous articles, we have already progressed step by step from the theoretical foundations to the practical implementation of the key modules of <i>TMA</i>. We have developed a system capable of processing streams of price changes, structuring them, and extracting meaningful units of movement, which are subsequently combined into aggregated forms. This is not just data processing — it is an intelligent reconstruction of market dynamics. A system built on <i>TMA</i> principles is like an observer who does not record individual events but senses the overall melody of movement. It is able to discern structure where most people see only random fluctuations.</p> <h3 id="para2"><br></h3> <h3 id="para2">Top-level Object</h3> <p style="text-align:justify;">It should be noted that the <i>TMA</i> architecture did not emerge in a vacuum. It is based on an idea proposed by the authors of the <i><a href="/en/articles/20095" target="_blank">RAFT</a></i> (<i>Recurrent All-Pairs Field Transforms</i>) framework, which we discussed earlier. <i>RAFT</i> introduced an elegant recurrent processing scheme in which motion is viewed as a continuous field of correspondences between frames in optical flow. This principle turned out to be surprisingly close to the nature of the financial market, where each new price value does not exist in and of itself, but is linked to a multitude of previous states.</p> <p style="text-align:justify;">Our interpretation of <i>RAFT</i>'s ideas has shown just how versatile the concept of a recurrent correspondence field is. It is precisely this that makes it possible to integrate temporal dynamics into a single structure. Here, each new iteration refines the perception of motion, and the model learns to recognize the cause-and-effect relationship between changes.</p> <p style="text-align:justify;">As with our interpretation of the <i>RAFT</i> framework, the final stage in implementing the approaches proposed by the authors of <i>TMA</i> is the creation of a top-level object — the central element that integrates all previously constructed components into a single, coherent system. At this level, the architecture takes its complete form. Individual modules are linked into an internally organized structure, where data undergoes a complete cycle of transformations, from raw time series to aggregated representations of motion.</p> <p style="text-align:justify;">And it is no coincidence that the object developed as part of the <i><a href="/en/articles/20153#para2" target="_blank">RAFT</a></i> implementation was chosen as the parent class. This type of inheritance allows for the reuse of proven methods and helps maintain continuity in architectural principles. We strive to ensure that each new framework is a natural extension of the previous one. The <i>RAFT</i> approaches provided a reliable foundation for recurrent data processing, efficient module interaction, and working with the <i>OpenCL</i> environment. Therefore, using a well-established parent class makes <i>TMA</i> more robust, modular, and scalable.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="keyword">class</span> CNeuronTMA&nbsp;&nbsp;:&nbsp;&nbsp;<span class="keyword">public</span> CNeuronRAFT
+&nbsp;&nbsp;{
+<span class="keyword">protected</span>:
+&nbsp;&nbsp; CNeuronAddToStack cStatesStack;
+&nbsp;&nbsp; <span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">bool</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;feedForward(CNeuronBaseOCL *NeuronOCL) <span class="keyword">override</span>;
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">bool</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;updateInputWeights(CNeuronBaseOCL *NeuronOCL) <span class="keyword">override</span>;
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">bool</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;calcInputGradients(CNeuronBaseOCL *NeuronOCL) <span class="keyword">override</span>;
+
+<span class="keyword">public</span>:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CNeuronTMA(<span class="keyword">void</span>) {};
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~CNeuronTMA(<span class="keyword">void</span>) {};
+&nbsp;&nbsp; <span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">bool</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Init(<span class="keyword">uint</span> numOutputs, <span class="keyword">uint</span> myIndex, COpenCLMy *open_cl,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">uint</span> &amp;units[], <span class="keyword">uint</span> &amp;chanels[], <span class="keyword">uint</span> group_size,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">uint</span> groups, <span class="keyword">uint</span> segments, <span class="keyword">uint</span> segment_size, <span class="keyword">uint</span> levels,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">uint</span> window_key, <span class="keyword">uint</span> heads,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ENUM_OPTIMIZATION optimization_type, <span class="keyword">uint</span> batch);
+&nbsp;&nbsp; <span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">int</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Type(<span class="keyword">void</span>)&nbsp;&nbsp; <span class="keyword">override</span> <span class="keyword">const</span>&nbsp;&nbsp; {&nbsp;&nbsp;<span class="keyword">return</span> defNeuronTMA;&nbsp;&nbsp; }
+&nbsp;&nbsp; <span class="comment">//--- methods for working with files</span>
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">bool</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Save(<span class="keyword">int</span> <span class="keyword">const</span> file_handle) <span class="keyword">override</span>;
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">bool</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Load(<span class="keyword">int</span> <span class="keyword">const</span> file_handle) <span class="keyword">override</span>;
+&nbsp;&nbsp; <span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">void</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SetOpenCL(COpenCLMy *obj) <span class="keyword">override</span>;
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">bool</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Clear(<span class="keyword">void</span>) <span class="keyword">override</span>;
+&nbsp;&nbsp;};
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">The <i>CNeuronTMA</i> object being created inherits key <i>RAFT</i> mechanisms but gives them new meaning in line with the tasks of temporal aggregation. A state stack, <i>CNeuronAddToStack</i>, is added to its structure to enable the storage and sequential updating of temporal data, which is particularly important when working with motion streams.</p> <p style="text-align:justify;">The <i>Init</i> method plays a key role in creating a new object. This is where the model acquires its <i>body&nbsp;</i>— the layer sizes, number of channels, aggregation parameters, depth of the correlation stacks, and even the logic of the recurrent connections are defined. Essentially, this is the stage of <i>assembling the model's body</i>, where each element finds its place and purpose, while <i>OpenCL</i> computational resources are allocated to ensure maximum parallelism and data processing efficiency.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="keyword">bool</span> CNeuronTMA::Init(<span class="keyword">uint</span> numOutputs, <span class="keyword">uint</span> myIndex, COpenCLMy *open_cl,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">uint</span> &amp;units[], <span class="keyword">uint</span> &amp;chanels[], <span class="keyword">uint</span> group_size, <span class="keyword">uint</span> groups,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">uint</span> segments, <span class="keyword">uint</span> segment_size, <span class="keyword">uint</span> levels, <span class="keyword">uint</span> window_key,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">uint</span> heads, ENUM_OPTIMIZATION optimization_type, <span class="keyword">uint</span> batch)
+&nbsp;&nbsp;{
+&nbsp;&nbsp; <span class="keyword">if</span>(units.Size() != chanels.Size())
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; <span class="keyword">uint</span> layers = units.Size() - <span class="number">1</span>;
+&nbsp;&nbsp; <span class="keyword">if</span>(!CNeuronSpikeActivation::Init(numOutputs, myIndex, open_cl, units[layers]*chanels[layers],
+                                                                      optimization_type, batch))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">At the very beginning of the method, the supplied parameters are checked for consistency. The array specifying the number of elements in the analyzed sequence at each level (<i>units</i>) must have the same length as the array specifying the number of channels (<i>chanels</i>). The number of elements in the specified arrays indicates the number of neural network blocks involved in the initial processing of the data being analyzed.</p> <p style="text-align:justify;">Control is then passed to the method of the same name in the parent class, which is responsible for the overall activation of the module and serves as a kind of interface for external interaction with the model's components.</p> <p style="text-align:justify;">Once the preparatory work is complete, the construction of the main architecture — the encoder (cEncoder) and the context (cContext) backbone — then begins. Each of them is composed of repeating <i>CNeuronSpikeResNeXtBlock</i> structures. These blocks provide deep convolutional feature extraction and generate a robust representation of the time-series data.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">int</span> index = <span class="number">0</span>;
+&nbsp;&nbsp; CNeuronSpikeResNeXtBlock*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resblock&nbsp;&nbsp;&nbsp;&nbsp;= <span class="macro">NULL</span>;
+&nbsp;&nbsp; CNeuronSpikeConvGRU2D*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; gru&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = <span class="macro">NULL</span>;
+&nbsp;&nbsp; CNeuronMultScalStackCorrelBySegments*&nbsp;&nbsp;correlation = <span class="macro">NULL</span>;
+&nbsp;&nbsp; CNeuronTMAMFE*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mfe&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = <span class="macro">NULL</span>;
+&nbsp;&nbsp; CNeuronTMAMPA*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mpa&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = <span class="macro">NULL</span>;
+&nbsp;&nbsp; CNeuronTransposeRCDOCL*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;transpose&nbsp;&nbsp; = <span class="macro">NULL</span>;
+&nbsp;&nbsp; CNeuronBaseOCL*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;neuron&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="macro">NULL</span>;
+&nbsp;&nbsp; CNeuronBatchNormOCL*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; norm&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="macro">NULL</span>;
+<span class="comment">//---</span>
+&nbsp;&nbsp; cEncoder.Clear();
+&nbsp;&nbsp; cContext.Clear();
+&nbsp;&nbsp; cCorrelation.Clear();
+&nbsp;&nbsp; cG.Clear();
+&nbsp;&nbsp; cEncoder.SetOpenCL(OpenCL);
+&nbsp;&nbsp; cContext.SetOpenCL(OpenCL);
+&nbsp;&nbsp; cCorrelation.SetOpenCL(OpenCL);
+&nbsp;&nbsp; cG.SetOpenCL(OpenCL);
+<span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">for</span>(<span class="keyword">uint</span> i = <span class="number">0</span>; i &lt; layers; i++)
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resblock = <span class="keyword">new</span> CNeuronSpikeResNeXtBlock();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>(!resblock ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; !resblock.Init(<span class="number">0</span>, index, OpenCL, chanels[i], chanels[i + <span class="number">1</span>], units[i], units[i + <span class="number">1</span>],
+                                                 group_size, groups, optimization, iBatch) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; !cEncoder.Add(resblock))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DeleteObj(resblock)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;index++;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;resblock = <span class="keyword">new</span> CNeuronSpikeResNeXtBlock();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>(!resblock ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; !resblock.Init(<span class="number">0</span>, index, OpenCL, chanels[i], chanels[i + <span class="number">1</span>], units[i], units[i + <span class="number">1</span>], 
+                                                 group_size, groups, optimization, iBatch) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; !cContext.Add(resblock))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DeleteObj(resblock)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;index++;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">The encoder is responsible for compressing information, while the context branch handles its recurrent refinement, forming the basis for the module's <i>memory</i>.</p> <p style="text-align:justify;">Next, a recurrent element called <i>CNeuronSpikeConvGRU2D</i> is added to the architecture — the heart of the context backbone, so to speak, which enables dynamic processing of time series. This block allows the model to take past states into account and adjust the current context based on accumulated information.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; gru = <span class="keyword">new</span> CNeuronSpikeConvGRU2D();
+&nbsp;&nbsp; <span class="keyword">if</span>(!gru ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!gru.Init(<span class="number">0</span>, index, OpenCL, units[layers], chanels[layers], chanels[layers], optimization, iBatch) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!cContext.Add(gru))
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DeleteObj(gru)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp; index++;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">After the basic streams have been formed, a state stack (<i>cStatesStack</i>) is created to temporarily store a latent representation of historical environment states.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!cStatesStack.Init(<span class="number">0</span>, index, OpenCL, segments, chanels[layers], units[layers], optimization, iBatch))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; index++;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">This is followed by the <i>CNeuronMultScalStackCorrelBySegments</i> module, which calculates multilevel correlations between segments. This is where the central idea behind <i>TMA</i> originates — identifying movement patterns by comparing multiple time windows.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; correlation = <span class="keyword">new</span> CNeuronMultScalStackCorrelBySegments();
+&nbsp;&nbsp; <span class="keyword">if</span>(!correlation ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!correlation.Init(<span class="number">0</span>, index, OpenCL, segments, segment_size, chanels[layers],
+                                   units[layers], levels, optimization, iBatch) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!cCorrelation.Add(correlation))
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DeleteObj(correlation)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp; index++;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">Next to it is the <i>CNeuronTMAMFE</i> (<i>Multi-Feature Extractor</i>) module, which acts as both a filter and a synthesizer. It combines two types of information — spatiotemporal features of price movements and a matrix of correlations between segments — into a single representation. Its main task is to extract and amplify key features from these streams, emphasizing the relationships between them.</p> <p style="text-align:justify;">Two arrays are supplied as input: the results of temporal aggregation (<i>stack states</i>) and multiscale correlation data (<i>correlation map</i>). The first array contains compact dynamics vectors — a kind of <i>sequence of frames capturing price movement over time</i>, reflecting successive market states. The second array stores the correlation coefficients between these states, showing which segments of the historical data move in sync and which move in antiphase.</p> <p style="text-align:justify;">Within <i>MFE</i>, these two sources merge in a coordinated manner. Initially, both streams are normalized and passed through multichannel convolutional filters to extract stable combinations of features. They are then combined. A unified feature field is formed. Now, each point contains information about a local price change and the correlation context. This transforms the data stream into <i>an intelligent motion map&nbsp;</i>— structured and self-contained.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; neuron = <span class="keyword">new</span> CNeuronBaseOCL();
+&nbsp;&nbsp; <span class="keyword">if</span>(!neuron ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!neuron.Init(<span class="number">0</span>, index, OpenCL, correlation.Neurons() + cStatesStack.Neurons(), optimization, iBatch) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!cCorrelation.Add(neuron))
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DeleteObj(neuron)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp; index++;
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">uint</span> temp[] = { cStatesStack.GetDimension(), correlation.GetDimension() };
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mfe = <span class="keyword">new</span> CNeuronTMAMFE();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>(!mfe ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; !mfe.Init(<span class="number">0</span>, index, OpenCL, segments * units[layers], temp, chanels[layers], optimization, iBatch) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; !cCorrelation.Add(mfe))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DeleteObj(mfe)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp; index++;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">It is complemented by <i>CNeuronTransposeRCDOCL</i>, which permutes the dimensions and ensures that the data is properly aligned for subsequent stages.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; transpose = <span class="keyword">new</span> CNeuronTransposeRCDOCL();
+&nbsp;&nbsp; <span class="keyword">if</span>(!transpose ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!transpose.Init(<span class="number">0</span>, index, OpenCL, units[layers], segments, chanels[layers], optimization, iBatch) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!cCorrelation.Add(transpose))
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DeleteObj(transpose)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp; index++;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">Two <i>CNeuronTMAMPA</i> (<i>Motion Pattern Aggregation</i>) blocks play a special role. It is through them that the model is able <i>to focus</i> on the truly significant movements amid a multitude of minor changes. After the data undergoes preprocessing, correlation, and aggregation, many fragments remain: some carry the key signal, while others are merely noise. This is where the attention mechanism comes into play.</p> <p style="text-align:justify;">Each <i>CNeuronTMAMPA</i> block receives input segments that have been formed using the principle of temporal aggregation. These blocks <i>extract</i> from this varied set the patterns that recur most frequently or have the greatest <i>energy of change.</i> These are the parts that can serve as indicators of future price movements. Essentially, they define a weighting mask. Some fragments are amplified, while others are attenuated.</p> <p style="text-align:justify;">As a result, attention blocks allow the model to <i>set priorities</i> rather than simply process everything indiscriminately. It is as if a highly experienced trader were sitting in front of a monitor and saying: <i>"Here, the movement was significant — remember it; but here, it was just noise — do not take it into account."</i> But the model does this automatically and continuously. In market dynamics, where there is more noise than signal, such a mechanism becomes quite valuable.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">2</span>; i++)
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;mpa = <span class="keyword">new</span> CNeuronTMAMPA();
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>(!mpa ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; !mpa.Init(<span class="number">0</span>, index, OpenCL, chanels[layers], window_key, segments, units[layers],
+                                                           heads, optimization, iBatch) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; !cCorrelation.Add(mpa))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DeleteObj(mpa)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;index++;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">It is important to note that we use two <i>CNeuronTMAMPA</i> blocks in a row. The first block can serve as <i>a primary attention filter</i> — it filters out obvious noise and identifies meaningful fragments. The second block — <i>a deep attention layer</i> — receives the already selected fragments from the output of the first block and performs an even finer selection, amplifying the most important ones and highlighting their interconnections. This creates a double attention-filtering effect, enhancing the model's ability to identify patterns in price dynamics.</p> <p style="text-align:justify;">Thus, <i>CNeuronTMAMPA</i> implements one of the key ideas of the TMA framework: not simply to aggregate motion, but to identify structures within it that deserve attention and then work specifically with those structures. This allows the model to become more selective and robust to noise, adapt more quickly to changes in market dynamics, and, as a result, forecast prices more effectively.</p> <p style="text-align:justify;">Next, all branches are combined into a single array of features using <i>cConcatenated</i>.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; transpose = <span class="keyword">new</span> CNeuronTransposeRCDOCL();
+&nbsp;&nbsp; <span class="keyword">if</span>(!transpose ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!transpose.Init(<span class="number">0</span>, index, OpenCL, segments, units[layers], chanels[layers], optimization, iBatch) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!cCorrelation.Add(transpose))
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DeleteObj(transpose)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp; index++;
+<span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">if</span>(!cConcatenated.Init(<span class="number">0</span>, index, OpenCL, units[layers] * ((segments + <span class="number">2</span>) * chanels[layers]),
+                                                                        optimization, iBatch))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; index++;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">After that, the second recurrent layer, <i>cGRU</i>, is activated to process the already aggregated data. This stage can be compared to <i>comprehension</i> — the model does not simply memorize the structure of the movement, but begins to understand its evolution over time.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!cGRU.Init(<span class="number">0</span>, index, OpenCL, units[layers], (segments + <span class="number">2</span>) * chanels[layers], chanels[layers],
+                                                                              optimization, iBatch))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; index++;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">In the final stage, the <i>cResidual</i> residual connection path is formed.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!cResidual.Init(<span class="number">0</span>, index, OpenCL, chanels[<span class="number">0</span>], chanels[layers], units[<span class="number">0</span>], units[layers], optimization, iBatch))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; index++;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">Recall that, as in the <i>RAFT</i> framework, the central data processing backbone in <i>TMA</i> does not simply interpret the market state, but <i>predicts changes</i> in the analyzed features. Each iteration of the calculations effectively constructs a map of expected dynamics, showing how current structures might transform at the next point in time. This predicted shift results from all modules working together, from correlation and aggregation to attention blocks and recurrent refinement.</p> <p style="text-align:justify;">The values obtained in this process are not considered in isolation — they are added to the current environment state to form a predicted feature field. Thanks to this approach, the model remains stable even if the market changes its behavior. It does not lose the accumulated structure of features, but gradually refines it. With each new step, the model predicts not an absolute value, but a correction — a subtle shift.</p> <p style="text-align:justify;">After that, two final components are added to perform the final normalization and stabilize training by preventing shifts in feature distributions.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; neuron = <span class="keyword">new</span> CNeuronBaseOCL();
+&nbsp;&nbsp; <span class="keyword">if</span>(!neuron ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!neuron.Init(<span class="number">0</span>, index, OpenCL, Neurons(), optimization, iBatch) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!cG.Add(neuron))
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DeleteObj(neuron)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp; neuron.SetActivationFunction(None);
+&nbsp;&nbsp; <span class="keyword">if</span>(!neuron.SetGradient(cGRU.getGradient(), <span class="macro">true</span>) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!cResidual.SetGradient(cGRU.getGradient(), <span class="macro">true</span>))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+<span class="comment">//---</span>
+&nbsp;&nbsp; index++;
+&nbsp;&nbsp; norm = <span class="keyword">new</span> CNeuronBatchNormOCL();
+&nbsp;&nbsp; <span class="keyword">if</span>(!norm ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!norm.Init(<span class="number">0</span>, index, OpenCL, Neurons(), iBatch, optimization) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!cG.Add(norm))
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DeleteObj(norm)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+<span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">true</span>;
+&nbsp;&nbsp;}
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">Thus, the initialization method fully assembles the multilayer dynamic architecture.</p> <p style="text-align:justify;">The forward pass algorithm is implemented in the <i>feedForward</i>&nbsp;method, which contains the main loop for propagating data through all components of the <i>TMA</i> framework. It can be viewed as <i>the life cycle</i> of a single packet of information — from the initial market features to the final prediction of a change in state.</p> <p style="text-align:justify;">The algorithm reflects the idea of step-by-step motion refinement that underlies the philosophy of <i>RAFT</i> and <i>TMA</i>, where each computation is a link in a continuous chain of adaptation.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="keyword">bool</span> CNeuronTMA::feedForward(CNeuronBaseOCL *NeuronOCL)
+&nbsp;&nbsp;{
+&nbsp;&nbsp; <span class="keyword">if</span>(!cResidual.FeedForward(NeuronOCL))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">First, the initial data is projected along the residual connection path. This block generates a kind of reference point onto which all subsequent changes are superimposed. It ensures continuity of perception and serves as <i>a backdrop</i>.</p> <p style="text-align:justify;">Next, two parallel streams —&nbsp;<i>cEncoder</i> and <i>cContext&nbsp;</i>— are processed. The first generates <i>local features&nbsp;</i>— microstructures of motion that reflect short-term market impulses. Each layer of the encoder sequentially extracts new levels of abstraction, ranging from elementary fluctuations to stable patterns of price change.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; CNeuronBaseOCL* current = <span class="macro">NULL</span>;
+&nbsp;&nbsp; CNeuronBaseOCL* prev = NeuronOCL;
+&nbsp;&nbsp; <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; cEncoder.Total(); i++)
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;current = cEncoder[i];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>(!current ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; !current.FeedForward(prev))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;prev = current;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">The second stream, <i>cContext</i>, operates at a deeper level. It connects local features into broader temporal relationships, ensuring continuity of analysis. With each step, the contextual representation becomes smoother and more stable, accumulating the model's memory of previous states.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; prev = NeuronOCL;
+&nbsp;&nbsp; <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; cContext.Total(); i++)
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;current = cContext[i];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>(!current ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; !current.FeedForward(prev))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;prev = current;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">When both streams finish running, the encoder's results are passed to the <i>cStatesStack</i> module. This block accumulates a latent representation of the environment state, creating a temporal stack —&nbsp;<i>a history of motion</i>&nbsp;— that can be analyzed as a whole.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!cStatesStack.FeedForward(cEncoder[-<span class="number">1</span>]))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">At the same time, a correlation map is generated using <i>CNeuronMultScalStackCorrelBySegments</i>, which calculates how synchronously individual segments of the history move.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; CNeuronMultScalStackCorrelBySegments* correlation = cCorrelation[<span class="number">0</span>];
+&nbsp;&nbsp; <span class="keyword">if</span>(!correlation ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!correlation.FeedForward(cEncoder[-<span class="number">1</span>]))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">These two structures (the state stack and the correlation coefficients) form the core of further calculations, as they incorporate both the dynamics and the interrelationships between segments.</p> <p style="text-align:justify;">The next step is to combine the results using the concatenation operation. Here, two sources of information (the state stack and the correlation map) are combined into a single tensor. This combination enables the model to consider motion not only over time but also in the space of interrelationships.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">uint</span> variables = cStatesStack.GetVariables();
+&nbsp;&nbsp; <span class="keyword">uint</span> segments = cStatesStack.GetStackSize();
+&nbsp;&nbsp; <span class="keyword">uint</span> dimension = cStatesStack.GetDimension();
+&nbsp;&nbsp; <span class="keyword">uint</span> corr_dim = correlation.GetDimension();
+<span class="comment">//---</span>
+&nbsp;&nbsp; prev = cCorrelation[<span class="number">1</span>];
+&nbsp;&nbsp; <span class="keyword">if</span>(!Concat(cStatesStack.getOutput(), correlation.getOutput(), prev.getOutput(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dimension, corr_dim, variables * segments))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">Next, the dynamics analysis block begins operating, with the <i>MFE</i> and <i>MPA</i> modules activated sequentially within it.</p> <p style="text-align:justify;"></p> <ul> <li><i>CNeuronTMAMFE</i> extracts joint features across segments and their correlations, strengthening connections that appear consistently.</li> <li><i>CNeuronTMAMPA</i> adds selective attention to this process, highlighting the most significant movement fragments — those that carry the signal rather than noise.</li> </ul> <p></p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">2</span>; i &lt; cCorrelation.Total(); i++)
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;current = cCorrelation[i];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>(!current ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; !current.FeedForward(prev))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;prev = current;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">Each pass through these blocks refines the representation of the market. It is as if the model <i>is learning to look</i> only where something important is happening.</p> <p style="text-align:justify;">Next, the streams (<i>cEncoder</i>, <i>cContext</i>, and <i>cCorrelation</i>) are combined again into a single structure. This step can be viewed as a moment of knowledge integration: local features, context, and correlational relationships are brought together into a coherent whole.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!Concat(cEncoder[-<span class="number">1</span>].getOutput(), cContext[-<span class="number">1</span>].getOutput(), cCorrelation[-<span class="number">1</span>].getOutput(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cConcatenated.getOutput(), dimension, dimension, segments * dimension, variables))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">The resulting tensor is passed to <i>cGRU</i>—a recurrent block responsible for <i>temporal refinement</i> of the predicted changes. Here, the model accumulates and updates its memory of the motion, generating a prediction of the dynamics of the next state.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!cGRU.FeedForward(cConcatenated.AsObject()))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">The final step is to combine the outputs of the <i>GRU</i> and the <i>residual</i> block. This is where the framework's key concept is implemented —&nbsp;<i>adding the predicted increments to the current environment state</i>. The result is a new feature map that reflects the expected evolution of the market.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; current = cG[<span class="number">0</span>];
+&nbsp;&nbsp; <span class="keyword">if</span>(!current ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!SumAndNormilize(cGRU.getOutput(), cResidual.getOutput(), current.getOutput(), cGRU.GetChanels(),
+                                                                                   <span class="macro">false</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">Next, normalization and spiking activation are applied to the results, producing a nonlinear transformation that puts the output into a form suitable for further interpretation.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; prev = current;
+&nbsp;&nbsp; <span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">1</span>; i &lt; cG.Total(); i++)
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;current = cG[i];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>(!current ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; !current.FeedForward(prev))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;prev = current;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+<span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">return</span> CNeuronSpikeActivation::feedForward(prev);
+&nbsp;&nbsp;}
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">Thus, the <i>feedForward</i> method is an integrated process for modeling market dynamics, in which each module plays its own role. The encoder extracts the shape; the context links it across time; the correlation blocks refine the relationships; and the <i>GRU</i> and <i>residual</i> update bring the model closer to an actual forecast.</p> <p style="text-align:justify;">Together, all these components form the <i>motion backbone</i> of the <i>TMA</i> framework. Here, information does not just flow forward — it evolves, step by step, forming an increasingly accurate understanding of the patterns of the financial market.</p> <p style="text-align:justify;">Once the forward pass — during which the model generates its own forecast — is complete, the backward pass begins — a process that is no less important and even more nuanced. Now the system needs to figure out exactly where it went wrong and to what extent each internal transformation affected the final result. That is exactly what the <i>calcInputGradients</i> method does. It turns the error into a source of learning, distributing it across the model's layers like blood through the capillaries of a living organism.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="keyword">bool</span> CNeuronTMA::calcInputGradients(CNeuronBaseOCL *NeuronOCL)
+&nbsp;&nbsp;{
+&nbsp;&nbsp; <span class="keyword">if</span>(!NeuronOCL)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+<span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">if</span>(!CNeuronSpikeActivation::calcInputGradients(cG[-<span class="number">1</span>]))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">The algorithm begins by checking the received pointer to the source data object to which the error gradient is to be passed. If the object is not initialized, backpropagation is interrupted. This is not merely a technical measure, but a safeguard against disruptions to the learning process. Next, the corresponding algorithms of the parent class — the spiking activation module that completed the forward pass — are invoked. Now it is the first to absorb the impact of the backward signal, assessing how much the actual network output has deviated from the target. This is where the initial error gradient is generated, which then begins its journey down through the model's components.</p> <p style="text-align:justify;">The next step is to pass this signal through the <i>cG</i> block, which is responsible for final data processing. The loop proceeds from the last layer to the first, calling the <i>CalcHiddenGradients</i> method on each element.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; CNeuronBaseOCL* curr = <span class="macro">NULL</span>;
+<span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">for</span>(<span class="keyword">int</span> i = cG.Total() - <span class="number">2</span>; i &gt;= <span class="number">0</span>; i--)
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;curr = cG[i];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>(!curr ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; !curr.CalcHiddenGradients(cG[i + <span class="number">1</span>]))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">It is like a chain reaction — each neuron determines to what extent its own contribution brought the model closer to — or, conversely, further away from — the correct answer. The error is gradually decomposed across the layers, shedding redundancy and retaining only its meaningful component.</p> <p style="text-align:justify;">Next, the gradient descends along the main path of the residual branch, <i>cResidual</i>. Its role can be compared to a compensation system: it corrects accumulated imbalances and balances the influence of adjacent layers. As a result, the model <i>does not readjust itself</i> too abruptly, but instead makes subtle, carefully calibrated adjustments.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!NeuronOCL.CalcHiddenGradients(cResidual.AsObject()))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">Next, processing begins on the concatenated buffer <i>cConcatenated</i>, which combined the outputs of different streams into a single whole during the forward pass. Now the task is the reverse — to break down the total gradient into its components and assign each stream its share of the responsibility.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!cConcatenated.CalcHiddenGradients(cGRU.AsObject()))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+<span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">uint</span> variables = cStatesStack.GetVariables();
+&nbsp;&nbsp; <span class="keyword">uint</span> segments = cStatesStack.GetStackSize();
+&nbsp;&nbsp; <span class="keyword">uint</span> dimension = cStatesStack.GetDimension();
+<span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">if</span>(!cEncoder[-<span class="number">1</span>] || !cContext[-<span class="number">1</span>] || !cCorrelation[-<span class="number">1</span>] ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!DeConcat(cEncoder[-<span class="number">1</span>].getGradient(), cContext[-<span class="number">1</span>].getGradient(), cCorrelation[-<span class="number">1</span>].getGradient(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cConcatenated.getGradient(), dimension, dimension, segments * dimension, variables))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; Deactivation(cContext[-<span class="number">1</span>])
+&nbsp;&nbsp; Deactivation(cCorrelation[-<span class="number">1</span>])
+&nbsp;&nbsp; <span class="keyword">if</span>(cEncoder[-<span class="number">1</span>].Activation() != None)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>(!DeActivation(cEncoder[-<span class="number">1</span>].getOutput(), cEncoder[-<span class="number">1</span>].getPrevOutput(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; cEncoder[-<span class="number">1</span>].getGradient(), cEncoder[-<span class="number">1</span>].Activation()))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">This is where the <i>DeConcat</i> operation comes into play. This is not merely a mathematical separation of data, but something like separating a complete symphony into its individual instrumental parts. The error is distributed among the encoder, the context module, and the correlation block — the three key components of the forward pass. The encoder is responsible for extracting features, the context module stores temporal dependencies, and the correlation block identifies relationships between market states. After the streams are split, the context and correlation components are deactivated — a gradual reduction in excess activity to avoid amplifying noise or introducing interference between streams during training.</p> <p style="text-align:justify;">Next, the focus shifts to the correlation blocks. The backward pass through these blocks resembles the work of an analyst who reviews historical data to determine which relationships have actually proven significant. The model learns to distinguish between genuine patterns and random coincidences.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp;<span class="keyword">for</span>(<span class="keyword">int</span> i = cCorrelation.Total() - <span class="number">2</span>; i &gt;= <span class="number">1</span>; i--)
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;curr = cCorrelation[i];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>(!curr ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; !curr.CalcHiddenGradients(cCorrelation[i + <span class="number">1</span>]))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">After that, deconcatenation is performed again, but this time followed by the summation of the data from the two information streams at the encoder's final layer.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; CNeuronMultScalStackCorrelBySegments* correlation = cCorrelation[<span class="number">0</span>];
+&nbsp;&nbsp; <span class="keyword">uint</span> corr_dim = correlation.GetDimension();
+&nbsp;&nbsp; <span class="keyword">if</span>(!DeConcat(cStatesStack.getGradient(), correlation.getGradient(), curr.getGradient(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dimension, corr_dim, variables * segments))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; curr = cEncoder[-<span class="number">1</span>];
+&nbsp;&nbsp; <span class="keyword">if</span>(!curr.CalcHiddenGradients(cStatesStack.AsObject()) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!SumAndNormilize(curr.getGradient(), curr.getPrevOutput(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; curr.getPrevOutput(), dimension, <span class="macro">false</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; <span class="keyword">if</span>(!curr.CalcHiddenGradients(correlation) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!SumAndNormilize(curr.getGradient(), curr.getPrevOutput(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; curr.getGradient(), dimension, <span class="macro">false</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">The algorithm then returns to the encoder. Here, the model seems to be reevaluating its own perception of the market: it analyzes which features actually conveyed information and which turned out to be spurious. Each layer of the encoder receives its own portion of feedback and adjusts its internal weights, refining the perception filters.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">for</span>(<span class="keyword">int</span> i = cEncoder.Total() - <span class="number">2</span>; i &gt;= <span class="number">0</span>; i--)
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;curr = cEncoder[i];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>(!curr ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; !curr.CalcHiddenGradients(cEncoder[i + <span class="number">1</span>]))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp; <span class="keyword">if</span>(!NeuronOCL.CalcHiddenGradients(curr))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">After that, a similar process takes place within the context block. Here, the model reconstructs temporal connections, as if flipping through recent events and assessing exactly where it lost the causal thread.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">for</span>(<span class="keyword">int</span> i = cContext.Total() - <span class="number">2</span>; i &gt;= <span class="number">0</span>; i--)
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;curr = cContext[i];
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>(!curr ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; !curr.CalcHiddenGradients(cContext[i + <span class="number">1</span>]))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">Finally, the method sums the gradients obtained from the various information streams at the level of the source data object. The various branches of the model, each with its own logic, are brought into alignment so that the final update to the weights is consistent.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; CBufferFloat* temp = NeuronOCL.getGradient();
+&nbsp;&nbsp; <span class="keyword">if</span>(!NeuronOCL.SetGradient(NeuronOCL.getPrevOutput(), <span class="macro">false</span>) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!NeuronOCL.CalcHiddenGradients(curr) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!SumAndNormilize(temp, NeuronOCL.getGradient(), temp, <span class="number">1</span>, <span class="macro">false</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>) ||
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!NeuronOCL.SetGradient(temp, <span class="macro">false</span>))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+<span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">true</span>;
+&nbsp;&nbsp;}
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">In this way, the <i>calcInputGradients</i> method transforms a dry mathematical operation into a true self-learning process. It does not just distribute the error; it retraces the model's entire line of reasoning in reverse, helping it understand where it went wrong and why. This is precisely what gives the <i>TMA</i> framework its vitality: the system does not just react to data; it analyzes its own actions, learns to identify its weaknesses, and, step by step, makes increasingly accurate predictions.</p> <div> <div> The final step in the training cycle is to update the model parameters. Here, the entire process boils down to sequentially transferring control to the internal components in which the trainable weights are concentrated. Each block has already received its share of the computed gradient and is adjusting its parameters according to the direction suggested by backpropagation. The process is like the coordinated operation of a complex mechanism, where each gear knows exactly when and how much to turn so that the system as a whole becomes more precise and stable. </div> <div> <br> </div> <div> The <i>updateInputWeights</i> method implements this step as transparently as possible. There are no hidden pitfalls or ambiguous decisions — it simply passes the update command to the modules that contain the trainable parameters. This approach makes the architecture flexible and extensible: new components can be added without disrupting the overall logic of interaction. </div> <div> <br> </div> <div> The method's algorithm has no <i>hidden pitfalls, </i>and I suggest leaving it for independent study. The complete source code for the <i>CNeuronTMA</i> class and all of its methods is provided in the attachment.<br> </div> </div><br> <h3 id="para3"><br></h3> <h3 id="para3">Model Architectures</h3> <p style="text-align:justify;">We have reached an important milestone. We have completed extensive work on developing all the key components of the <i>TMA</i> framework, integrating them, and unifying them under a single top-level object. Now a new, truly practical phase begins: designing the architecture of trainable models that will not only predict market dynamics but also make actual trading decisions.</p> <p style="text-align:justify;">At this stage, we are once again following the principle of continuity. As before, the framework is evolving gradually: without unduly disrupting what has come before, but with constant refinement of what has already been created. That is precisely why we use a time-tested architecture, developed as part of the <i>RAFT</i> framework, as our foundation. In the <i>Environment State Encoder</i>, the previously used <i>CNeuronRAFT</i> module is now replaced by a new component: <i>CNeuronTMA</i>. This replacement may seem minor at first glance, but in fact it enables the model to develop a deeper, more multilayered understanding of market processes.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//--- Layer 4</span>
+&nbsp;&nbsp; <span class="keyword">if</span>(!(descr = <span class="keyword">new</span> CLayerDescription()))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; descr.type = defNeuronTMA;
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">uint</span> temp[] = {prev_out,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Channels In</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="number">32</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="number">64</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="number">128</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Channels Out</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;};
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>(<span class="functions">ArrayCopy</span>(descr.windows, temp) &lt; (<span class="keyword">int</span>)temp.Size())
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">uint</span> temp[] = {prev_count,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Units In</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="number">128</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="number">64</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="number">32</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="comment">// Units Out</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;};
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>(<span class="functions">ArrayCopy</span>(descr.units, temp) &lt; (<span class="keyword">int</span>)temp.Size())
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">uint</span> temp[] = {StackSize,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="comment">// Segments</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="number">4</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Segment Size</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;};
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span>(<span class="functions">ArrayCopy</span>(descr.heads, temp) &lt; (<span class="keyword">int</span>)temp.Size())
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp; descr.window = EmbeddingSize / NHeads;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="comment">// Group size</span>
+&nbsp;&nbsp; descr.count = NHeads;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Groups</span>
+&nbsp;&nbsp; descr.layers = <span class="number">3</span>;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// Levels of Correlation</span>
+&nbsp;&nbsp; descr.window_out = EmbeddingSize / NHeads;&nbsp;&nbsp; <span class="comment">// Dimension K</span>
+&nbsp;&nbsp; descr.step = NHeads;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="comment">// Attention Heads</span>
+&nbsp;&nbsp; descr.optimization = ADAM;
+&nbsp;&nbsp; descr.batch = BatchSize;
+&nbsp;&nbsp; <span class="keyword">if</span>(!encoder.Add(descr))
+&nbsp;&nbsp;&nbsp;&nbsp; {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">delete</span> descr;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp; iLatentLayer++;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">The <i>TMA</i> block, integrated into the architecture, inherits all the strengths of <i>RAFT</i>&nbsp;— recurrent consistency, noise resilience, and the ability to refine features. And it supplements them with a new mechanism for multilevel aggregation and careful analysis of dynamic patterns.<br></p> <h3 id="para4"><br></h3> <h3 id="para4">Testing</h3> <p style="text-align:justify;">Once the architecture of the model to be trained has been finalized and our <i>TMA</i> module has been integrated into the <i>Environment State Encoder</i>, the most critical and exciting part begins — training and practical testing. This is where it becomes clear whether <i>TMA</i> is capable not only of processing data, but also of truly thinking in market terms: recognizing patterns, responding to price movements, and making decisions in the spirit of an experienced trader.</p> <p style="text-align:justify;">The first stage of training can be compared to a trial performance on the historical stage of the market. We use data for the <i>EURUSD</i> currency pair on the <i>M</i>15 timeframe for the period from <i>January</i> 2024 to <i>June</i> 2025. During this phase, the model is exposed to a rich historical context and learns to recognize underlying patterns: volatility, reactions to news, relationships between key features, and the hidden structure of trends. Here, the framework acts as a systems analyst, developing a solid <i>understanding</i> of the market state. Gradually, the model develops the ability to predict how events will unfold and assess the level of risk for each potential trade.</p> <p style="text-align:justify;">Next comes a more dynamic phase —&nbsp;<i>online fine-tuning</i> in the <i>MetaTrader</i> 5 Strategy Tester. The model now operates under conditions resembling real-time operation, processing data one candlestick at a time. Every price change presents a new situation that requires a quick and precise response. <i>TMA</i> remains stable during sharp fluctuations, filters out noise, and adjusts the strategy during periods of low liquidity. What was previously learned from historical data is transformed into live behavior — flexible, adaptive, and confident.</p> <p style="text-align:justify;">The final step is to test the model using new data from <i>July through September</i> 2025. Here, the model is evaluated on unseen data, without any advance hints. All parameters learned during training are loaded without modification. This stage demonstrates the extent to which <i>TMA</i> is capable of generalizing and operating in new market conditions, where past experience helps but does not guarantee success.</p> <p style="text-align:center;"><img height="377" loading="lazy" src="https://c.mql5.com/2/180/4493651559798.png" style="vertical-align:middle;" title="Test Results" width="900"> <img height="374" loading="lazy" src="https://c.mql5.com/2/180/4918946021434.png" style="vertical-align:middle;" title="Test Results" width="900"></p> <p></p> <p style="text-align:justify;">During the three-month test of the <i>TMA</i> framework, the model executed 59 trades, maintaining moderate activity and a balance between long and short positions. This alone indicates that the framework correctly interprets environmental signals, is not prone to overexposure, and operates consistently.</p> <p style="text-align:justify;">The financial results were modest: a net profit of 1.44% on an initial deposit of USD 100. At the same time, gross profit and loss are virtually balanced (40.52 USD versus –39.08 USD), resulting in a <i>Profit Factor</i> of 1.04 — the break-even threshold. This result is typical for a model that is still in the process of adaptation: it has not yet been optimized for the entry conditions and capital management strategy, but it is already demonstrating stability without catastrophic losses.</p> <p style="text-align:justify;">A drawdown of 16–17% indicates a moderate level of risk, which is entirely acceptable for the research phase. The balance and equity move in tandem, which confirms that the model closes positions in a timely manner, without a dangerous accumulation of unrealized losses. This is an important indicator of the maturity of the system's internal decision-making logic: the system <i>does not get stuck</i> in losing trades and responds correctly to exit signals.</p> <p style="text-align:justify;">An analysis of trading sequences also confirms that the trading behavior is balanced: the maximum number of consecutive winning trades is 4, and the maximum number of consecutive losing trades is 6. The proportion of profitable trades (52.5%) is only slightly above the probability threshold, but there is a trend toward symmetry between short and long positions, which indicates that the strategy is neutral — it is not prone to directional biases.</p> <p style="text-align:justify;">Capital growth follows a wave-like pattern: a period of steady growth in the first half of July is followed by a drawdown and then a phase of stagnation. This is a classic scenario for a model that is still searching for the optimal balance between responsiveness and stability.</p> <p style="text-align:justify;">Overall, the test results show that the <i>TMA</i> framework is capable of developing its own trading logic, analyzing market data, and making decisions without external support. It successfully passes a key test — it performs consistently without losing control of risk and shows features of an ability to learn. This result can be considered a starting point: the system has proven its viability, and now its task is to improve.<br></p> <h3 id="para5"><br></h3> <h3 id="para5">Conclusion</h3> <p style="text-align:justify;">We have completed the development of the <i>TMA</i> framework and conducted initial testing of the model. We can now say with confidence that the architecture we have created not only works but also exhibits all the features of a fully fledged learning system. It analyzes the market, identifies patterns in the data, and makes decisions based on internal logic rather than predefined rules.</p> <p style="text-align:justify;">Test results showed that the model is already capable of operating consistently in a dynamic environment, maintaining control over risk and avoiding typical overfitting errors. Yes, profits are still modest, but what matters is that <i>TMA</i> has proven the viability of its concept. It was tested using real-world data, proved to be stable, and laid the foundation for further development.</p> <p style="text-align:justify;">The next step is obvious: in-depth optimization, fine-tuning of parameters, and expansion of behavioral models. More complex systems can be built on this foundation. Our framework has already demonstrated that it is capable of thinking in terms of the future. Now it is time to teach it to act with the confidence of a professional.<br></p><br> <h4 id="para6">Links</h4> <ul> <li><a href="https://arxiv.org/abs/2303.11629" rel="noreferrer noopener nofollow" target="_blank" title="TMA: Temporal Motion Aggregation for Event-Based Optical Flow">TMA: Temporal Motion Aggregation for Event-Based Optical Flow</a></li> <li><a href="/en/search#!module=mql5_module_articles&amp;keyword=Neural%20networks&amp;method=2&amp;author=DNG" target="_blank">Other articles in this series</a></li> </ul><br> <h4 id="para7">Software used in this article</h4> <table cellpadding="3" cellspacing="0" class="standart" width="100%"> <thead> <tr> <th>#</th> <th>Name</th> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td data-label="#">1</td> <td data-label="Name">Study.mq5</td> <td data-label="Type">Expert Advisor</td> <td data-label="Description">Expert Advisor for offline model training</td> </tr> <tr> <td data-label="#">2</td> <td data-label="Name">StudyOnline.mq5</td> <td data-label="Type">Expert Advisor</td> <td data-label="Description">Expert Advisor for online model training</td> </tr> <tr> <td data-label="#">3</td> <td data-label="Name">Test.mq5</td> <td data-label="Type">Expert Advisor</td> <td data-label="Description">Model testing Expert Advisor</td> </tr> <tr> <td data-label="#">4</td> <td data-label="Name">Trajectory.mqh</td> <td data-label="Type">Class Library</td> <td data-label="Description">Structure describing the system state and model architectures</td> </tr> <tr> <td data-label="#">5</td> <td data-label="Name">NeuroNet.mqh</td> <td data-label="Type">Class Library</td> <td data-label="Description">Class library for building a neural network</td> </tr> <tr> <td data-label="#">6</td> <td data-label="Name">NeuroNet.cl</td> <td data-label="Type">Library</td> <td data-label="Description">Code library for an <i>OpenCL</i>&nbsp;program</td> </tr> </tbody> </table> <p><br></p>
+      </div>
+          <p style="text-align: right;">
+            <small>
+              Translated from Russian by MetaQuotes Ltd. <br>Original article: <a href="/ru/articles/20228" target="_blank">https://www.mql5.com/ru/articles/20228</a>
+            </small>
+          </p>
+<div id="cb_20228" class="attachBlock">
+  <strong>Attached files</strong> |
+  <div class="grouped-attachments-help">
+    <a title="Download all attachments in the single ZIP archive" href="/en/articles/download/20228.zip">
+      <i class="attach-icon attach-icon_zip"></i>Download ZIP
+    </a>
+  </div>
+    <div class="attachItem">
+      <a title="Download MQL5.zip" href="/en/articles/download/20228/MQL5.zip"><i class="attach-icon attach-icon_zip"></i>MQL5.zip</a>
+      <span class="attachSize">(3307.17 KB)</span>
+    </div>
+</div>
+    </div>
+
+  <div class="copyright">
+    <p><strong>Warning:</strong> All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.</p>
+      <p>This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.</p>
+  </div>
+
+
+
+    <div class="article__author-with-articles">
+      
+
+
+<div class="article-footer__author">
+  <div class="article-footer__author-avatar">
+    <img id="avatar" src="https://c.mql5.com/avatar/2014/8/53E8CB77-1C48_big.png" title="Dmitriy Gizlyk" alt="Dmitriy Gizlyk" loading="lazy" width="164" height="164">
+  </div>
+  <div class="article-footer__author-content">
+    <div class="article-footer__author-name">
+      <a href="/en/users/dng" title="Dmitriy Gizlyk">Dmitriy Gizlyk</a>
+    </div>
+    <div class="article-footer__author-info">
+      <ul>
+          <li>
+            <i title="Lives" class="icons-profile icons-profile_geo"></i>
+            <a target="_blank" rel="noreferrer noopener nofollow" title="Lives" href="https://maps.google.com/?z=4&amp;q=Ukraine">Ukraine</a>
+          </li>
+        <li>
+          <i title="Rating" class="icons-profile icons-profile_statistics"></i>
+          <a title="Rating" href="/en/users/dng/achievements">110372</a>
+        </li>
+      </ul>
+    </div>
+    <div class="article-footer__author-contacts">
+          <li title="X"><a class="icons-networks icons-networks_tw-mini" target="_blank" rel="noreferrer noopener nofollow" href="https://x.com/Prognoz_2013"></a></li>
+
+    </div>
+    <div class="article-footer__author-bio">Professional programming of any complexity for MT4, MT5, C#.</div>
+  </div>
+</div>
+
+      <div class="other-author-articles ui">
+        <h4 class="other-author-articles__title">Other articles by this author</h4>
+        <ul class="other-author-articles__list">
+          <li><a href="/en/articles/20584" data-fz-event="MQL5+Article+From+Author+Article">Neural Networks in Trading: Mesh Approximation of Event Streams as a Tool for Analyzing Price Patterns (EEMFlow)</a></li>
+          <li><a href="/en/articles/20559" data-fz-event="MQL5+Article+From+Author+Article">Neural Networks in Trading: Bidirectional Adaptive Temporal Correlation (Conclusion)</a></li>
+          <li><a href="/en/articles/20528" data-fz-event="MQL5+Article+From+Author+Article">Neural Networks in Trading: Bidirectional Adaptive Temporal Correlation (Main Components)</a></li>
+          <li><a href="/en/articles/20506" data-fz-event="MQL5+Article+From+Author+Article">Neural Networks in Trading: Bidirectional Adaptive Temporal Correlation (BAT)</a></li>
+          <li><a href="/en/articles/20477" data-fz-event="MQL5+Article+From+Author+Article">Neural Networks in Trading: A Spatio-Temporal State Model for Financial Data Analysis (Conclusion)</a></li>
+          <li><a href="/en/articles/20447" data-fz-event="MQL5+Article+From+Author+Article">Neural Networks in Trading: A Spatio-Temporal State Space Model for Financial Data Analysis (STSSM Block)</a></li>
+          <li><a href="/en/articles/20421" data-fz-event="MQL5+Article+From+Author+Article">Neural Networks in Trading: A Spatio-Temporal State-Space Model for Financial Data Analysis (E-STMFlow)</a></li>
+        </ul>
+      </div>
+    </div>
+
+</article>
+
+
+  <div class="article__last-comments" id="articleAdditional">
+    
+<div class="comments-preview">
+    <div class="title">
+      <span></span><b>
+ <a href="/en/forum/519695">Go to discussion</a>
+      </b>
+    </div>
+    <div>
+        
+    </div>
+</div>
+
+  </div>
+
+
+    <div class="articles-bottom-list">
+        <div class="articles-bottom-list__row">
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Neural Networks in Practice: Stochastic Gradient Descent" src="https://c.mql5.com/2/192/13841-rede-neural-na-pr-tica-gradiente-logo__1.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/13841" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Neural Networks in Practice: Stochastic Gradient Descent</a>
+                <div class="articles-bottom-list__desc">This article uses practical examples to explain how to calculate and apply gradients of the weights and bias (intercept) in a linear neuron implemented in MQL5, and also discusses a stochastic variant of gradient descent. We analyze stopping criteria, iteration limits, and the effects of training on data subsets. The results are displayed in the MetaTrader 5 terminal, where a simple chart is also plotted. Readers are invited to modify the training set and analyze the model's behavior.</div>
+              </div>
+          </div>
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Practical Modules from Other Languages in MQL5 (Part 09): MATPLOTLIB (II)" src="https://c.mql5.com/2/276/24295-practical-modules-from-other-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/24295" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Practical Modules from Other Languages in MQL5 (Part 09): MATPLOTLIB (II)</a>
+                <div class="articles-bottom-list__desc">Learn how to create advanced visualizations in MetaTrader 5 using a Matplotlib-like API from MQL5 while Python handles rendering. We implement key chart types—scatter, bar, horizontal bar, histogram, pie, and hexbin—and show how to control axes, legends, colorbars, and styles. The result is a consistent workflow for exploring trading and financial datasets.</div>
+              </div>
+          </div>
+        </div>
+        <div class="articles-bottom-list__row">
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="From Basic to Intermediate: Subwindows (I)" src="https://c.mql5.com/2/193/17086-do-b-sico-ao-intermedi-rio-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/17086" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">From Basic to Intermediate: Subwindows (I)</a>
+                <div class="articles-bottom-list__desc">In this article, we'll start exploring how to work with subwindows in MetaTrader 5 using MQL5. This is a broad topic with several practical aspects that may prove challenging, so we'll start with a brief introduction. And yet, dear reader, it’s important that you understand what we’re going to discuss here, because it could play an important role in your future.</div>
+              </div>
+          </div>
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Confident Learning: Finding Mislabeled Trades Before They Poison Your Classifier" src="https://c.mql5.com/2/277/24728-confident-learning-finding-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/24728" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Confident Learning: Finding Mislabeled Trades Before They Poison Your Classifier</a>
+                <div class="articles-bottom-list__desc">The article focuses on label-auditing for meta-labeling, not on a new entry signal. It presents a native MQL5 implementation of confident learning with out-of-fold scoring and calibrated pruning, plus an EA switch that trains the meta-filter on raw or cleaned datasets. A controlled Strategy Tester comparison helps you quantify noise and choose a pruning level that preserves generalization.</div>
+              </div>
+          </div>
+        </div>
+    </div>
+
+<div class="clear-fix"></div>
+
+<div id="wdausxxqrpvhekbwjrjlhqjghyhesrqqau" class="rx45ft5jkbtq9r7i2 rx45ft5jkbtq9r7i2_articles-view ghky8ic0v"><iframe width="800" height="80" frameborder="0" style="vertical-align: top; max-width: 100% !important; display: block;" scrolling="no" src="https://www.mql5.com/ff/sh/sm4wqgxpy6553ggyp2/index.html?link=https%3A%2F%2Fwww.metatrader.com%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay%26utm_content%3Dvisit%26utm_campaign%3Dvisit.metatrader.com.426&amp;a=arztkvuejlwhtdiqmnplzyxxbcdvqyio&amp;s=d47bcfab6252db327a4605dd76e34a34f9ae856861c96abd7751bd37daae5b62&amp;v=1&amp;w=800&amp;h=80&amp;r=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F20228&amp;host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&amp;id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&amp;fz_uniq=5049974610882193610&amp;custom="></iframe></div>
+    
+
+<div class="hidden" id="popupRegisterLogin">
+  <div class="register-login-popup">
+    <div class="register-login-popup__header">
+      <img src="https://c.mql5.com/i/registerlandings/logo-2.png" srcset="https://c.mql5.com/i/registerlandings/logo-2_2x.png 2x" alt="MQL5 - Language of trade strategies built-in the MetaTrader 5 client terminal" loading="lazy" width="74" height="24">
+    </div>
+    <div class="register-login-popup__content">
+      <div class="register-login-popup__desc">
+        <div class="register-login-popup__title">You are missing trading opportunities:</div>
+        <ul>
+<li>Free trading apps</li>
+<li>Over 8,000 signals for copying</li>
+<li>Economic news for exploring financial markets</li>
+</ul>
+      </div>
+      <div class="register-login-popup__forms ui">
+        <div class="register-login-popup__tabs" id="registerLoginPopupTabs">
+          <span data-id="register" id="registerLoginPopupTab_register" class="register-login-popup__tab register-login-popup__tab_active">Registration</span>
+          <span data-id="login" id="registerLoginPopupTab_login" class="register-login-popup__tab">Log in</span>
+        </div>
+        <div id="registerLoginPopupTabContent_register">
+          <div class="ui auth-form__content">
+    
+  <script type="text/javascript">/*<![CDATA[*/ if (!window.V) var V = []; /*]]>*/</script>
+<script>/*<![CDATA[*/ if(! window.V) var V=[]; /*]]>*/</script>
+<form method="POST" action="/en/auth_register_short" id="PopupRegisterquickRegisterForm" onsubmit="PopupRegisterquickRegistration.OnSubmit(this,'en');if(Validate(this)) Ajax.form(this,{onready:PopupRegisterquickRegistration.OnSuccessPopup,onerror:PopupRegisterquickRegistration.OnError,onbeginrequest:PopupRegisterquickRegistration.DisableInputs,onendrequest:PopupRegisterquickRegistration.EnableInputs});return(false);" enctype="multipart/form-data"><input type="hidden" name="__signature" value="5d8386a4ed1dc723957168ba0deaf1da">
+    <div class="auth-form__inputs">
+      <input type="hidden" value="0" name="IsValidate" id="PopupRegisterIsValidate">
+
+      <!--[if lt IE 10]><div class="note">Login:</div><![endif]-->
+      <div class="auth-form__box-input">
+        <input type="text" id="PopupRegisterusername" name="username" class="input" maxlength="32" onchange="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.CheckUserName();}" onkeyup="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.ValidateUserName(this, 'Enter a valid login');}" placeholder="Login" title="May contain Latin letters, digits, dots, dashes,underscore characters. Cannot start or end with a dot. The allowed length is 3 to 32 characters." onfocus="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnFocus(this,'');}" onblur="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnBlur(this);}">
+        <script id="validate_PopupRegisterusername">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['PopupRegisterusername',10,'You may use Latin characters, numbers, underscores and periods.',validate_username]);}); /*]]>*/</script>
+
+        <label class="label" for="PopupRegisterusername">latin characters without spaces</label>
+      </div>
+      <!--[if lt IE 10]><div class="note">Your email:</div><![endif]-->
+      <div class="auth-form__box-input">
+        <input class="input" type="email" id="PopupRegisteremail" name="email" placeholder="Your email" title="Please enter the email (it may not exceed 256 characters). For example: john@example.com" onchange="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnChange(this);}" onfocus="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnFocus(this,'');}" onblur="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnBlur(this);}">
+        <script id="validate_PopupRegisteremail">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['PopupRegisteremail',10,'Enter a valid email address',validate_email]);}); /*]]>*/</script>
+
+        <label class="label" for="PopupRegisteremail">a password will be sent to this email</label>
+      </div>
+      <input name="PrefixId" type="hidden" value="Popup+Register">
+    </div>
+    <span id="PopupRegisterquickRegisterSubmit">
+      <input type="submit" value="Register" id="PopupRegisterquickRegisterButton" title="Sign up and receive an email with your password" class="button button_yellow">
+    </span>
+    <span id="PopupRegisterquickRegisterErrorMessage" class="quick-register-error-message field-validation-error" style="text-align: center; margin-top: 16px; display: none;">
+      An error occurred
+    </span>
+</form>
+    
+</div>
+<div class="auth-social">
+  <ul class="auth-social-list" id="PopupRegistersocialList">
+    <li><a onclick="window.fpush({name: 'MQL5+Popup+Register+Google', unit: 'section', value: 'Articles'}); " href="https://www.mql5.com/en/auth_oauth2?provider=Google&amp;amp;return=popup&amp;amp;reg=1" class="auth-soc-button qa-google-button auth-soc-button_google" rel="nofollow">Log in With Google</a></li>
+  </ul>
+</div>
+<div class="auth-block-agree">
+  <p>
+    You agree to <a target="_blank" href="/en/about/privacy">website policy</a> and <a target="_blank" href="/en/about/terms">terms of use</a>
+  </p>
+</div>
+
+
+        </div>
+        <div id="registerLoginPopupTabContent_login" class="hidden">
+            <div id="loginRegistrationHint" class="auth-form__text">
+    If you do not have an account, please <a href="https://www.mql5.com/en/auth_register" rel="nofollow" style="vertical-align: top">register</a>
+  </div>
+<div class="ui auth-form__content auth-form__content_login" id="loginFormWrapper">
+    
+  <div id="needCookies" class="need-cookies hidden">
+    <div class="danger-box">
+      <p>Allow the use of cookies to log in to the MQL5.com website.</p>
+<p>Please enable the necessary setting in your browser, otherwise you will not be able to log in.</p>
+    </div>
+  </div>
+<script>/*<![CDATA[*/ if(! window.V) var V=[]; /*]]>*/</script>
+<form method="POST" action="/en/auth_login" id="loginForm" onsubmit="if(window.quickLogin){return window.quickLogin.onSubmit(this);}var result = Validate(this); if(result) { preventDoubleSubmit(this); } return result;"><input id="RedirectAfterLoginUrl" name="RedirectAfterLoginUrl" type="hidden" value=""><input id="RegistrationUrl" name="RegistrationUrl" type="hidden" value=""><input data-val="true" data-val-required="The ShowOpenId field is required." id="ShowOpenId" name="ShowOpenId" type="hidden" value="True"><input id="TrackingSection" name="TrackingSection" type="hidden" value="Articles">    <input name="ViewType" type="hidden" value="5">
+      <input name="PrefixId" type="hidden" value="Popup+Login">
+    <div id="loginCredentials">
+    <!--[if lt IE 10]><div class="note">Your login:</div><![endif]-->
+    <div class="auth-form__box-input">
+      <input aria-label="Your login" class="input qa-login" id="Login" name="Login" onchange="if(window.quickLogin){window.quickLogin.onChange(this);}" placeholder="Login" title="Your login" type="text" value="">
+      <script id="validate_Login">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['Login',1,'Enter login specified when signing up']);});mqGlobal.AddOnReady(function() {V.push(['Login',10,'Email cannot be used. Enter your login please',validateLogin]);}); /*]]>*/</script>
+    </div>
+    <!--[if lt IE 10]><div class="note">Password:</div><![endif]-->
+    <div class="auth-form__box-input">
+      <div class="input-with-show">
+        <input aria-label="Password" autocomplete="off" class="input qa-password" id="Password" name="Password" onchange="if(window.quickLogin){window.quickLogin.onChange(this);}" placeholder="Password" title="Enter the password please" type="password">
+        <button type="button" class="input-with-show__icon" title="Show password" aria-label="Show password" aria-pressed="false" onclick="if(window.quickLogin){window.quickLogin.showPass(this, 'Show password', 'Hide password');}"></button>
+      </div>
+      <script id="validate_Password">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['Password',1,'Please enter the password']);}); /*]]>*/</script>
+    </div>
+    </div>
+    <script type="text/javascript">
+    function validateLogin(input) {
+      return !/^\w+([-+.'']{1,2}\w+)* @\w+([-.]\w+)*\.\w+([-.]\w+)*$/i.test(input.value);
+    }
+    </script>
+    <div id="loginTwoFactor" style="display: none;" data-url="/en/auth_two_factor" data-signature="64f0e7f139c4430f84fe056b0f1555d0" data-error="Error occurred. Please try again later." data-confirm="Confirm" data-code-prompt="Enter the six-digit code from your authenticator app." data-recovery-prompt="Enter recovery code number {0} from the list you saved during setup.">
+      <p id="loginTwoFactorPrompt">Enter the six-digit code from your authenticator app.</p>
+      <div class="auth-form__box-input">
+        <input class="input input_two-factor" type="text" id="loginTwoFactorCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" dir="ltr" placeholder="000000" aria-label="Authorization code verification" aria-describedby="loginTwoFactorPrompt" disabled="">
+      </div>
+    </div>
+    <p id="loginInlineError" class="field-validation-error" role="alert" style="display: none;"></p>
+    <p id="loginPasswordResetError" class="field-validation-error" role="alert" style="display: none;">Please use <a href="/en/auth_forgotten">Password recovery</a></p>
+    <div class="forgot" id="loginForgotBlock"><a id="loginForgotLink" href="https://www.mql5.com/en/auth_forgotten?return=popup">Forgot your login/password?</a></div>
+    <div class="forgot" id="loginTwoFactorRecoveryBlock" style="display: none;">
+      <a id="loginTwoFactorRecovery" class="link">Lost your authenticator?</a>
+    </div>
+    <input type="submit" class="button button_yellow qa-submit" id="loginSubmit" value="Log in" title="Enter">
+</form>  <div id="loginTwoFactorRecovered" style="display: none;">
+    <p>You are signed in. Two-factor authentication has been disabled. Set it up again and scan a new QR code, or continue with two-factor authentication disabled.</p>
+    <a id="loginTwoFactorSettings" class="button button_yellow">Enable two-factor authentication</a>
+    <a id="loginTwoFactorContinue" class="button" style="margin-top: 12px;">Continue</a>
+  </div>
+</div>
+
+  <div class="auth-social" id="authSocialBlock">
+    <ul class="auth-social-list" id="PopupLoginsocialList">
+      <li><a onclick="window.fpush({name: 'MQL5+Popup+Login+Google', unit: 'section', value: 'Articles'}); " href="https://www.mql5.com/en/auth_oauth2?provider=Google&amp;amp;return=popup" class="auth-soc-button qa-google-button auth-soc-button_google" rel="nofollow">Log in With Google</a></li>
+    </ul>
+  </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script id="popupSection" type="application/json">{"section": "Articles"}</script>
+<script id="popupTranslate" data-type="translate" type="application/json">
+{
+  "popup":
+  {
+  "EmailTitle" : "The password has been sent to {0}",
+  "EmailDescription" : "Log in using the obtained password and the login specified during the registration",
+  "SubmitButtonText" : "Activate account",
+  "RegistrationTip" : "If you have not received the password email, check the spam folder or &lt;a href={0}&gt;repeat the registration&lt;/a&gt;"
+  }
+}
+</script>
+
+    
+
+    
+
+
+            </div>
+          </div>
+    </div>
+  </main>
+
+
+<footer class="footer desktop" id="footer">
+  <ul class="links links_desktop">
+      <li id="navFooterCommunity">
+        <nav aria-label="Website: Sections">
+          <ul>
+            <li><a href="https://web.metatrader.app/terminal?mode=demo&amp;lang=en" target="_blank" rel="nofollow noopener" data-fz-event="MQL5+Footer+Trading">Online trading / WebTerminal</a></li>
+            <li><a href="/en/code" data-fz-event="MQL5+Footer+CodeBase">Free technical indicators and robots</a></li>
+            <li><a href="/en/articles" data-fz-event="MQL5+Footer+Articles">Articles about programming and trading</a></li>
+            <li><a href="/en/job" data-fz-event="MQL5+Footer+Job">Order trading robots on the Freelance</a></li>
+            <li><a href="/en/market" data-fz-event="MQL5+Footer+Market">Market of Expert Advisors and applications	</a></li>
+            <li><a href="/en/signals" data-fz-event="MQL5+Footer+Signals">Follow forex signals</a></li>
+            <li><a href="/en/vps" data-fz-event="MQL5+Footer+VPS">Low latency forex VPS</a></li>
+            <li><a href="/en/forum" data-fz-event="MQL5+Footer+Forum">Traders forum</a></li>
+            <li><a href="/en/blogs" data-fz-event="MQL5+Footer+Blogs">Trading blogs</a></li>
+            <li><a rel="nofollow" href="/en/charts" data-fz-event="MQL5+Footer+Charts">Charts</a></li>
+            <li><a href="/en/widgets" data-fz-event="MQL5+Footer+Widgets">Free widgets</a></li>
+          </ul>
+        </nav>
+      </li>
+      <li id="navFooterMt5">
+        <nav aria-label="MetaTrader 5 Trade Platform">
+          <ul>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com" data-fz-event="MQL5+Footer+MetaTrader+5"><span class="nobr">MetaTrader 5</span> Trading Platform</a></li>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/releasenotes" data-fz-event="MQL5+Footer+MetaTrader+5"><span class="nobr">MetaTrader 5</span> latest updates</a></li>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/news" data-fz-event="MQL5+Footer+MetaTrader+5">News, implementations and technology</a></li>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/terminal/help" data-fz-event="MQL5+Footer+MetaTrader+5"><span class="nobr">MetaTrader 5</span> User Manual</a></li>
+            <li><a href="/en/docs" data-fz-event="MQL5+Footer+Docs">MQL5 language of trading strategies</a></li>
+            <li><a rel="nofollow noopener" href="https://cloud.mql5.com" data-fz-event="MQL5+Footer+Cloud">MQL5 Cloud Network</a></li>
+            <li><a rel="noopener" href="https://forge.mql5.io/?lang=en" data-fz-event="MQL5+Footer+Forge" target="_blank">MQL5 Algo Forge</a></li>
+              <li><a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/mt5setup.exe?utm_source=www.mql5.com&amp;utm_campaign=download" data-fz-event="MetaTrader+5+Desktop+Download+Footer">Download <span class="nobr">MetaTrader 5</span></a></li>
+              <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/terminal/help/start_advanced/installation" data-fz-event="MQL5+Footer+MetaTrader+5">Install Platform</a></li>
+              <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/terminal/help/start_advanced/deinstallation" data-fz-event="MQL5+Footer+MetaTrader+5">Uninstall Platform</a></li>
+          </ul>
+        </nav>
+
+      </li>
+    <li id="navFooterWebsite">
+        <nav aria-label="Website">
+          <ul>
+            <li><a rel="nofollow" href="/en/about" data-fz-event="MQL5+Footer+About">About</a></li>
+              <li><a href="/en/wall" data-fz-event="MQL5+Footer+Wall">Timeline</a></li>
+            <li><a rel="nofollow" href="/en/about/terms" data-fz-event="MQL5+Footer+About">Terms and Conditions</a></li>
+            <li><a rel="nofollow" href="/en/about/autopayments" data-fz-event="MQL5+Footer+About">Recurring Payment Agreement</a></li>
+            <li><a rel="nofollow" href="/en/about/agencyagreement" data-fz-event="MQL5+Footer+About">Agency Agreement – Offer</a></li>
+            <li><a rel="nofollow" href="/en/about/privacy" data-fz-event="MQL5+Footer+About">Privacy and Data Protection Policy</a></li>
+            <li><a href="/en/data-sources" data-fz-event="MQL5+Footer+DataSources">Data Sources</a></li>
+            <li><a rel="nofollow" href="/en/about/cookies" data-fz-event="MQL5+Footer+About">Cookies Policy</a></li>
+            <li>
+                <a rel="nofollow" href="/en/contact" data-fz-event="MQL5+Footer+Contacts">Contacts and requests</a>
+            </li>
+          </ul>
+        </nav>
+    </li>
+
+      <li>
+        <div class="footer__products">
+          <div class="footer__product">
+            <a target="_blank" rel="nofollow noopener" href="https://www.metatrader5.com" class="footer__product-name">MetaTrader 5</a>
+            <div class="footer__product-links">
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/mt5setup.exe?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon windows" data-fz-event="MetaTrader+5+Desktop+Download+Footer"><div class="footer__product-link-hint footer__product-link-hint-short">Download MetaTrader 5 for Windows</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/MetaTrader5.pkg.zip?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon macos" data-fz-event="MetaTrader+5+Desktop+Download+Footer"><div class="footer__product-link-hint footer__product-link-hint-short">Download MetaTrader 5 for MacOS</div></a>
+            <a rel="nofollow noopener" href="https://www.mql5.com/en/articles/625?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon linux" data-fz-event="MetaTrader+5+Desktop+Download+Footer"><div class="footer__product-link-hint footer__product-link-hint-short">Download MetaTrader 5 for Linux</div></a>
+            <a rel="nofollow noopener" href="https://web.metatrader.app/terminal?mode=demo&amp;lang=en" class="icon web"><div class="footer__product-link-hint footer__product-link-hint-short">Open MetaTrader 5 WebTerminal</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mt5/ios?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes&amp;hl=en" class="icon ios" data-fz-event="MetaTrader+5+iOS+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/c1c4cd9cbd49e9f1.png)">Scan to install from App Store</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mt5/android?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes&amp;hl=en" class="icon android" data-fz-event="MetaTrader+5+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/afc2bab603ef62e7.png)">Scan to install from Google Play</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mt5/android/app-gallery?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes" class="icon huawei" data-fz-event="MetaTrader+5+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/bd10f45a3d61c404.png)">Scan to install from Huawei AppGallery</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.software.corp/mt5/metatrader5.apk?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes" class="icon ark" data-fz-event="MetaTrader+5+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/253081c4da455e66.png)">Scan to get Android APK file</div></a>
+            </div>
+          </div>
+          <div>
+            <div class="footer__product">
+              <a target="_blank" rel="nofollow noopener" href="https://www.metatrader5.com/en/news/2270" class="footer__product-name">MQL5 Channels</a>
+              <div class="footer__product-links">
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mql5.channels/ios?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon ios" data-fz-event="MQL5+Channels+iOS+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/1b697989dc2445d5.png)">Scan to install from App Store</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mql5.channels/android?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon android" data-fz-event="MQL5+Channels+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/aa3876298bf4b95b.png)">Scan to install from Google Play</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mql5.channels/android/app-gallery?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon huawei" data-fz-event="MQL5+Channels+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/0843a8a2e12f9b78.png)">Scan to install from Huawei AppGallery</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.software.corp/mql5channels/mql5channels.apk?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon ark" data-fz-event="MQL5+Channels+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/21805012f0baa519.png)">Scan to get Android APK file</div></a>
+              </div>
+            </div>
+            <div class="footer__product">
+              <a target="_blank" rel="nofollow noopener" href="https://www.tradays.com/en/download?utm_source=www.mql5.com&amp;utm_campaign=download" data-fz-event="MQL5+Footer+Download+Tradays" class="footer__product-name">Economic Calendar</a>
+              <div class="footer__product-links">
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/tradays/ios?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon ios" data-fz-event="Tradays+iOS+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/93dbd287c43b0f0e.png)">Scan to install from App Store</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/tradays/android?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon android" data-fz-event="Tradays+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/009272874cc05ac8.png)">Scan to install from Google Play</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/tradays/android/app-gallery?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon huawei" data-fz-event="Tradays+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/df384f0c0ea46413.png)">Scan to install from Huawei AppGallery</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.software.corp/tradays/tradays.apk?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon ark" data-fz-event="Tradays+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/fe67645e20910571.png)">Scan to get Android APK file</div></a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer__networks">
+          <a href="https://www.facebook.com/mql5.community/" target="_blank" rel="nofollow" title="Facebook"><i class="icons-networks icons-networks_fb"></i></a>
+          <a href="https://t.me/mql5dev" target="_blank" rel="nofollow" title="Telegram"><i class="icons-networks icons-networks_tg"></i></a>
+          <a href="https://x.com/mql5com" target="_blank" rel="nofollow" title="X (Twitter)"><i class="icons-networks icons-networks_tw"></i></a>
+          <a href="https://www.youtube.com/@MetaQuotesOfficial" target="_blank" rel="nofollow" title="YouTube"><i class="icons-networks icons-networks_yt"></i></a>
+          <a href="https://www.linkedin.com/company/mql5" target="_blank" rel="nofollow" title="LinkedIn"><i class="icons-networks icons-networks_linkedin"></i></a>
+          <span>Subscribe to algotrading news</span>
+        </div>
+  
+        <div class="footer__other">
+          <div class="footer__not-a-broker">Not a broker, no real trading accounts</div>
+          <div class="copyright">35 Dodekanisou str, Germasogeia, 4043,&nbsp;Limassol,&nbsp;Cyprus</div>
+          <div class="copyright">Copyright 2000-2026, <span class="nobr">MetaQuotes Ltd</span></div>
+        </div>
+      </li>
+  </ul>
+</footer>
+
+
+  <div class="shadow-layer" id="layer"></div>
+      
+  
+  <script>
+    mqGlobal.AddOnReady(function () { Mql5Cookie.init('mql5.com','5049974610882193610'); });
+    mqGlobal.AddOnReady(function(){if(!window.Pocket){window.Pocket=new PocketManager();}});mqGlobal.AddOnReady(function(){if(!window.translateManager){window.translateManager=new Translate(undefined,'Error: failed to translate. Please try again later.');}if(document.querySelectorAll){var translateElements=document.querySelectorAll(".translateMenu");if(translateElements){var i=0,count=translateElements.length;for(i;i<count;i++){(function(i){var contentid=dataset(translateElements[i],"contentid"),sourcelang=dataset(translateElements[i],"sourcelang"),targetlang=dataset(translateElements[i],"targetlang"),moduleid=parseInt(dataset(translateElements[i],"moduleid")),typeid=parseInt(dataset(translateElements[i],"typeid")),entityid=parseInt(dataset(translateElements[i],"entityid"));Core.AddHandler(translateElements[i],"mouseover",function(){return translateManager.SetMenu(this,contentid,sourcelang,targetlang,moduleid,typeid,entityid);});})(i);}}}});window.fz("show","wdausxxqrpvhekbwjrjlhqjghyhesrqqau");window.mqGlobal.AddOnLoad(function(){window.fpush('MQL5+Article+Open');Articles.CheckOnScrollDown();});mqGlobal.AddOnReady(function(){window.PopupRegisterquickRegistration=new QuickRegistration('PopupRegister','Popup+Register','Articles');});function validate_username(input){var reg=/^([a-z0-9]){1}([\-._a-z0-9]){1,30}([\-_a-z0-9]){1}$/i,value=input.value,result=true;if(reg.test(value)){result=true;}else{result=false;window.fpush({name:'MQL5+Popup+Register+Invalid+Login',unit:'section',value:'Articles'});}return result;}function validate_email(input){var reg=/^\w+([-+.'']{1,2}\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/i,value=input.value,result=true,length_value=value.length;if(reg.test(value)&&length_value>=1&&length_value<=40){result=true;}else{result=false;window.fpush({name:'MQL5+Popup+Register+Invalid+Email',unit:'section',value:'Articles'});}return result;};mqGlobal.AddOnReady(function(){var username=$('PopupRegisterusername'),email=$('PopupRegisteremail');if(username)username.value='';if(email)email.value='';});mqGlobal.AddOnReady(function(){window.quickLogin=new QuickLogin('Popup+Login','Articles');});mqGlobal.AddOnLoad(function(){window.showLoginRegisterPopupAtEnd();});mqGlobal.AddOnLoad(function(){window.tooltipUserInfo.init();});window.fz("show","bfogggabsofabcpxuzmgaibarmaxasdrj");window.fz("show","vgckrufggwxdtfscpyalmenexmvhljduja");mqGlobal.AddOnReady(function(){window.floatVerticalPanelNode=FloatVerticalPanel('This website uses cookies. Learn more about our <a href="/en/about/cookies">Cookies Policy</a>.','cookie_accept');});mqGlobal.AddOnReady(function(){window.initAddCopyButtonsToCodes('Copy to Clipboard');});
+    if (typeof Attach !== "undefined")
+      Attach.setAcceptFilter(".mq4,.jpeg,.webp,.gif,.mqproj,.txt,.log,.set,.mqh,.sqlite,.ex5,.mp4,.onnx,.webm,.png,.mq5,.ipynb,.mt5,.ex4,.jpg,.py,.csv,.ini,.zip,.tpl,.md,.cl");
+  </script>
+  <div class="b-fixed-mt" id="bFixedMt" style="display: none;">
+    
+  </div>
+  <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "url": "https://www.mql5.com",
+        "logo": "https://c.mql5.com/i/community/logo_mql5-2.png",
+        "sameAs": [
+          "https://www.facebook.com/mql5.community",
+          "https://www.x.com/mql5com",
+          "https://www.youtube.com/user/MetaQuotesOfficial"
+        ]
+      }
+       , 
+{"@context":"https://schema.org","@type":"ItemList","itemListElement":[{"@type":"SiteNavigationElement","position":1,"name":"Forum","description":"Discussions of trading strategies and algorithmic trading. MQL5.community  the largest forex forum","url":"https://www.mql5.com/en/forum","children":[]},{"@type":"SiteNavigationElement","position":2,"name":"Market","description":"MetaTrader Market - a Market of trading robots, indicators, trading books and magazines","url":"https://www.mql5.com/en/market","children":[]},{"@type":"SiteNavigationElement","position":3,"name":"Signals","description":"Social trading, copy trading and account monitoring with MetaTrader - Trading Signals on MQL5.com","url":"https://www.mql5.com/en/signals","children":[]},{"@type":"SiteNavigationElement","position":4,"name":"Freelance","description":"Order trading robots, technical indicators and algorithmic trading applications. Forex jobs. Freelance on MQL5.com. Hire MetaTrader experts and specialists","url":"https://www.mql5.com/en/job","children":[]},{"@type":"SiteNavigationElement","position":5,"name":"Quotes","description":"","url":"https://www.mql5.com/en/quotes/overview","children":[]},{"@type":"SiteNavigationElement","position":6,"name":"MetaTrader","description":"","url":"https://www.metatrader.com","children":[]},{"@type":"SiteNavigationElement","position":7,"name":"WebTerminal","description":"WebTerminal for the MetaTrader trading platform. Online forex trading.","url":"https://web.metatrader.app/terminal?mode=demo","children":[]},{"@type":"SiteNavigationElement","position":8,"name":"Calendar","description":"","url":"https://www.mql5.com/en/economic-calendar","children":[]},{"@type":"SiteNavigationElement","position":9,"name":"VPS","description":"","url":"https://www.mql5.com/en/vps","children":[]},{"@type":"SiteNavigationElement","position":10,"name":"Articles","description":"","url":"https://www.mql5.com/en/articles","children":[]},{"@type":"SiteNavigationElement","position":11,"name":"CodeBase","description":"Download trading robots, technical indicators and scripts with source code - MQL5 Code Base for MetaTrader 5","url":"https://www.mql5.com/en/code","children":[]},{"@type":"SiteNavigationElement","position":12,"name":"Algo Forge","description":"","url":"https://forge.mql5.io","children":[]},{"@type":"SiteNavigationElement","position":13,"name":"Documentation","description":"MetaQuotes Language 5 (MQL5) Reference - Documentation on MQL5.com","url":"https://www.mql5.com/en/docs","children":[]}]}    
+,
+{"@context":"https://schema.org","@type":"TechArticle","mainEntityOfPage":{"@type":"WebPage","@id":"https://www.mql5.com/en/articles/20228"},"headline":"Neural Networks in Trading: Temporal Motion Aggregation (Conclusion)","image":["https://c.mql5.com/2/179/2969760514603__2.png","https://c.mql5.com/2/180/4493651559798.png","https://c.mql5.com/2/180/4918946021434.png"],"datePublished":"2026-11-02T09:30:22+00:00Z","dateModified":"2026-11-02T08:52:03+00:00Z","author":{"@type":"Person","name":"Dmitriy Gizlyk","url":"https://www.mql5.com/en/users/dng"},"editor":{"@type":"Organization","name":"MetaQuotes","url":"https://www.mql5.com/en/users/metaquotes","address":{"@type":"PostalAddress","addressCountry":"CY"}},"publisher":{"@type":"Organization","name":"MQL5 Community","url":"https://www.mql5.com","logo":{"@type":"ImageObject","url":"https://c.mql5.com/i/community/logo_mql5-2.png"}},"description":"Introducing the TMA framework  an intelligent system capable of forecasting market dynamics with sufficient accuracy. In this article, we have integrated all the components into a single architecture and transformed it into a fully-fledged trading agent that analyzes the market and makes decisions in real time."}
+,
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"item":"https://www.mql5.com/en/articles","name":"Articles"},{"@type":"ListItem","position":2,"item":"https://www.mql5.com/en/articles/mt5","name":"MetaTrader 5"},{"@type":"ListItem","position":3,"item":"https://www.mql5.com/en/articles/mt5/trading_systems","name":"Trading systems"}]}
+
+    ]
+  </script>
+
+
+<div class="float-vertical-panel">This website uses cookies. Learn more about our <a href="/en/about/cookies">Cookies Policy</a>.<span class="float-vertical-panel__cross"></span></div></body></html>
