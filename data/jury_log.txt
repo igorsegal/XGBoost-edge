@@ -1,0 +1,7 @@
+2026-11-23 17:50:11 [JURY] в очереди: 35
+2026-11-23 17:50:12 [JURY] сбой на https://www.mql5.com/en/articles/13942: 'str' object has no attribute 'choices' - останется в очереди
+2026-11-23 17:50:12 [JURY] сбой на https://www.mql5.com/en/articles/20153: 'str' object has no attribute 'choices' - останется в очереди
+2026-11-23 17:50:12 [JURY] сбой на https://www.mql5.com/en/articles/20228: 'str' object has no attribute 'choices' - останется в очереди
+2026-11-23 17:50:12 [JURY] сбой на https://www.mql5.com/en/articles/20322: 'str' object has no attribute 'choices' - останется в очереди
+2026-11-23 17:50:12 [JURY] сбой на https://www.mql5.com/en/articles/20404: 'str' object has no attribute 'choices' - останется в очереди
+2026-11-23 17:50:12 [JURY] обработано: 0

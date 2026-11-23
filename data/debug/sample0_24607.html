@@ -1,0 +1,1647 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="x-dns-prefetch-control" content="on">
+  <link rel="dns-prefetch" href="https://c.mql5.com">
+  <meta name="robots" content="max-snippet:250,max-image-preview:large">
+  <meta name="description" content="This article implements a path-dependent volatility model in MQL5 that keeps the sign of returns. The engine uses two-timescale EWMA kernels (four accumulators) to form activity and trend features, with closed-form coefficients and a lightweight kernel search. We provide a calibration workflow and an indicator that plots the decomposition, then test out of sample against EWMA and GARCH on multiple symbols. Results show clear gains on equity indicators and minimal gains on FX.">
+  <meta property="og:url" content="https://www.mql5.com/en/articles/24607">
+  <meta property="og:title" content="Beyond Squared Returns: Path-Dependent Volatility">
+  <meta property="og:description" content="This article implements a path-dependent volatility model in MQL5 that keeps the sign of returns. The engine uses two-timescale EWMA kernels (four accumulators) to form activity and trend features, with closed-form coefficients and a lightweight kernel search. We provide a calibration workflow and an indicator that plots the decomposition, then test out of sample against EWMA and GARCH on multiple symbols. Results show clear gains on equity indicators and minimal gains on FX.">
+  <meta property="og:image" content="https://c.mql5.com/2/274/24607-beyond-squared-returns-path-dependent-volatility_1200x628.jpg">
+  <meta property="og:image:secure_url" content="https://c.mql5.com/2/274/24607-beyond-squared-returns-path-dependent-volatility_1200x628.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:type" content="article">
+  <meta property="article:published_time" content="2026-10-26T14:43:27.0000000Z">
+  <meta property="article:author" content="https://www.mql5.com/en/users/ayantrader">
+  <meta property="article:section" content="MetaTrader 5">
+  <meta property="article:tag" content="Indicators">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@mql5com">
+  <meta name="twitter:image" content="https://c.mql5.com/2/274/24607-beyond-squared-returns-path-dependent-volatility_1200x628.jpg">
+  <meta name="theme-color" content="#4a76b8">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="https://www.mql5.com/manifest.json">
+  <link rel="apple-touch-icon" sizes="57x57" href="https://www.mql5.com/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://www.mql5.com/apple-touch-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="https://www.mql5.com/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="https://www.mql5.com/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="https://www.mql5.com/apple-touch-icon-167x167.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://www.mql5.com/apple-touch-icon-180x180.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="https://www.mql5.com/apple-touch-icon-192x192.png">
+  <link rel="icon" sizes="192x192" href="https://www.mql5.com/android-touch-icon-192x192.png">
+  <link rel="icon" sizes="128x128" href="https://www.mql5.com/android-touch-icon-128x128.png">
+  <link rel="shortcut icon" href="https://c.mql5.com/i/favicon4.ico">
+  <link rel="describedby" href="https://www.mql5.com/llms.txt" type="text/markdown">
+  <meta name="msapplication-config" content="none">
+  <meta name="referrer" content="no-referrer-when-downgrade">
+  <meta property="qc:admins" content="36367170677651456375">
+  <meta property="wb:webmaster" content="073d7690269bcd81">
+  <link href="https://c.mql5.com/styles/core.014c88f485403b7cba7e3a47af5df221.css" type="text/css" rel="stylesheet" media="all">
+  <link href="https://c.mql5.com/styles/all.a5418197f583e92c77667d6e88d3bfa3.css" type="text/css" rel="stylesheet" media="all">
+  <link href="https://c.mql5.com/styles/articles.aa7cb07010062a9d4f26dbad7eb36197.css" type="text/css" rel="stylesheet" media="all">
+  <link href="/en/articles/rss" rel="alternate" type="application/rss+xml" title="Articles on the development and application of MetaTrader 5 trading robots and technical indicators">
+  <link rel="canonical" href="https://www.mql5.com/en/articles/24607">
+  <link rel="alternate" hreflang="en" href="https://www.mql5.com/en/articles/24607">
+  <title>Beyond Squared Returns: Path-Dependent Volatility - MQL5 Articles</title>
+  <script async="" src="https://www.mql5.com/ff/rq?tz_offset=0&amp;ids=wdausxxqrpvhekbwjrjlhqjghyhesrqqau%2Cbfogggabsofabcpxuzmgaibarmaxasdrj%2Cvgckrufggwxdtfscpyalmenexmvhljduja&amp;ssn=1795456024436462276&amp;ssn_dr=8&amp;ssn_sr=0&amp;fv_date=1795456024&amp;ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F24607&amp;title=Beyond%20Squared%20Returns%3A%20Path-Dependent%20Volatility%20-%20MQL5%20Articles&amp;scr_res=1366x768&amp;ac=179545603245136981&amp;fz_uniq=5049974610882193610&amp;sv=2552"></script><script async="" defer="" src="/ff/core.js"></script><script>
+    (function(a,e,f,g,b,c,d){a[b]||(a.FintezaCoreObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=!0,c.defer=!0,c.src=g,d&&d.parentNode&&d.parentNode.insertBefore(c,d))})
+      (window, document, "script", "/ff/core.js", "fz");
+    window.fz("register", "website", {id: "sqjxkxkswybhifrohpyooonwgbvsfzmayq",trackLinks: true,sendEventsByBeacon: true,});
+  </script>
+  <script>
+    !function(){window.mqGlobal={};var t=!1,n=!1,e=[],o=[],i=[];function d(t){var n;for(n=0;n<t.length;n+=1)t[n]()}function c(){t||(t=!0,d(e),d(o),o=[],e=[])}function a(){c(),n||(n=!0,d(i),i=[])}if(mqGlobal.AddOnReady=function(n,i){t?n(document):i?e.push(n):o.push(n)},mqGlobal.AddOnLoad=function(t){n?t(document):i.push(t)},mqGlobal.AddOnActiveWindowChange=function(t){this._onvisibility||(this._onvisibility=[]),this._onvisibility[this._onvisibility.length]=t},document.addEventListener)document.addEventListener("DOMContentLoaded",c,!1),window.addEventListener("load",a,!1);else if(document.attachEvent&&(document.attachEvent("onreadystatechange",(function(){switch(document.readyState){case"interactive":c();break;case"complete":a()}})),window.attachEvent("onload",a),document.documentElement.doScroll&&window==window.top)){!function n(){if(!t&&document.body)try{document.documentElement.doScroll("left"),c()}catch(t){setTimeout(n,0)}}()}}();
+    mqGlobal.CookieDomain = ".mql5.com";
+    mqGlobal.Language = 'en';
+    mqGlobal.IsMobile = false;
+    mqGlobal.ClearRteStorage = function (e) { if (window.GStorage || (window.GStorage = globalStorage()), window.GStorage.supported) try { var o = e; window.GStorage.getItem("rte_autosave_uid", function (e, t) { t == o && (window.GStorage.removeItem("rte_autosave_text"), window.GStorage.removeItem("rte_autosave_date"), window.GStorage.removeItem("rte_autosave_uid")) }) } catch (e) { } };
+  </script>
+  
+  <script src="https://c.mql5.com/js/all.33b519888d8f16d7894ad5f6e870daa4.js" defer="defer"></script>
+  <script src="https://c.mql5.com/js/vendor.255ec4ae38267278c2823d8c90fea431.js" defer="defer"></script>
+  <script src="https://c.mql5.com/js/articles.c443d16c59e317d536ae7477d0c6f7e6.js" defer="defer"></script>
+<style id="c-nvz9zt">.s-suggestions.c-nvz9zt {position:absolute;left:0;right:0;top:100%;z-index:100;background:#fff;box-shadow:0 2px 6px rgba(0, 0, 0, 0.1);border-top:1px solid #dadada;}</style><style id="c-b8amxo">.copy-code-btn.c-b8amxo {background:#fbf9f5;padding:0;border:0;position:absolute;right:8px;top:8px;}
+@media (hover: hover) and (pointer: fine) {.copy-code-btn.c-b8amxo:hover {cursor:pointer;}.copy-code-btn.c-b8amxo:hover svg path {stroke:#707070;}
+}</style></head>
+<body class="cover" id="cover">
+    <header class="head">
+      <a href="https://www.mql5.com" class="head__logo" title="MQL5 - Language of trade strategies built-in the MetaTrader 5 client terminal" aria-label="MQL5 - Language of trade strategies built-in the MetaTrader 5 client terminal"></a>
+        <div class="head__content">
+<nav class="main-menu" id="mainmenu" aria-label="Sections">
+  <ul class="main-menu__top-level" id="menuTopLevel">
+      <li><a href="/en/forum" data-fz-event="MQL5+Menu+Forum">Forum</a></li>
+      <li><a href="/en/market" data-fz-event="MQL5+Menu+Market">Market</a></li>
+      <li><a href="/en/signals" data-fz-event="MQL5+Menu+Signals">Signals</a></li>
+      <li><a href="/en/job" data-fz-event="MQL5+Menu+Job">Freelance</a></li>
+      <li><a href="/en/vps" data-fz-event="MQL5+Menu+VPS">VPS</a></li>
+      <li><a href="/en/quotes/overview" data-fz-event="MQL5+Menu+Overview">Quotes</a></li>
+      <li><a href="https://www.metatrader.com" target="_blank" rel="noopener" data-fz-event="MQL5+Menu+MetaTrader">MetaTrader</a></li>
+        </ul>
+        <ul class="main-menu__second-level" id="menuSecondLevel">
+      <li class="main-menu__selected"><a href="/en/articles" data-fz-event="MQL5+Menu+Articles"> <img src="https://c.mql5.com/i/menu/icon-articles4.svg" alt="" width="16" height="16"> Articles</a></li>
+      <li><a href="/en/code" data-fz-event="MQL5+Menu+CodeBase"> <img src="https://c.mql5.com/i/menu/icon-code4.svg" alt="" width="16" height="16"> CodeBase</a></li>
+      <li><a href="https://forge.mql5.io/?lang=en" target="_blank" rel="noopener" data-fz-event="MQL5+Menu+AlgoForge"> <img src="https://c.mql5.com/i/menu/icon-algoforge4.svg" alt="" width="16" height="16"> Algo Forge</a></li>
+      <li><a href="/en/docs" data-fz-event="MQL5+Menu+Docs"> <img src="https://c.mql5.com/i/menu/icon-docs4.svg" alt="" width="16" height="16"> Documentation</a></li>
+      <li><a href="/en/book" data-fz-event="MQL5+Menu+Book"> <img src="https://c.mql5.com/i/menu/icon-book4.svg" alt="" width="16" height="16"> AlgoBook</a></li>
+      <li><a href="/en/neurobook" data-fz-event="MQL5+Menu+Neurobook"> <img src="https://c.mql5.com/i/menu/icon-neurobook4.svg" alt="" width="16" height="16"> NeuroBook</a></li>
+      <li><a href="/en/economic-calendar" data-fz-event="MQL5+Menu+Economic+Calendar"> <img src="https://c.mql5.com/i/menu/icon-economic-calendar4.svg" alt="" width="16" height="16"> Calendar</a></li>
+      <li><a href="https://web.metatrader.app/terminal?mode=demo&amp;lang=en" target="_blank" rel="nofollow noopener" data-fz-event="MQL5+Menu+Trading"> <img src="https://c.mql5.com/i/menu/icon-trading4.svg" alt="" width="16" height="16"> WebTerminal</a></li>
+      <li><a href="/en/tools" data-fz-event="MQL5+Menu+Tools"> <img src="https://c.mql5.com/i/menu/icon-tools4.svg" alt="" width="16" height="16"> Tools</a></li>
+
+
+    <li class="main-menu__mobile"><a href="/en/about">About</a></li>
+
+          <li class="main-menu__second-tools"><a rel="noopener" href="/en/vps" title="Reliable trader hosting for uninterrupted operation of robots and instant copying of trades" class="button-mt" data-vars-fz="Start+VPS+Trial+Submenu"><img width="18" height="18" src="https://c.mql5.com/i/sidebar/vpstrial2.svg" alt="" loading="lazy">Start VPS Trial</a></li>
+  </ul>
+</nav>
+<div class="main-menu__active">
+  <a id="mainMenuSelected" href="#">
+    <span class="main-menu__primary">Articles</span><span class="main-menu__secondary">Sections</span>
+  </a>
+</div>
+  <form action="https://www.mql5.com/en/search" onsubmit="return false;" autocomplete="off" id="headerSearchForm" class="header-search" method="post">
+    <button type="button" id="headerSearchButton" title="Search" aria-label="Search" class="header-search__button"></button>
+    <div class="header-search__input">
+      <input name="keyword" type="text" enterkeyhint="search" title="Enter search text" placeholder="Search" id="headerSearchKeyword" autocomplete="off">
+      <label for="headerSearchKeyword" class="header-search__placeholder">Type <span>/</span> to search:  @user, $symbol, ...</label>
+      <button type="submit" id="headerSearchSubmit" aria-label="Search" class="header-search__submit"></button>
+    <!----></div>
+    <button type="button" id="headerSearchClean" title="Close" aria-label="Close" class="header-search__clean"></button>
+  </form>
+  <script>mqGlobal.AddOnReady(function(){window.initHeaderSearch('', 'https://www.mql5.com/en/search');});</script>
+  <script>mqGlobal.AddOnReady(function(){window.initSuggestions("headerSearchKeyword","en","https://search.mql5.com/api/query","https://www.mql5.com/en/users_search/suggestion");});</script>
+          <input class="blurHandler" id="mainMenuBlurHandler" type="checkbox">
+        </div>
+        <div class="head__toolbar" id="headerToolbar">
+<div class="container loginRegister">
+  <nav aria-label="Account">
+    <ul id="loginRegisterButtons">
+      <li><a class="login" title="Please sign in. OpenID supported" href="/en/auth_login" rel="nofollow" data-fz-event="MQL5+Menu+Siginin">Log in</a></li>
+      <li><a class="registration en" title="Please register" href="/en/auth_register" rel="nofollow" data-fz-event="MQL5+Menu+Register" onclick="window.fpush('MQL5+Button+Click');">Create an account</a></li>
+    </ul>
+  </nav>
+</div>
+          <div class="container">
+            <div class="toggle-button" id="sidebarToggleButton">
+              <i></i>
+            </div>
+          </div>
+
+          <div class="group-menu" id="groupMenu">
+            <div class="container lang-menu-container">
+              <div id="langMenuContainer" class="lang-menu">
+                <input class="blurHandler" id="langmenuBlurHandler" type="checkbox">
+                <nav aria-label="Language">
+                  <ul class="lang-menu__list" id="langmenu">
+  <li class="lang-menu__list-item lang-menu__list-item_selected"><a href="/en/articles" aria-label="English (English)"><i class="icons-languages icons-languages_en"></i><span>English</span></a></li>
+  <li class="lang-menu__list-item"><a href="/ru/articles" aria-label="Русский (Russian)"><i class="icons-languages icons-languages_ru"></i><span>Русский</span></a></li>
+  <li class="lang-menu__list-item"><a href="/zh/articles" aria-label="中文 (Chinese)"><i class="icons-languages icons-languages_zh"></i><span>中文</span></a></li>
+  <li class="lang-menu__list-item"><a href="/es/articles" aria-label="Español (Spanish)"><i class="icons-languages icons-languages_es"></i><span>Español</span></a></li>
+  <li class="lang-menu__list-item"><a href="/pt/articles" aria-label="Português (Portuguese)"><i class="icons-languages icons-languages_pt"></i><span>Português</span></a></li>
+  <li class="lang-menu__list-item"><a href="/ja/articles" aria-label="日本語 (Japanese)"><i class="icons-languages icons-languages_ja"></i><span>日本語</span></a></li>
+  <li class="lang-menu__list-item"><a href="/de/articles" aria-label="Deutsch (German)"><i class="icons-languages icons-languages_de"></i><span>Deutsch</span></a></li>
+  <li class="lang-menu__list-item"><a href="/ko/articles" aria-label="한국어 (Korean)"><i class="icons-languages icons-languages_ko"></i><span>한국어</span></a></li>
+  <li class="lang-menu__list-item"><a href="/fr/articles" aria-label="Français (French)"><i class="icons-languages icons-languages_fr"></i><span>Français</span></a></li>
+  <li class="lang-menu__list-item"><a href="/it/articles" aria-label="Italiano (Italian)"><i class="icons-languages icons-languages_it"></i><span>Italiano</span></a></li>
+  <li class="lang-menu__list-item"><a href="/tr/articles" aria-label="Türkçe (Turkish)"><i class="icons-languages icons-languages_tr"></i><span>Türkçe</span></a></li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
+    </header>
+  <main class="site-main">
+<div id="bfogggabsofabcpxuzmgaibarmaxasdrj" class="rclnd1pm17phgt3ha ghky8ic0v"><iframe width="800" height="80" frameborder="0" style="vertical-align: top; max-width: 100% !important; display: block;" scrolling="no" src="https://www.mql5.com/ff/sh/a27a2kwmtszm2m6kz2/index.html?link=https%3A%2F%2Fwww.metatrader5.com%2Fen%2Fnews%2F2270%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay%26utm_term%3Dmessenger.for.traders%26utm_content%3Ddownload.app%26utm_campaign%3D0524.mql5.channels&amp;a=vpcudokyepxfrcxrpjcktglhsjlemtza&amp;s=f08ad2c1289e29bd5630f1ef977aef297d5cdbfcb686faed4a4b0f1e276d3c4a&amp;v=1&amp;w=800&amp;h=80&amp;r=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F24607&amp;host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&amp;id=bfogggabsofabcpxuzmgaibarmaxasdrj&amp;fz_uniq=5049974610882193610&amp;custom="></iframe></div>    <div class="body" id="bodyContent">
+
+  <div id="left-sidebar-selector" class="left-sidebar__selector left-sidebar__selector_padding">
+    <div class="left-sidebar__title">
+MetaTrader 5 /     Indicators
+    </div>
+    <i class="icons-ux icons-ux_arrow-down-black"></i>
+  </div>
+          <div class="articles-container block-with-sidebar">
+            <aside class="left-sidebar left-sidebar_270" id="left-sidebar">
+              
+
+    <ul class="tree-menu-ul">
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/examples">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/examples.svg" alt="" loading="lazy">
+            Examples
+          </a>
+            <ul class="tree-menu__list tree-menu__list_nested">
+                <li class="tree-menu__item">
+                  <a class="tree-menu__link" href="/en/articles/examples_indicators">
+                      <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/examples_indicators.svg" alt="" loading="lazy">
+                    Indicators
+                  </a>
+                </li>
+                <li class="tree-menu__item">
+                  <a class="tree-menu__link" href="/en/articles/examples_experts">
+                      <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/examples_experts.svg" alt="" loading="lazy">
+                    Experts
+                  </a>
+                </li>
+            </ul>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/strategy_tester">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/strategy_tester.svg" alt="" loading="lazy">
+            Tester
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/trading">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/trading.svg" alt="" loading="lazy">
+            Trading
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/trading_systems">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/trading_systems.svg" alt="" loading="lazy">
+            Trading systems
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/integration">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/integration.svg" alt="" loading="lazy">
+            Integration
+          </a>
+        </li>
+        <li class="tree-menu__item tree-menu__item_selected">
+          <a class="tree-menu__link" href="/en/articles/indicators">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/indicator.svg" alt="" loading="lazy">
+            Indicators
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/expert_advisors">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/expert.svg" alt="" loading="lazy">
+            Expert Advisors
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/statistics">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/statistics.svg" alt="" loading="lazy">
+            Statistics and analysis
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/machine_learning">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/machine_learning.svg" alt="" loading="lazy">
+            Machine learning
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/interviews">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/interviews.svg" alt="" loading="lazy">
+            Interviews
+          </a>
+        </li>
+    </ul>
+  
+
+    <div class="hints-panel">
+      <div class="hints-panel__item">
+        <i class="icons-hints icons-hints_like"></i>
+        <div class="hints-panel__content">
+          Do you like the article?<br>
+          Share it with others —<br>post a <a href="https://www.mql5.com/en/articles/24607" target="_blank">link</a> to it!
+        </div>
+      </div>
+
+      <div class="hints-panel__item">
+        <i class="icons-hints icons-hints_fb-square icons-hints_24px"></i><div class="hints-panel__content">
+Find us on <a href="https://www.facebook.com/mql5.community/" target="_blank" rel="nofollow">Facebook</a>!<br> Join our fan page</div>
+      </div>
+
+      <div class="hints-panel__item">
+        <i class="icons-hints icons-hints_mt-5"></i>
+        <div class="hints-panel__content">
+          Use new possibilities of <a href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/mt5setup.exe?utm_source=www.mql5.com&amp;utm_campaign=download" data-fz-event="MetaTrader+5+Desktop+Download+Article" rel="nofollow sponsored noopener noreferrer">MetaTrader 5</a>
+        </div>
+      </div>
+    </div>
+<div id="vgckrufggwxdtfscpyalmenexmvhljduja" class="rnbn5s4ly03dyhm81 ghky8ic0v"><a target="_blank" href="https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fsignals%2Fmt5%2Fpage1%3Fpreset%3D2%26utm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.left.margin%26utm_term%3Dmax.profit.signals%26utm_content%3Dsubscribe.signal%26utm_campaign%3D0622.MQL5.com.Internal&amp;a=vssuvpfwyzqfbryvztaxywiganfivxlp&amp;s=61c6319c1d668ed85e4c8b0e8d7a12232938067324200ac302ef60b4e80a064c&amp;v=1&amp;host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&amp;id=vgckrufggwxdtfscpyalmenexmvhljduja&amp;uid=gmunhsomobdrpalslrvkajbjacwnhfvt&amp;ssn=1795456024436462276&amp;ssn_dr=8&amp;ssn_sr=0&amp;fv_date=1795456024&amp;ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F24607&amp;title=Beyond%20Squared%20Returns%3A%20Path-Dependent%20Volatility%20-%20MQL5%20Articles&amp;scr_res=1366x768&amp;ac=179545603247231088&amp;fz_uniq=5049974610882193610&amp;sv=2552"><img src="https://www.mql5.com/ff/si/ppjc817qdk6w4qpn82.png" width="220" style="width: 220px; overflow: hidden; vertical-align: top; height: auto; border: 0px;" height="400"></a></div>      <div class="similar-author-articles ui">
+        <h4 class="similar-author-articles__title">Similar articles</h4>
+        <ul class="similar-author-articles__list">
+            <li>
+              <a href="/en/articles/23548" data-fz-event="MQL5+Article+Similar+Article">Path Signatures for Lead-Lag Detection</a>
+            </li>
+            <li>
+              <a href="/en/articles/23821" data-fz-event="MQL5+Article+Similar+Article">Self-Exciting Markets: Building a Hawkes Process from Scratch</a>
+            </li>
+            <li>
+              <a href="/en/articles/22258" data-fz-event="MQL5+Article+Similar+Article">Building Volatility Models in MQL5 (Part II): Implementing GJR-GARCH and TARCH in MQL5</a>
+            </li>
+            <li>
+              <a href="/en/articles/24469" data-fz-event="MQL5+Article+Similar+Article">MetaTrader 5 Machine Learning Blueprint (Part 24): Sequence Risk</a>
+            </li>
+            <li>
+              <a href="/en/articles/22521" data-fz-event="MQL5+Article+Similar+Article">Beyond GARCH (Part VI): Fractional Brownian Motion And The Multiplicative Cascade in MQL5</a>
+            </li>
+        </ul>
+      </div>
+    <div class="freelance-hint">
+      <img src="https://c.mql5.com/i/articles/icon_freelance.svg" width="24" height="24" alt="" loading="lazy">
+      <div class="freelance-hint__text">
+        Use the ideas from this article<br>to order your own robot<br>on Freelance
+      </div>
+        <a target="_blank" class="button button_blue-gray-border" title="Go to Freelance" href="/en/job/new" data-fz-event="MQL5+Article+New+Job">Go to Freelance</a>
+    </div>
+
+            </aside>
+            <div class="content-with-sidebar articles-content splashed">
+              
+
+
+<article>
+  <header class="article-header">
+    <section class="article-tools-panel">
+        
+      <div class="article-tools-panel__item">
+        <a href="#pocket" title="Pocket allows you to insert a complete content description to the appropriate comment" aria-label="to pocket" onclick="return Pocket.Add(this,'en',2,1,24607);" class="article-tools-panel__rounded">
+          <i class="article-pocket-icon"></i>
+        </a>
+      </div>
+      <div class="article-tools-panel__item">
+        <a href="/en/articles/24607?print=" target="_blank" class="article-tools-panel__rounded" rel="nofollow" title="Printer friendly version" aria-label="Printer friendly version">
+          <i class="article-print-icon"></i>
+        </a>
+      </div>
+
+    </section>
+    <section class="article-header__image-box" style="background-color: rgb(166,169,169)">
+        <img class="article-header__image-preview" loading="lazy" width="32" height="16" alt="preview" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAsICAoIBwsKCQoNDAsNERwSEQ8PESIZGhQcKSQrKigkJyctMkA3LTA9MCcnOEw5PUNFSElIKzZPVU5GVEBHSEX/2wBDAQwNDREPESESEiFFLicuRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUX/wAARCAAQACADASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAAAwQF/8QAIRAAAgEEAgIDAAAAAAAAAAAAAQIAAwQSIRExBWETcYH/xAAWAQEBAQAAAAAAAAAAAAAAAAADBAX/xAAYEQADAQEAAAAAAAAAAAAAAAAAAQIRIf/aAAwDAQACEQMRAD8A3fia22hb6ERL9scRyG9iK1TLuS1adNt9GBCcse2qQjX9wvREJvJ1+dhvwQlDDWXI9xlw42JfNrOoz6it4z//2Q==">
+      <div class="article-header__gradient" style="background: linear-gradient(90deg, rgba(166,169,169, 1) 0%, rgba(166,169,169, 0.72) 8.31%, rgba(166,169,169, 0) 17.1%), linear-gradient(270deg, rgba(166,169,169, 1) 0%, rgba(166,169,169, 0.72) 8.06%, rgba(166,169,169, 0) 16.59%), linear-gradient(0deg, rgba(166,169,169, 1) 8.26%, rgba(166,169,169, 0.8) 65%, rgba(166,169,169, 0) 100%);"></div>
+        <picture>
+          <source srcset="https://c.mql5.com/2/274/24607-beyond-squared-returns-path-dependent-volatility_600x314.jpg, https://c.mql5.com/2/274/24607-beyond-squared-returns-path-dependent-volatility_1200x628.jpg 2x" media="(min-width:700px)">
+          <img class="article-header__image" loading="lazy" width="600" height="314" srcset="https://c.mql5.com/2/274/24607-beyond-squared-returns-path-dependent-volatility_300x157.jpg, https://c.mql5.com/2/274/24607-beyond-squared-returns-path-dependent-volatility_600x314.jpg 2x" src="https://c.mql5.com/2/274/24607-beyond-squared-returns-path-dependent-volatility_600x314.jpg" alt="Beyond Squared Returns: Path-Dependent Volatility" onerror="this.style.display='none';">
+        </picture>
+    </section>
+    <section class="article-header__content">
+      <h1>Beyond Squared Returns: Path-Dependent Volatility</h1>
+      <div class="article-header__info">
+        <a href="/en/articles/mt5">MetaTrader 5</a>
+          —
+          <a href="/en/articles/mt5/indicators">Indicators</a>
+        | <time datetime="2026-10-26T14:43Z" title="2026.10.26 14:43" datetime-type="datetime">26 October 2026 at 14:43</time>
+      </div>
+      <div class="article-header__indicators">
+        <span title="Views">
+          <img src="https://c.mql5.com/i/icons.svg#views-usage" width="20" height="20" alt="">
+          937
+        </span>
+        
+          <a title="Comments" href="/en/forum/519232">
+            <img src="https://c.mql5.com/i/icons.svg#comments-usage" width="20" height="20" alt="">
+            0
+          </a>
+      </div>
+      <div class="article-header__author">
+          <div class="article-header__avatar">
+            <img src="https://c.mql5.com/avatar/2026/1/69658e59-c4ec.png" srcset="https://c.mql5.com/avatar/2026/1/69658e59-c4ec_big.png 2x" data-user-login="ayantrader" title="Muhammad Minhas Qamar" alt="Muhammad Minhas Qamar" loading="lazy" width="60" height="60">
+          </div>
+<a class="author" href="/en/users/ayantrader" data-user-login="ayantrader">Muhammad Minhas Qamar</a>      </div>
+    </section>
+  </header>
+
+    <div class="content">
+      <div class="inner formatted-content">
+        <h3>Introduction</h3> <p>Open any chart and put a volatility measure on it: an ATR, a rolling standard deviation, a GARCH estimate from one of the econometric libraries published here. Whichever you pick, you get one line that rises when the market moves and falls when it is quiet.</p> <p>Now ask that line a question it cannot answer. The reading is high: is the market selling off in a straight line, or thrashing sideways across the same range for the third day? Those are only two of the ways a market can be volatile, alongside gaps, news shocks and reversals, but they demand opposite behaviour from you: one punishes fading, the other punishes chasing breakouts. Your volatility indicator prints the same number for both.</p> <p>This is structural, not a defect of any implementation. A conditional-variance model conditions today's variance on <b>past squared returns</b>, and squaring destroys the sign of the path: a week that fell and a week that rose look the same once the data reaches the model. The asymmetric extensions let the sign back in, as the next section shows, but only through the variance's own memory, never as a memory of the <i>path's</i> direction.</p> <p>In this article we implement the path-dependent volatility model of Guyon and Lekeufack, which keeps the sign. They find that most of the variation in volatility is explained by two summaries of the recent path: a weighted sum of past <i>signed</i> returns, a trend measure, and a weighted sum of past <i>squared</i> returns, an activity measure. The model is linear in both and costs four running numbers and eight multiplications per bar, with no lookback window and no matrix in the per-bar update.</p> <p>We will build the engine, the calibration and an indicator that plots the two components separately, then measure everything out of sample against an EWMA volatility and GARCH(1,1) on ten instruments. On equity indices the trend term adds 0.07 to 0.17 of out-of-sample R-squared over an otherwise identical model; on currency pairs it adds essentially nothing. Both halves matter, and we will look at what the second does and does not tell us.</p> <p>We will cover:</p> <ol> <li><a href="/en/articles/24607#what_squaring_throws_away">What Squaring Throws Away</a></li> <li><a href="/en/articles/24607#two_numbers_that_describe_a_path">Two Numbers That Describe a Path</a></li> <li><a href="/en/articles/24607#the_whole_model_in_four_accumulators">The Whole Model in Four Accumulators</a></li> <li><a href="/en/articles/24607#fitting_six_parameters_and_solving_three">Fitting Six Parameters and Solving Three</a></li> <li><a href="/en/articles/24607#the_decomposition_on_a_chart">The Decomposition on a Chart</a></li> <li><a href="/en/articles/24607#does_it_beat_garch">Does It Beat GARCH?</a></li> <li><a href="/en/articles/24607#what_the_numbers_do_not_say">What the Numbers Do Not Say</a></li> <li><a href="/en/articles/24607#conclusion">Conclusion</a></li> </ol> <p><br></p> <h3 id="what_squaring_throws_away">What Squaring Throws Away</h3> <p>The GARCH(1,1) recursion is three terms:</p> <div class="code-box"><pre class="code" data-enhanced="true">h_t = omega + alpha * r_(t-<span class="number">1</span>)^<span class="number">2</span> + beta * h_(t-<span class="number">1</span>)</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>Everything the model learns arrives through <b>r squared</b>. Feed it a sequence of returns, then the same sequence with every sign flipped, and the variance paths are identical at every step. A crash and a melt-up of the same size are, to this model, the same event.</p> <p style="text-align:center;"> <img width="750" height="422" src="https://c.mql5.com/2/253/PdvSignBlindGarch_960w.gif" loading="lazy" title="Two opposite price paths producing one identical GARCH variance path" alt="Two opposite price paths producing one identical GARCH variance path" style="vertical-align:middle;"></p> <p style="text-align:center;"><span class="small">Fig. 1. Two price paths with identical squared returns and opposite signs. GARCH cannot distinguish them; the path-dependent decomposition can.</span></p> <p>The standard answers are the asymmetric extensions. GJR-GARCH and TARCH add a term that fires only after a negative return; EGARCH models log-variance with a signed term. Both measurably improve on plain GARCH, and neither is limited to yesterday: the shock enters the recursive variance state and decays through the same persistence as everything else. Unrolled, the EGARCH recursion is even an exponentially weighted sum of past signed, standardised shocks. The sign does accumulate.</p> <p>What they cannot express is a direction with its own memory. In GJR the sign only switches how much a squared shock counts, so a slow drift of small down bars barely registers. In EGARCH the signed sum shares one decay rate with the variance and is measured in units of volatility. "Drifting down for three weeks" is a weighted average of many past returns over more than one timescale, and neither model lets that average keep a memory separate from how hard the market has been moving.</p> <p>That is the gap this article fills, with a model that takes the signed path as a first-class input rather than a correction bolted onto a squared one.</p> <p><br></p> <h3 id="two_numbers_that_describe_a_path">Two Numbers That Describe a Path</h3> <p>The model comes from <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4174589" rel="noreferrer noopener nofollow" title="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=4174589" target="_blank">Volatility Is (Mostly) Path-Dependent</a> by Julien Guyon and Jordan Lekeufack. Its claim, and its title, is that no hidden stochastic volatility process with its own shocks is needed: the observable price path already contains most of the answer.</p> <p>The model is one line:</p> <div class="code-box"><pre class="code" data-enhanced="true">sigma_t = b0 + b1 * R1_t + b2 * sqrt(R2_t)</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>and its two features are built the same way, from different inputs:</p> <div class="code-box"><pre class="code" data-enhanced="true">R1_t = sum_k  w1_k * r_(t-k)
+R2_t = sum_k  w2_k * r_(t-k)^<span class="number">2</span></pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>R1 is a kernel-weighted sum of past signed returns, a smoothed drift: strongly negative after a sustained selloff, near zero after a directionless range. R2 applies the same construction to squared returns, so its square root is an exponentially weighted volatility of the familiar kind.</p> <p>The b2 term is therefore the activity component, roughly what a conventional volatility model already gives you. The b1 term is the trend component, the part with no counterpart in the existing MQL5 volatility literature. Where a leverage effect exists, b1 is negative: a falling path raises volatility and a rising one lowers it, continuously and in proportion.</p> <p>Guyon and Lekeufack use a convex mixture of two exponentials for each kernel, and the reason shows why one is not enough. A short-memory exponential reacts to this week and forgets the quarter; a long-memory one remembers the quarter and barely notices this week. Neither describes a market. Two, mixed by a weight theta, cover both timescales.</p> <p style="text-align:center;"> <img width="750" height="422" src="https://c.mql5.com/2/253/PdvTwoTimescaleKernel_960w.gif" loading="lazy" title="Fast and slow exponential kernels and their convex mixture" alt="Fast and slow exponential kernels and their convex mixture" style="vertical-align:middle;"></p> <p style="text-align:center;"><span class="small">Fig. 2. The weight each past bar receives under the fast component, the slow component, and the mixture that the model actually uses.</span></p> <p>The paper parametrises each exponential by a decay rate; this port uses half-life in bars, the form you can argue with on a chart: a half-life of five means a return five bars old carries half the weight of today's. The conversion is one line, and the only place the two conventions meet.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//--- Half-life to decay factor. The guard keeps phi inside (0,1), so</span>
+<span class="comment">//--- the accumulator can neither pass through nor grow.</span>
+<span class="keyword">double</span> PdvDecayFromHalfLife(<span class="keyword">const</span> <span class="keyword">double</span> half_life)
+  {
+   <span class="keyword">const</span> <span class="keyword">double</span> h=(half_life&lt;<span class="number">0.01</span> ? <span class="number">0.01</span> : half_life);
+   <span class="keyword">return</span> <span class="functions">MathPow</span>(<span class="number">0.5</span>,<span class="number">1.0</span>/h);
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>Two kernels of two exponentials give six weight parameters: a fast half-life, a slow half-life and a mixture weight for each of R1 and R2. With b0, b1 and b2 the model is nine numbers, fitted in section four.</p> <p><br></p> <h3 id="the_whole_model_in_four_accumulators">The Whole Model in Four Accumulators</h3> <p>Read literally, R1 is a sum over the instrument's whole history, and rescanning every past bar on every new one would cost 800 million operations to fill one buffer on a 40,000-bar chart.</p> <p>It never has to. With weights w_k = (1 - phi) * phi^k, the normalised discrete form of the paper's kernel, the sum satisfies a recursion:</p> <div class="code-box"><pre class="code" data-enhanced="true">A_t = phi * A_(t-<span class="number">1</span>) + (<span class="number">1</span> - phi) * r_t</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>One running scalar carries an unbounded window. That is the entire computational content of the method, and what moves it from a research notebook into an indicator.</p> <p style="text-align:center;"> <img width="750" height="422" src="https://c.mql5.com/2/253/PdvSumToRecursion_960w.gif" loading="lazy" title="An unbounded weighted sum collapsing into a one-line recursion" alt="An unbounded weighted sum collapsing into a one-line recursion" style="vertical-align:middle;"></p> <p style="text-align:center;"><span class="small">Fig. 3. The weighted sum over all history and the recursion that replaces it. Both compute the same number; only one of them is affordable per tick.</span></p> <p>Two mixtures of two exponentials therefore need four scalars, here as an excerpt from the private section of <i>CPdvState</i>:</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//--- the four accumulators. 1f/1s hold signed returns, 2f/2s squared.</span>
+   <span class="keyword">double</span>            m_a1f;
+   <span class="keyword">double</span>            m_a1s;
+   <span class="keyword">double</span>            m_a2f;
+   <span class="keyword">double</span>            m_a2s;</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>And here is the update, which is the model:</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| Fold one return into the state. This is the model.               |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">void</span> CPdvState::Update(<span class="keyword">const</span> <span class="keyword">double</span> r)
+  {
+   UpdateParts(r,r*r);
+  }
+
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| The four lines that are the entire per-bar cost of the method.   |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">void</span> CPdvState::UpdateParts(<span class="keyword">const</span> <span class="keyword">double</span> r,<span class="keyword">const</span> <span class="keyword">double</span> r_sq)
+  {
+   m_a1f=m_phi_1f*m_a1f+m_w_1f*r;
+   m_a1s=m_phi_1s*m_a1s+m_w_1s*r;
+   m_a2f=m_phi_2f*m_a2f+m_w_2f*r_sq;
+   m_a2s=m_phi_2s*m_a2s+m_w_2s*r_sq;
+   m_count++;
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>Each line is two multiplications and an addition: eight multiplications and four additions per bar, plus one to square the return. No lookback array, no matrix, nothing that grows with history, and no <i>MathPow</i> in the hot path, because each decay and its complement are cached at initialisation. The paper reports that the model explains a large share of next-day realised volatility; per bar it costs the same as four exponential moving averages.</p> <p>The split between <i>Update</i> and <i>UpdateParts</i> is not cosmetic: the multi-step forecast in section seven feeds the signed and squared sides different things, and this split lets it do so without duplicating the recursion.</p> <p>The features themselves are two inline mixtures:</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//--- the two path features and the square root the model actually uses.</span>
+   <span class="keyword">double</span>            R1(<span class="keyword">void</span>) <span class="keyword">const</span> { <span class="keyword">return</span> m_theta1*m_a1f+(<span class="number">1.0</span>-m_theta1)*m_a1s; }
+   <span class="keyword">double</span>            R2(<span class="keyword">void</span>) <span class="keyword">const</span> { <span class="keyword">return</span> m_theta2*m_a2f+(<span class="number">1.0</span>-m_theta2)*m_a2s; }
+   <span class="keyword">double</span>            RootR2(<span class="keyword">void</span>) <span class="keyword">const</span>;</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>Because the discrete weights sum exactly to one, the degenerate cases are exact. Set the mixture weight to 1 and R1 is a plain EWMA of returns, to the last bit. Set b0 and b1 to zero, and b2 and the R2 mixture weight to one, and the output is exactly the square root of an EWMA of squared returns, which you can compute independently in three lines. Identities like these are the difference between believing an implementation and checking it.</p> <p><br></p> <h3 id="fitting_six_parameters_and_solving_three">Fitting Six Parameters and Solving Three</h3> <p>Nine numbers have to be found, not all in the same way. With the six kernel parameters fixed, the model is a linear regression of realised volatility on two features, so the three coefficients have a closed form. Only the kernels need an optimiser, which is why calibration takes about a second: a simplex explores six dimensions while a regression solves three exactly inside each evaluation.</p> <p><u>Building the target</u>. First we need the thing being predicted: the volatility realised over the bars that follow. The library offers two measures. Three volatilities appear from here on, and they are kept apart: the target; the model's raw sigma, b0 + b1 * R1 + b2 * sqrt(R2); and the <b>floored sigma</b> the indicator plots.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| Realised volatility over the H bars that follow each bar.        |</span>
+<span class="comment">//|                                                                  |</span>
+<span class="comment">//|  Both variants are per-bar volatilities on the scale of the      |</span>
+<span class="comment">//|  returns, so they are interchangeable as targets and directly    |</span>
+<span class="comment">//|  comparable to each other. They differ in how much of a single   |</span>
+<span class="comment">//|  bar they use. The close-to-close form sees one number per bar   |</span>
+<span class="comment">//|  and at H = 1 degenerates to the absolute return. Its square is  |</span>
+<span class="comment">//|  unbiased for the variance; the return itself is biased low by   |</span>
+<span class="comment">//|  sqrt(2/pi) and very noisy, and the fitted slope absorbs that.   |</span>
+<span class="comment">//|  Parkinson reads the whole range and is several times more       |</span>
+<span class="comment">//|  efficient, at the cost of ignoring gaps between bars.           |</span>
+<span class="comment">//|                                                                  |</span>
+<span class="comment">//|  A noisy target does not bias the fit, but it does cap the       |</span>
+<span class="comment">//|  attainable R-squared, so the choice has to be reported          |</span>
+<span class="comment">//|  alongside any number the model scores.                          |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">bool</span> CPdvModel::BuildTarget(<span class="keyword">void</span>)
+  {
+   <span class="keyword">if</span>(m_horizon&lt;<span class="number">1</span>)
+      <span class="keyword">return</span> <span class="macro">false</span>;
+   <span class="keyword">if</span>(m_target_kind==PDV_TARGET_PARKINSON &amp;&amp; !m_has_range)
+     {
+      <span class="functions">Print</span>(<span class="string">"CPdvModel: Parkinson target needs high and low series"</span>);
+      <span class="keyword">return</span> <span class="macro">false</span>;
+     }
+
+   <span class="functions">ArrayResize</span>(m_target,m_total);
+   <span class="functions">ArrayInitialize</span>(m_target,<span class="number">0.0</span>);
+
+   <span class="keyword">const</span> <span class="keyword">int</span> last=m_total-<span class="number">1</span>-m_horizon;
+   <span class="keyword">const</span> <span class="keyword">double</span> pk=<span class="number">1.0</span>/(<span class="number">4.0</span>*<span class="functions">MathLog</span>(<span class="number">2.0</span>));
+
+   <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;=last;i++)
+     {
+      <span class="keyword">double</span> acc=<span class="number">0.0</span>;
+      <span class="keyword">for</span>(<span class="keyword">int</span> k=<span class="number">1</span>;k&lt;=m_horizon;k++)
+        {
+         <span class="keyword">if</span>(m_target_kind==PDV_TARGET_CLOSE)
+            acc+=m_ret[i+k]*m_ret[i+k];
+         <span class="keyword">else</span>
+           {
+            <span class="keyword">const</span> <span class="keyword">double</span> lo=m_low[i+k];
+            <span class="keyword">if</span>(lo&lt;=<span class="number">0.0</span>)
+               <span class="keyword">return</span> <span class="macro">false</span>;
+            <span class="keyword">const</span> <span class="keyword">double</span> lr=<span class="functions">MathLog</span>(m_high[i+k]/lo);
+            acc+=pk*lr*lr;
+           }
+        }
+      m_target[i]=<span class="functions">MathSqrt</span>(acc/m_horizon);
+     }
+   <span class="keyword">return</span> <span class="macro">true</span>;
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p><u>Avoiding Leakage and Fixing the Split</u>. The index arithmetic is the leakage guard. Features at bar i use returns up to and including bar i; the target at bar i starts at bar i+1, so no row sees its own answer. Every series is chronological, index 0 the oldest, and the loaders call ArraySetAsSeries with false before copying. The split is chronological too: a shuffled split would fit on bars after the ones it is scored on, and on data this autocorrelated that alone manufactures an R-squared.</p> <p>A chronological cut is not quite enough, because the last H training targets reach past the split into the test period. <i>CPdvModel</i> therefore ends the fit at <i>m_fit_last</i>, H bars before the first test bar, and <i>PDV_Evidence</i> gives every baseline the same purged rows. The tables here predate the purge; re-scoring the same SPX500 history with it moves out-of-sample R-squared by at most 0.0001 and the coefficients in the fourth significant figure, so they stand.</p> <p><u>Solving the coefficients</u>. With the features built, the three betas are a two-by-two system plus an intercept.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| Least squares for the three betas on bars [a,b].                 |</span>
+<span class="comment">//|                                                                  |</span>
+<span class="comment">//|  Solved on centred features, which turns the 3x3 normal          |</span>
+<span class="comment">//|  equations into a 2x2 system plus an intercept recovered from    |</span>
+<span class="comment">//|  the means. That is not only shorter: R1 and sqrt(R2) are around |</span>
+<span class="comment">//|  1e-4 on FX while the intercept column is 1, and centring        |</span>
+<span class="comment">//|  removes that eight-order-of-magnitude spread from the matrix    |</span>
+<span class="comment">//|  being inverted. The ridge term is a numerical guard for the     |</span>
+<span class="comment">//|  degenerate case where a candidate kernel makes the two features |</span>
+<span class="comment">//|  collinear, not a regularisation choice. At its default, 1e-10 of|</span>
+<span class="comment">//|  the trace, it moves a coefficient by about 1e-10 times the      |</span>
+<span class="comment">//|  condition number.                                               |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">bool</span> CPdvModel::SolveBetas(<span class="keyword">const</span> <span class="keyword">int</span> a,<span class="keyword">const</span> <span class="keyword">int</span> b,<span class="keyword">double</span> &amp;c0,<span class="keyword">double</span> &amp;c1,<span class="keyword">double</span> &amp;c2)
+  {
+   c0=<span class="number">0.0</span>;
+   c1=<span class="number">0.0</span>;
+   c2=<span class="number">0.0</span>;
+   <span class="keyword">const</span> <span class="keyword">int</span> n=b-a+<span class="number">1</span>;
+   <span class="keyword">if</span>(n&lt;<span class="number">10</span>)
+      <span class="keyword">return</span> <span class="macro">false</span>;
+
+   <span class="keyword">double</span> mx1=<span class="number">0.0</span>,mx2=<span class="number">0.0</span>,my=<span class="number">0.0</span>;
+   <span class="keyword">for</span>(<span class="keyword">int</span> i=a;i&lt;=b;i++)
+     {
+      mx1+=m_f1[i];
+      mx2+=m_f2[i];
+      my +=m_target[i];
+     }
+   mx1/=n;
+   mx2/=n;
+   my /=n;
+
+   <span class="keyword">double</span> s11=<span class="number">0.0</span>,s12=<span class="number">0.0</span>,s22=<span class="number">0.0</span>,s1y=<span class="number">0.0</span>,s2y=<span class="number">0.0</span>;
+   <span class="keyword">for</span>(<span class="keyword">int</span> i=a;i&lt;=b;i++)
+     {
+      <span class="keyword">const</span> <span class="keyword">double</span> d1=m_f1[i]-mx1;
+      <span class="keyword">const</span> <span class="keyword">double</span> d2=m_f2[i]-mx2;
+      <span class="keyword">const</span> <span class="keyword">double</span> dy=m_target[i]-my;
+      s11+=d1*d1;
+      s12+=d1*d2;
+      s22+=d2*d2;
+      s1y+=d1*dy;
+      s2y+=d2*dy;
+     }
+
+<span class="comment">//--- the ridge is scaled by the matrix's own size so it stays</span>
+<span class="comment">//--- negligible whatever units the instrument quotes in.</span>
+   <span class="keyword">const</span> <span class="keyword">double</span> reg=m_ridge*(s11+s22);
+   s11+=reg;
+   s22+=reg;
+
+<span class="comment">//--- with the trend term suppressed this collapses to a simple</span>
+<span class="comment">//--- regression on the activity feature alone.</span>
+   <span class="keyword">if</span>(!m_use_trend)
+     {
+      <span class="keyword">if</span>(s22&lt;=<span class="number">0.0</span>)
+         <span class="keyword">return</span> <span class="macro">false</span>;
+      c1=<span class="number">0.0</span>;
+      c2=s2y/s22;
+      c0=my-c2*mx2;
+      <span class="keyword">return</span> <span class="functions">MathIsValidNumber</span>(c0) &amp;&amp; <span class="functions">MathIsValidNumber</span>(c2);
+     }
+
+<span class="comment">//--- relative test, so a near-collinear pair is refused in any units;</span>
+<span class="comment">//--- the negated form also refuses a NaN</span>
+   <span class="keyword">const</span> <span class="keyword">double</span> det=s11*s22-s12*s12;
+   <span class="keyword">if</span>(!(det&gt;<span class="number">1.0e-12</span>*s11*s22))
+      <span class="keyword">return</span> <span class="macro">false</span>;
+
+   c1=(s1y*s22-s2y*s12)/det;
+   c2=(s2y*s11-s1y*s12)/det;
+   c0=my-c1*mx1-c2*mx2;
+   <span class="keyword">return</span> <span class="functions">MathIsValidNumber</span>(c0) &amp;&amp; <span class="functions">MathIsValidNumber</span>(c1) &amp;&amp; <span class="functions">MathIsValidNumber</span>(c2);
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p><u>Why the Activity-Only Ablation Is Fair</u>. The <i>m_use_trend</i> branch is not a convenience. It pins b1 at zero and fits activity alone, so the specification differs from the full model only in whether the sign of the path may matter; data, target, split and the squared-return kernel are the same. Each model is fitted at its own optimum, so the activity kernel and b2 may readjust when the trend term is present. That is the usual way to price a nested term: the ablation of section six measures the value of adding the trend term, readjustment included, not the effect of b1 with everything else frozen.</p> <p>Two numerical details: the determinant test is relative to the product of the diagonal, so a near-collinear candidate is refused in any units, and the ridge, at 1e-10 of the trace, keeps an exactly collinear pair solvable while moving a coefficient by about 1e-10 times the condition number, far below the four decimals printed here.</p> <p><u>Searching the kernels</u>. Nelder-Mead has no notion of a constraint, so the constraints live in the mapping onto a valid pair of kernels.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| Map the simplex's unconstrained vector onto two valid kernels.   |</span>
+<span class="comment">//|                                                                  |</span>
+<span class="comment">//|  Nelder-Mead has no notion of a constraint, so the constraints   |</span>
+<span class="comment">//|  live in this mapping instead. Half-lives arrive as logarithms,  |</span>
+<span class="comment">//|  which keeps them positive and makes the search scale-free - a   |</span>
+<span class="comment">//|  step is a percentage change, so it means the same thing at 3    |</span>
+<span class="comment">//|  bars and at 300. The slow half-life is coded as an increment    |</span>
+<span class="comment">//|  above the fast one rather than independently, which removes the |</span>
+<span class="comment">//|  relabelling symmetry: without it the objective has two          |</span>
+<span class="comment">//|  identical minima with fast and slow swapped, and a simplex can  |</span>
+<span class="comment">//|  spend its whole budget drifting between them. Mixture weights   |</span>
+<span class="comment">//|  come through a logistic, so they cannot leave [0,1].            |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">void</span> CPdvModel::Decode(<span class="keyword">const</span> <span class="keyword">double</span> &amp;u[],SPdvKernel &amp;k1,SPdvKernel &amp;k2) <span class="keyword">const</span>
+  {
+   <span class="keyword">const</span> <span class="keyword">double</span> lo=<span class="number">0.5</span>;
+   <span class="keyword">const</span> <span class="keyword">double</span> hi=(m_max_half&gt;lo ? m_max_half : lo);
+
+   <span class="keyword">double</span> h1f=<span class="functions">MathExp</span>(u[<span class="number">0</span>]);
+   h1f=(h1f&lt;lo ? lo : (h1f&gt;hi ? hi : h1f));
+   <span class="keyword">double</span> h1s=h1f+<span class="functions">MathExp</span>(u[<span class="number">1</span>]);
+   h1s=(h1s&gt;hi ? hi : h1s);
+
+   <span class="keyword">double</span> h2f=<span class="functions">MathExp</span>(u[<span class="number">3</span>]);
+   h2f=(h2f&lt;lo ? lo : (h2f&gt;hi ? hi : h2f));
+   <span class="keyword">double</span> h2s=h2f+<span class="functions">MathExp</span>(u[<span class="number">4</span>]);
+   h2s=(h2s&gt;hi ? hi : h2s);
+
+   k1.half_fast=h1f;
+   k1.half_slow=h1s;
+   k1.theta    =<span class="number">1.0</span>/(<span class="number">1.0</span>+<span class="functions">MathExp</span>(-u[<span class="number">2</span>]));
+   k2.half_fast=h2f;
+   k2.half_slow=h2s;
+   k2.theta    =<span class="number">1.0</span>/(<span class="number">1.0</span>+<span class="functions">MathExp</span>(-u[<span class="number">5</span>]));
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>The increment coding of the slow half-life is the detail most likely to be dropped in a quick port, and the costliest: a stalled simplex never announces two identical minima, it simply returns a worse fit. The coding removes the swapped duplicate, not every flat direction: the two half-lives can still coincide, both on the cap or with the increment near zero, leaving the mixture weight nothing to choose. That is a flat edge, not a second minimum, and the simplex comes to rest on it.</p> <p><u>The Objective Function</u>. The objective itself is short, because the regression does the work:</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| Training sum of squares for one candidate kernel pair.           |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">double</span> CPdvModel::Objective(<span class="keyword">const</span> <span class="keyword">double</span> &amp;u[])
+  {
+   SPdvKernel k1,k2;
+   Decode(u,k1,k2);
+   m_evals++;
+
+   <span class="keyword">if</span>(!BuildFeatures(k1,k2))
+      <span class="keyword">return</span> <span class="macro">DBL_MAX</span>;
+
+   <span class="keyword">double</span> c0,c1,c2;
+   <span class="keyword">if</span>(!SolveBetas(m_first,m_fit_last,c0,c1,c2))
+      <span class="keyword">return</span> <span class="macro">DBL_MAX</span>;
+
+   <span class="keyword">double</span> sse=<span class="number">0.0</span>;
+   <span class="keyword">for</span>(<span class="keyword">int</span> i=m_first;i&lt;=m_fit_last;i++)
+     {
+      <span class="keyword">const</span> <span class="keyword">double</span> e=m_target[i]-(c0+c1*m_f1[i]+c2*m_f2[i]);
+      sse+=e*e;
+     }
+   <span class="keyword">return</span> (<span class="functions">MathIsValidNumber</span>(sse) ? sse : <span class="macro">DBL_MAX</span>);
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>One decision in <i>CPdvModel</i> is easy to get wrong and hard to notice. A long-memoried kernel needs more warm-up than a short one, so a scored window derived from each candidate would grade candidates on different samples and reward whichever got the easiest bars. The window is therefore fixed before the search: the caller reserves a warm-up budget, every candidate is scored on identical bars, and half-lives are capped at a fifth of the budget so all are warm when scoring begins.</p> <p>The cap is enforced rather than trusted, and it can also be set on its own:</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| Cap the half-lives without disturbing the scored window.         |</span>
+<span class="comment">//|                                                                  |</span>
+<span class="comment">//|  Refuses a cap the warm-up cannot support: five half-lives is    |</span>
+<span class="comment">//|  the burn-in the whole design rests on, and quietly allowing a   |</span>
+<span class="comment">//|  kernel with more memory than the reserve can absorb would put   |</span>
+<span class="comment">//|  cold accumulators into the first scored bars.                   |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">bool</span> CPdvModel::SetMaxHalfLife(<span class="keyword">const</span> <span class="keyword">double</span> bars)
+  {
+   <span class="keyword">if</span>(bars&lt;<span class="number">0.5</span>)
+      <span class="keyword">return</span> <span class="macro">false</span>;
+   <span class="keyword">if</span>(bars&gt;m_warmup/<span class="number">5.0</span>)
+     {
+      <span class="functions">PrintFormat</span>(<span class="string">"CPdvModel: a %.1f-bar half-life needs at least %d bars of "</span>
+                  <span class="string">"warm-up, and only %d are reserved"</span>,
+                  bars,(<span class="keyword">int</span>)<span class="functions">MathCeil</span>(<span class="number">5.0</span>*bars),m_warmup);
+      <span class="keyword">return</span> <span class="macro">false</span>;
+     }
+   m_max_half=bars;
+   <span class="keyword">return</span> <span class="macro">true</span>;
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>The separate call matters: raising the warm-up to permit longer memory also deletes bars from the front of the sample, so a naive before-and-after would score two periods and credit the difference to the cap. Section seven varies the cap with the window held still, through this call.</p> <p><u>Running it</u>. <i>PDV_Calibrate</i> loads one symbol, fits and reports. On SPX500 H1 with 22,870 bars, a 750-bar warm-up, a Parkinson target 24 bars ahead and a 70/30 chronological split, the simplex converges in 2,542 objective evaluations and 1,172 milliseconds.</p> <table cellspacing="0" cellpadding="3" width="100%" class="standart"> <thead> <tr> <th>Fitted component<br></th> <th align="center">Value<br></th> </tr> </thead> <tbody> <tr> <td>R1 kernel, half-lives<br></td> <td align="center">42.61/150.00 bars<br></td> </tr> <tr> <td>R1 kernel, mixture weight<br></td> <td align="center">0.664<br></td> </tr> <tr> <td>R2 kernel, half-lives<br></td> <td align="center">16.35/150.00 bars<br></td> </tr> <tr> <td>R2 kernel, mixture weight<br></td> <td align="center">0.678<br></td> </tr> <tr> <td>b0<br></td> <td align="center">5.2273e-04<br></td> </tr> <tr> <td>b1<br></td> <td align="center">-2.4143<br></td> </tr> <tr> <td>b2<br></td> <td align="center">0.6839<br></td> </tr> <tr> <td>R-squared, in-sample<br></td> <td align="center">0.6556<br></td> </tr> <tr> <td>R-squared, out-of-sample<br></td> <td align="center">0.4480<br></td> </tr> </tbody> </table> <p>The negative b1 is the signature of the leverage effect, a falling path raising volatility, recovered from price alone. Both slow half-lives rest on the 150-bar ceiling the warm-up imposes, so the search is pressing on that limit and the in-sample fit would take more memory. Section seven relaxes the ceiling and finds the extra memory does not carry out of sample: on a six-point grid the cap binds at no measurable cost.</p> <p>SPX500 appears in three runs, with close but not identical figures. This table is <i>PDV_Calibrate</i> on history ending 7 September 2026, 22,870 bars. Section six's <i>PDV_Evidence</i> ran a month earlier, on history ending 7 August 2026, 22,409 bars, which moves b1 in the second decimal. Section seven uses this table's history with a far longer warm-up, for a 700-bar half-life, so its scored window starts 2,750 bars later. Do not read a figure from one run against another.</p> <p><br></p> <h3 id="the_decomposition_on_a_chart">The Decomposition on a Chart</h3> <p>The indicator plots three lines in a subwindow: total volatility, the activity term b2 * sqrt(R2) and the trend term b1 * R1. Two calculation-only buffers, the trend share and the unfloored volatility, can be read back with CopyBuffer.</p> <p>It does not calibrate: an indicator running a simplex on every timeframe change would be unusable. The nine numbers arrive as inputs, defaulting to the SPX500 H1 fit from the previous section, so the defaults are the table you just read:</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="keyword">input</span> <span class="keyword">group</span> <span class="string">"R1 kernel - past signed returns"</span>
+<span class="keyword">input</span> <span class="keyword">double</span> InpK1Fast   = <span class="number">42.61</span>;         <span class="comment">// fast half-life, bars</span>
+<span class="keyword">input</span> <span class="keyword">double</span> InpK1Slow   = <span class="number">150.0</span>;         <span class="comment">// slow half-life, bars</span>
+<span class="keyword">input</span> <span class="keyword">double</span> InpK1Theta  = <span class="number">0.664</span>;         <span class="comment">// weight on the fast component</span>
+<span class="keyword">input</span> <span class="keyword">group</span> <span class="string">"R2 kernel - past squared returns"</span>
+<span class="keyword">input</span> <span class="keyword">double</span> InpK2Fast   = <span class="number">16.35</span>;         <span class="comment">// fast half-life, bars</span>
+<span class="keyword">input</span> <span class="keyword">double</span> InpK2Slow   = <span class="number">150.0</span>;         <span class="comment">// slow half-life, bars</span>
+<span class="keyword">input</span> <span class="keyword">double</span> InpK2Theta  = <span class="number">0.678</span>;         <span class="comment">// weight on the fast component</span>
+<span class="keyword">input</span> <span class="keyword">group</span> <span class="string">"Coefficients"</span>
+<span class="keyword">input</span> <span class="keyword">double</span> InpB0       = <span class="number">5.2273e-04</span>;    <span class="comment">// baseline level</span>
+<span class="keyword">input</span> <span class="keyword">double</span> InpB1       = <span class="number">-2.4143</span>;       <span class="comment">// loading on trend</span>
+<span class="keyword">input</span> <span class="keyword">double</span> InpB2       = <span class="number">0.68393</span>;       <span class="comment">// loading on activity</span>
+<span class="keyword">input</span> <span class="keyword">group</span> <span class="string">"Behaviour"</span>
+<span class="keyword">input</span> <span class="keyword">double</span> InpFloorFrac= <span class="number">0.10</span>;          <span class="comment">// sigma floor, as a share of activity</span>
+<span class="keyword">input</span> <span class="keyword">int</span>    InpSeedBars = <span class="number">250</span>;           <span class="comment">// bars used to seed the state, 0 to disable</span></pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>Those defaults are only a starting point. They come from one index on one timeframe, and b1 is a per-instrument quantity; section six shows it changing sign between SPX500 and gold. Run <i>PDV_Calibrate</i> on your own symbol before reading anything into the plot.</p> <p>Writing a bar is a direct read of the decomposition struct:</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| Write one bar's decomposition from a given state.                |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">void</span> WriteBar(<span class="keyword">const</span> CPdvForecast &amp;f,<span class="keyword">const</span> <span class="keyword">int</span> i)
+  {
+   SPdvDecomposition d;
+   f.Decompose(d);
+   BufSigma[i]    =d.sigma;
+   BufActivity[i] =d.activity;
+   BufTrend[i]    =d.trend;
+   BufShare[i]    =f.TrendShare();
+   BufSigmaRaw[i] =d.sigma_raw;
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>The struct and the share buffer are filled by two short methods on <i>CPdvForecast</i>, the second defining a quantity the rest of the article leans on:</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| Fill the full decomposition for the current bar.                 |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">void</span> CPdvForecast::Decompose(SPdvDecomposition &amp;d) <span class="keyword">const</span>
+  {
+   d.r1       =m_state.R1();
+   d.r2       =m_state.R2();
+   d.trend    =m_p.b1*d.r1;
+   d.activity =m_p.b2*m_state.RootR2();
+   d.sigma_raw=SigmaRaw();
+   d.sigma    =Sigma();
+  }
+
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| How much of the current volatility is directional.               |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">double</span> CPdvForecast::TrendShare(<span class="keyword">void</span>) <span class="keyword">const</span>
+  {
+   <span class="keyword">const</span> <span class="keyword">double</span> t=<span class="functions">MathAbs</span>(m_p.b1*m_state.R1());
+   <span class="keyword">const</span> <span class="keyword">double</span> a=<span class="functions">MathAbs</span>(m_p.b2*m_state.RootR2());
+   <span class="keyword">const</span> <span class="keyword">double</span> s=t+a;
+   <span class="keyword">return</span> (s&gt;<span class="number">0.0</span> ? t/s : <span class="number">0.0</span>);
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>The trend share is the magnitude of the trend term over the summed magnitudes of both terms:</p> <div class="code-box"><pre class="code" data-enhanced="true">trend_share = |b1 * R1| / ( |b1 * R1| + |b2 * sqrt(R2)| )</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>It runs from 0, volatility entirely explained by activity, to 1, entirely by direction. The absolute values make it a share rather than a signed ratio: a rally and a selloff of equal strength are equally directional, which is the question it answers. Section seven measures how large it actually gets, and that decides whether you can threshold on it.</p> <p>One more piece of setup matters. An accumulator that starts at zero is not merely imprecise but wrong, for as long as the kernel's memory. <i>OnInit</i> deals with that in two moves:</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//--- Seeding starts the accumulator near its long-run level, so the</span>
+<span class="comment">//--- blank stretch is two half-lives rather than the full five.</span>
+   <span class="keyword">const</span> <span class="keyword">double</span> longest=<span class="functions">MathMax</span>(InpK1Slow,InpK2Slow);
+   g_begin=(InpSeedBars&gt;<span class="number">0</span>
+            ? InpSeedBars+(<span class="keyword">int</span>)<span class="functions">MathCeil</span>(<span class="number">2.0</span>*longest)
+            : (<span class="keyword">int</span>)<span class="functions">MathCeil</span>(<span class="number">5.0</span>*longest));</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>The plot is suppressed before <i>g_begin</i> rather than drawn and hoped for, and the seed is what makes <i>g_begin</i> small. Seeding is an average, not a recursion:</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| Seed the live state from the earliest returns available.         |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">void</span> SeedFrom(<span class="keyword">const</span> <span class="keyword">double</span> &amp;close[],<span class="keyword">const</span> <span class="keyword">int</span> rates_total)
+  {
+   <span class="keyword">const</span> <span class="keyword">int</span> n=<span class="functions">MathMin</span>(InpSeedBars,rates_total-<span class="number">1</span>);
+   <span class="keyword">if</span>(n&lt;<span class="number">2</span>)
+      <span class="keyword">return</span>;
+
+   <span class="keyword">double</span> mr=<span class="number">0.0</span>,ms=<span class="number">0.0</span>;
+   <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">1</span>;i&lt;=n;i++)
+     {
+      <span class="keyword">if</span>(close[i]&lt;=<span class="number">0.0</span> || close[i-<span class="number">1</span>]&lt;=<span class="number">0.0</span>)
+         <span class="keyword">return</span>;
+      <span class="keyword">const</span> <span class="keyword">double</span> r=<span class="functions">MathLog</span>(close[i]/close[i-<span class="number">1</span>]);
+      mr+=r;
+      ms+=r*r;
+     }
+   g_live.Seed(mr/n,ms/n);
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>The justification is a one-line property of the recursion, recorded where the state is defined:</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//|  Seeding is the difference between an indicator that is wrong    |</span>
+<span class="comment">//|  for its first few hundred bars and one that is roughly right    |</span>
+<span class="comment">//|  immediately. The fixed point of the recursion under a constant  |</span>
+<span class="comment">//|  input is that input, so seeding with the sample mean return and |</span>
+<span class="comment">//|  mean square puts every accumulator where a long history would   |</span>
+<span class="comment">//|  have left it. The warm-up counter is deliberately not advanced: |</span>
+<span class="comment">//|  a seed is an estimate, and callers that insist on real bars     |</span>
+<span class="comment">//|  should still be able to tell the difference.                    |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">void</span> CPdvState::Seed(<span class="keyword">const</span> <span class="keyword">double</span> mean_ret,<span class="keyword">const</span> <span class="keyword">double</span> mean_sq)
+  {
+   m_a1f=mean_ret;
+   m_a1s=mean_ret;
+   m_a2f=(mean_sq&gt;<span class="number">0.0</span> ? mean_sq : <span class="number">0.0</span>);
+   m_a2s=m_a2f;
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>With a 250-bar seed and a 150-bar slow kernel the indicator is readable after about 550 bars instead of 750, and the number is derived rather than guessed. <i>Seed</i> does not advance the warm-up counter, so <i>IsWarm</i> still reports honestly that no real bars have been folded in.</p> <p>The calculation loop contains one trap specific to recursive models in indicators.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| Fold new closed bars into the running state, then plot the bar   |</span>
+<span class="comment">//| that is still forming from a throwaway copy.                     |</span>
+<span class="comment">//|                                                                  |</span>
+<span class="comment">//|  The copy is the whole trick. The state is a recursion, so a bar |</span>
+<span class="comment">//|  folded in twice is counted twice, and the bar at the right-hand |</span>
+<span class="comment">//|  edge is revised on every tick. Keeping the live state one bar   |</span>
+<span class="comment">//|  behind the edge and projecting the last bar onto a duplicate    |</span>
+<span class="comment">//|  makes the plot tick-accurate while leaving the recursion exact. |</span>
+<span class="comment">//|                                                                  |</span>
+<span class="comment">//|  There is deliberately no waiting loop here. Sleep is refused on |</span>
+<span class="comment">//|  the interface thread an indicator runs on, so anything that     |</span>
+<span class="comment">//|  needs to wait must instead return and be called again.          |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">int</span> <span class="functions">OnCalculate</span>(<span class="keyword">const</span> <span class="keyword">int</span> rates_total,
+                <span class="keyword">const</span> <span class="keyword">int</span> prev_calculated,
+                <span class="keyword">const</span> <span class="keyword">datetime</span> &amp;time[],
+                <span class="keyword">const</span> <span class="keyword">double</span> &amp;open[],
+                <span class="keyword">const</span> <span class="keyword">double</span> &amp;high[],
+                <span class="keyword">const</span> <span class="keyword">double</span> &amp;low[],
+                <span class="keyword">const</span> <span class="keyword">double</span> &amp;close[],
+                <span class="keyword">const</span> <span class="keyword">long</span> &amp;tick_volume[],
+                <span class="keyword">const</span> <span class="keyword">long</span> &amp;volume[],
+                <span class="keyword">const</span> <span class="keyword">int</span> &amp;spread[])
+  {
+   <span class="keyword">if</span>(!g_ready || rates_total&lt;<span class="number">2</span>)
+      <span class="keyword">return</span> <span class="number">0</span>;
+
+   <span class="keyword">int</span> start;
+   <span class="keyword">if</span>(prev_calculated&lt;=<span class="number">0</span> || g_done&lt;<span class="number">0</span> || prev_calculated&gt;rates_total)
+     {
+      <span class="comment">//--- history was rebuilt underneath us; start the recursion over</span>
+      g_live.Reset();
+      <span class="keyword">if</span>(InpSeedBars&gt;<span class="number">0</span>)
+         SeedFrom(close,rates_total);
+      <span class="functions">ArrayInitialize</span>(BufSigma,<span class="macro">EMPTY_VALUE</span>);
+      <span class="functions">ArrayInitialize</span>(BufActivity,<span class="macro">EMPTY_VALUE</span>);
+      <span class="functions">ArrayInitialize</span>(BufTrend,<span class="macro">EMPTY_VALUE</span>);
+      <span class="functions">ArrayInitialize</span>(BufShare,<span class="macro">EMPTY_VALUE</span>);
+      <span class="functions">ArrayInitialize</span>(BufSigmaRaw,<span class="macro">EMPTY_VALUE</span>);
+      g_done=<span class="number">0</span>;
+      start =<span class="number">1</span>;
+     }
+   <span class="keyword">else</span>
+      start=g_done+<span class="number">1</span>;
+
+   <span class="keyword">const</span> <span class="keyword">int</span> last_closed=rates_total-<span class="number">2</span>;
+   <span class="keyword">for</span>(<span class="keyword">int</span> i=start;i&lt;=last_closed;i++)
+     {
+      <span class="keyword">if</span>(close[i]&lt;=<span class="number">0.0</span> || close[i-<span class="number">1</span>]&lt;=<span class="number">0.0</span>)
+         <span class="keyword">return</span> <span class="number">0</span>;
+      g_live.Update(<span class="functions">MathLog</span>(close[i]/close[i-<span class="number">1</span>]));
+      <span class="keyword">if</span>(i&gt;=g_begin)
+         WriteBar(g_live,i);
+      g_done=i;
+     }
+
+   <span class="keyword">const</span> <span class="keyword">int</span> edge=rates_total-<span class="number">1</span>;
+   <span class="keyword">if</span>(close[edge]&gt;<span class="number">0.0</span> &amp;&amp; close[edge-<span class="number">1</span>]&gt;<span class="number">0.0</span>)
+     {
+      CPdvForecast forming;
+      forming.CopyFrom(g_live);
+      forming.Update(<span class="functions">MathLog</span>(close[edge]/close[edge-<span class="number">1</span>]));
+      <span class="keyword">if</span>(edge&gt;=g_begin)
+         WriteBar(forming,edge);
+     }
+
+   <span class="keyword">return</span> rates_total;
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>Fold the forming bar into the live state instead of a copy and it is counted once per tick, so by the close of a busy bar the same return has been absorbed hundreds of times. Nothing looks like an error: the line neither spikes nor blanks, it drifts plausibly in the wrong direction for as long as the chart is open.</p> <p>The bail-out on a non-positive close returns 0 rather than skipping the bar, which discards <i>prev_calculated</i> and forces a full rebuild on the next tick. For a recursion that is the right trade: a skipped bar would leave the accumulators permanently and invisibly out of step with the chart.</p> <p style="text-align:center;"> <img width="750" height="832" src="https://c.mql5.com/2/253/indicator__2.png" loading="lazy" title="PDV decomposition on SPX500 H1 through the October 2025 crash and recovery" alt="PDV decomposition on SPX500 H1 through the October 2025 crash and recovery" style="vertical-align:middle;"></p> <p style="text-align:center;"><span class="small">Fig. 4. SPX500 H1, October 2025. The trend term is strongly positive through the crash and negative through the recovery that follows, while activity stays elevated in both. The sign is the part a conditional-variance model cannot report separately.</span></p> <p>In Fig. 4 the dotted activity line behaves like the EWMA volatility it essentially is, climbing into the 10 October crash and staying elevated through the recovery, indifferent to direction. The red trend line separates the two episodes. At the crash it reaches +9.29e-04 against an activity term of 1.934e-03, lifting total volatility to 3.386e-03, some 38% above activity plus baseline. In the rally off the 17 October low it falls to -3.27e-04 against an activity term of 1.249e-03, pulling the total down to 1.445e-03, some 18% below that same figure.</p> <p>Between those bars the trend term swings by 1.256e-03 and activity by only 6.85e-04. In this episode the directional component moves nearly twice as far, across two stretches a single volatility number would call the same elevated regime; over the whole sample, though, the trend term is the smaller of the two, as section seven shows. Activity says how much, trend says which way, and only activity survives being squared.</p> <p>Two features need reading correctly. <i>b0</i> is the intercept, a constant offset of 5.2273e-04, not a floor, so the gap between the total and the activity line is b0 plus the trend term; read the trend from the red line, not the gap. The total usually sits above the activity line, but drops beneath it once the trend term falls below -b0, as at 23:00 on 27 October, when it reaches -5.42e-04. And the trend term does not collapse when a move ends: the fitted kernels weight a long memory heavily and still carry the crash days later, which is the model working as specified, not a lag to tune out.</p> <p><br></p> <h3 id="does_it_beat_garch">Does It Beat GARCH?</h3> <p><i>PDV_Evidence</i> answers this, and the method matters as much as the answer. Five models are compared on identical bars, target and chronological split, all fitted on the same purged training rows, and every baseline gets the same intercept and slope the model gets. Without that, the comparison would measure whether an EWMA happens to be quoted on the target's scale, not whether it carries the same information.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| Fit a raw proxy's affine map on the purged training rows         |</span>
+<span class="comment">//| [first,fit_last], then score both halves.                        |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">double</span> FitAndScore(<span class="keyword">const</span> <span class="keyword">double</span> &amp;raw[],<span class="keyword">const</span> <span class="keyword">double</span> &amp;y[],<span class="keyword">const</span> <span class="keyword">int</span> first,<span class="keyword">const</span> <span class="keyword">int</span> fit_last,
+                   <span class="keyword">const</span> <span class="keyword">int</span> split,<span class="keyword">const</span> <span class="keyword">int</span> last,<span class="keyword">double</span> &amp;r2_train,<span class="keyword">double</span> &amp;r2_test,
+                   <span class="keyword">double</span> &amp;rmse_test)
+  {
+   <span class="keyword">double</span> c0,c1;
+   r2_train =<span class="number">0.0</span>;
+   r2_test  =<span class="number">0.0</span>;
+   rmse_test=<span class="number">0.0</span>;
+   <span class="keyword">if</span>(!AffineFit(raw,y,first,fit_last,c0,c1))
+      <span class="keyword">return</span> <span class="macro">DBL_MAX</span>;
+
+   <span class="keyword">double</span> pred[];
+   <span class="functions">ArrayResize</span>(pred,last+<span class="number">1</span>);
+   <span class="functions">ArrayInitialize</span>(pred,<span class="number">0.0</span>);
+   <span class="keyword">for</span>(<span class="keyword">int</span> i=first;i&lt;=last;i++)
+      pred[i]=c0+c1*raw[i];
+
+   <span class="keyword">double</span> rm_train=<span class="number">0.0</span>;
+   r2_train=ScoreR2(pred,y,first,fit_last,rm_train);
+   r2_test =ScoreR2(pred,y,split,last,rmse_test);
+
+   <span class="keyword">double</span> sse=<span class="number">0.0</span>;
+   <span class="keyword">for</span>(<span class="keyword">int</span> i=first;i&lt;=fit_last;i++)
+     {
+      <span class="keyword">const</span> <span class="keyword">double</span> e=y[i]-pred[i];
+      sse+=e*e;
+     }
+   <span class="keyword">return</span> sse;
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>The GARCH baseline gets the same care, and one alignment decision inside it separates a fair test from a rigged one:</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| GARCH(1,1) conditional volatility under variance targeting.      |</span>
+<span class="comment">//|                                                                  |</span>
+<span class="comment">//|  Written to include bar i's own return, so it lines up with the  |</span>
+<span class="comment">//|  PDV features rather than lagging them by one bar - otherwise    |</span>
+<span class="comment">//|  the comparison would be handicapping GARCH by a bar of          |</span>
+<span class="comment">//|  information rather than by its structure. Omega is pinned by    |</span>
+<span class="comment">//|  variance targeting, which is standard practice and leaves the   |</span>
+<span class="comment">//|  two coefficients that actually shape the response.              |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">void</span> BuildGarch(<span class="keyword">const</span> <span class="keyword">double</span> &amp;ret[],<span class="keyword">const</span> <span class="keyword">int</span> total,<span class="keyword">const</span> <span class="keyword">double</span> alpha,<span class="keyword">const</span> <span class="keyword">double</span> beta,
+                <span class="keyword">const</span> <span class="keyword">double</span> uncond_var,<span class="keyword">double</span> &amp;out[])
+  {
+   <span class="keyword">const</span> <span class="keyword">double</span> omega=(<span class="number">1.0</span>-alpha-beta)*uncond_var;
+   <span class="keyword">double</span> h=uncond_var;
+   <span class="functions">ArrayResize</span>(out,total);
+   out[<span class="number">0</span>]=<span class="functions">MathSqrt</span>(h);
+   <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">1</span>;i&lt;total;i++)
+     {
+      h=omega+alpha*ret[i]*ret[i]+beta*h;
+      <span class="keyword">if</span>(h&lt;=<span class="number">0.0</span>)
+         h=uncond_var;
+      out[i]=<span class="functions">MathSqrt</span>(h);
+     }
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>Stored at index i, the value is the variance for bar i+1 given the close of bar i, the textbook one-step-ahead forecast, and the target at bar i starts at bar i+1. The coefficients are searched over persistence and alpha rather than alpha and beta: intraday persistence sits above 0.98, where a grid uniform in beta has almost no resolution, and the baseline would lose to its own coarse search. The grid minimises the same squared error the table scores, which suits GARCH better than a likelihood fit would. The comparison is with GARCH(1,1); the asymmetric variants of section one are not in it.</p> <p>Every figure here comes from one <i>PDV_Evidence</i> run: up to 40,000 H1 bars of whatever history the terminal held locally for each symbol, a Parkinson target 24 bars ahead, a 750-bar warm-up, a 70/30 chronological split, the EWMA searched over 40 half-lives and GARCH over a 22-by-22 grid in persistence and alpha. That history did not end on the same day everywhere: SPX500 (22,409 bars) and BTCUSD on 7 August 2026, the currency pairs and gold on 7 September 2026, the other indices in between. The split dates differ, so compare the models on a symbol, not the symbols. Here is SPX500:</p> <table cellspacing="0" cellpadding="3" width="100%" class="standart"> <thead> <tr> <th>Model<br></th> <th align="center">R-squared, train<br></th> <th align="center">R-squared, test<br></th> <th align="center">RMSE test<br></th> <th>Fitted<br></th> </tr> </thead> <tbody> <tr> <td>constant<br></td> <td align="center">0.0000<br></td> <td align="center">-0.0233<br></td> <td align="center">6.9659e-04<br></td> <td>mean 1.701e-03<br></td> </tr> <tr> <td>EWMA volatility<br></td> <td align="center">0.5661<br></td> <td align="center">0.2666<br></td> <td align="center">5.8972e-04<br></td> <td>half-life 16.4<br></td> </tr> <tr> <td>GARCH(1,1)<br></td> <td align="center">0.5667<br></td> <td align="center">0.2693<br></td> <td align="center">5.8863e-04<br></td> <td>alpha 0.039 beta 0.958<br></td> </tr> <tr> <td>PDV, activity only<br></td> <td align="center">0.5676<br></td> <td align="center">0.2753<br></td> <td align="center">5.8621e-04<br></td> <td>b2 0.7375<br></td> </tr> <tr> <td>PDV, full<br></td> <td align="center">0.6539<br></td> <td align="center">0.4464<br></td> <td align="center">5.1237e-04<br></td> <td>b1 -2.3949 b2 0.6837<br></td> </tr> </tbody> </table> <p>Read the "PDV, activity only" and "PDV, full" rows together. The activity-only model, PDV without the trend term at its own optimum, scores 0.2753 out of sample, within 0.006 of GARCH: by themselves, two-exponential kernels and a careful fit buy almost nothing over GARCH(1,1). The full model scores 0.4464. The +0.171 difference is the value of adding the trend term, its four parameters and the readjustment of the activity side they permit; nothing else in the specification differs.</p> <p>Across ten instruments the pattern is sharp:</p> <table cellspacing="0" cellpadding="3" width="100%" class="standart"> <thead> <tr> <th>Symbol<br></th> <th align="center">b1<br></th> <th align="center">Activity only<br></th> <th align="center">Full<br></th> <th align="center">R2 from trend<br></th> <th align="center">vs GARCH<br></th> </tr> </thead> <tbody> <tr> <td>SPX500<br></td> <td align="center">-2.3949<br></td> <td align="center">0.2753<br></td> <td align="center">0.4464<br></td> <td align="center">+0.1711<br></td> <td align="center">+0.1771<br></td> </tr> <tr> <td>US30<br></td> <td align="center">-1.7569<br></td> <td align="center">0.2273<br></td> <td align="center">0.3857<br></td> <td align="center">+0.1584<br></td> <td align="center">+0.1557<br></td> </tr> <tr> <td>NDX100<br></td> <td align="center">-1.5465<br></td> <td align="center">0.3401<br></td> <td align="center">0.4538<br></td> <td align="center">+0.1137<br></td> <td align="center">+0.1250<br></td> </tr> <tr> <td>JP225<br></td> <td align="center">-1.8994<br></td> <td align="center">0.3547<br></td> <td align="center">0.4328<br></td> <td align="center">+0.0781<br></td> <td align="center">+0.0941<br></td> </tr> <tr> <td>GER30<br></td> <td align="center">-0.8764<br></td> <td align="center">0.3686<br></td> <td align="center">0.4416<br></td> <td align="center">+0.0730<br></td> <td align="center">+0.1302<br></td> </tr> <tr> <td>XAUUSD<br></td> <td align="center">+0.6608<br></td> <td align="center">0.5192<br></td> <td align="center">0.5419<br></td> <td align="center">+0.0226<br></td> <td align="center">+0.0281<br></td> </tr> <tr> <td>BTCUSD<br></td> <td align="center">-0.1529<br></td> <td align="center">0.3583<br></td> <td align="center">0.3723<br></td> <td align="center">+0.0140<br></td> <td align="center">+0.0571<br></td> </tr> <tr> <td>GBPUSD<br></td> <td align="center">-0.8774<br></td> <td align="center">0.2286<br></td> <td align="center">0.2396<br></td> <td align="center">+0.0110<br></td> <td align="center">+0.0433<br></td> </tr> <tr> <td>USDJPY<br></td> <td align="center">-0.3393<br></td> <td align="center">0.3237<br></td> <td align="center">0.3329<br></td> <td align="center">+0.0092<br></td> <td align="center">+0.0123<br></td> </tr> <tr> <td>EURUSD<br></td> <td align="center">-0.5051<br></td> <td align="center">0.3707<br></td> <td align="center">0.3637<br></td> <td align="center">-0.0070<br></td> <td align="center">+0.0205<br></td> </tr> </tbody> </table> <p style="text-align:center;"> <img width="750" height="422" src="https://c.mql5.com/2/253/pdv_fig05_trend_gain.png" loading="lazy" title="Out-of-sample R-squared added by the trend term across ten instruments" alt="Out-of-sample R-squared added by the trend term across ten instruments" style="vertical-align:middle;"></p> <p style="text-align:center;"><span class="small">Fig. 5. What the sign of the path is worth, by instrument. The five equity indices separate cleanly from everything else.</span></p> <p>Every equity index sits between +0.073 and +0.171; every currency pair within about a hundredth of zero, with EURUSD very slightly harmed. That is consistent with the usual explanations of the effect. The classic one is financial leverage: a falling share price raises a firm's debt-to-equity ratio and makes its equity riskier. The other, volatility feedback, has rising expected volatility pushing prices down. Both are about equity, with no obvious counterpart in a currency pair, which has no issuer whose balance sheet can be geared.</p> <p>The currency rows say no more than that. GBPUSD's b1 of -0.877 matches GER30's -0.876; the coefficient is there in sample and does not carry out of sample. Currencies have their own asymmetries, such as risk-off flows into the yen, carry unwinds and intervention, whose sign depends on which side is the base currency, so one b1 per pair is a blunt tool. This specification finds nothing worth having on these pairs at this horizon and with this target; that does not prove currency volatility has no path dependence.</p> <p>Gold's b1 is positive: rising prices go with rising volatility, which would fit an asset whose rallies are the stress events. Treat it as a hint. The gain is small, +0.023, and fragile: refitting the same history with the purged training window lands in a neighbouring optimum near +0.009, inside the currency band, and one instrument on one horizon cannot separate a mechanism from a feature of the period.</p> <p><br></p> <h3 id="what_the_numbers_do_not_say">What the Numbers Do Not Say</h3> <p>Seven caveats. The first four we measured, the fifth concerns the forward projection, and the last two are about what was not measured.</p> <p><u>A noisy target keeps R-squared well below 1</u>. Realised volatility from a finite number of bars carries its own sampling noise, and no model explains noise. On synthetic data generated by the model with known parameters, the fit reaches an out-of-sample R-squared of 0.1156 against a close-to-close target, and a forecaster handed the true current volatility, rescaled to the target's mean, scores 0.1114. That is a benchmark, not a ceiling: it has no intercept and knows the current bar's volatility rather than the expected path over the target's 24 bars, so a fitted model can edge past it. It does show that a model at the right volatility scores only about 0.11 against such a target, so a low R-squared there is not by itself a failure. Against the true volatility the fit correlates at 0.976. The Parkinson target used elsewhere is far less noisy, hence the higher real-data figures. Read them against the baselines in section six, never against 1.0.</p> <p><u>The kernel parameters are weakly identified</u>. On the same test the calibrator recovered half-lives of 0.50 and 121.5 for a series generated with 4 and 60, with 98% of the weight on the 121.5-bar side, in effect one exponential, yet matched the fit of the true kernels and tracked the true volatility at 0.976. Very different kernels describe the same market almost equally well, so report the fitted curve and the decomposition, not the half-lives as structural constants. The 150-bar half-lives of section four describe that fit, not the market.</p> <p><u>More memory stops paying out of sample</u>. This sweep varies only the half-life cap. The warm-up is pinned at 3,500 bars for every row, what a 700-bar half-life needs and what <i>SetMaxHalfLife</i> would otherwise refuse, because raising it with the cap would move the scored window and credit the cap for a change of period. The window therefore starts 2,750 bars later than elsewhere, so these figures run higher than section four's and compare only with each other.</p> <table cellspacing="0" cellpadding="3" width="100%" class="standart"> <thead> <tr> <th align="center">Cap<br></th> <th align="center">R-squared, train<br></th> <th align="center">R-squared, test<br></th> <th align="center">b1<br></th> </tr> </thead> <tbody> <tr> <td align="center">50<br></td> <td align="center">0.6941<br></td> <td align="center">0.4446<br></td> <td align="center">-1.911<br></td> </tr> <tr> <td align="center">100<br></td> <td align="center">0.6991<br></td> <td align="center">0.4550<br></td> <td align="center">-2.134<br></td> </tr> <tr> <td align="center">150<br></td> <td align="center">0.7029<br></td> <td align="center">0.4575<br></td> <td align="center">-2.479<br></td> </tr> <tr> <td align="center">300<br></td> <td align="center">0.7080<br></td> <td align="center">0.4542<br></td> <td align="center">-3.843<br></td> </tr> <tr> <td align="center">500<br></td> <td align="center">0.7093<br></td> <td align="center">0.4523<br></td> <td align="center">-5.312<br></td> </tr> <tr> <td align="center">700<br></td> <td align="center">0.7095<br></td> <td align="center">0.4533<br></td> <td align="center">-5.939<br></td> </tr> </tbody> </table> <p style="text-align:center;"> <img width="750" height="422" src="https://c.mql5.com/2/253/pdv_fig06_cap_sweep.png" loading="lazy" title="Train and test R-squared against the half-life cap on SPX500" alt="Train and test R-squared against the half-life cap on SPX500" style="vertical-align:middle;"></p> <p style="text-align:center;"><span class="small">Fig. 6. In-sample R-squared rises monotonically with memory while out-of-sample R-squared rises to about 150 bars and then flattens slightly lower.</span></p> <p>Training R-squared rises monotonically. Out-of-sample R-squared climbs 0.013 from a 50-bar cap to 150, then sits 0.003 to 0.005 lower at every longer cap, not monotonically, and differences that small cannot be called without an interval. Meanwhile b1 inflates from -1.9 to -5.9 as it absorbs memory that does not generalise. A 750-bar warm-up, capping half-lives at 150, is a reasonable choice on H1 indices, not a proven optimum.</p> <p><u>The model can produce a negative volatility</u>. With b1 negative, a long enough rally drives b0 + b1 * R1 + b2 * sqrt(R2) through zero. That is a property of the linear specification, not a porting error, and it is handled in one helper, so the live reading and the multi-step forecast apply the same floor:</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| Apply the floor: a share of the activity term's magnitude, so it |</span>
+<span class="comment">//| carries the instrument's scale whatever the sign of b2.          |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">double</span> CPdvForecast::Floored(<span class="keyword">const</span> <span class="keyword">double</span> raw,<span class="keyword">const</span> <span class="keyword">double</span> root) <span class="keyword">const</span>
+  {
+   <span class="keyword">const</span> <span class="keyword">double</span> flr=m_floor_frac*<span class="functions">MathAbs</span>(m_p.b2)*root;
+   <span class="keyword">if</span>(flr&lt;=<span class="number">0.0</span>)
+      <span class="keyword">return</span> (raw&gt;<span class="number">0.0</span> ? raw : <span class="number">0.0</span>);
+   <span class="keyword">return</span> (raw&lt;flr ? flr : raw);
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>The live reading is that helper applied to the raw value:</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| Model volatility, floored.                                       |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">double</span> CPdvForecast::Sigma(<span class="keyword">void</span>) <span class="keyword">const</span>
+  {
+   <span class="keyword">return</span> Floored(SigmaRaw(),m_state.RootR2());
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>Both values are exposed because the raw one is a diagnostic: it shows the model has been pushed outside the range it was fitted in. On SPX500 the floor never engaged over 22,120 described bars, so there the indicator runs exactly the calibrated model; on another instrument, check the negative-raw-sigma count <i>PDV_Calibrate</i> prints. As a share of the activity term's magnitude, the floor keeps its scale even if a fit returned a negative b2, itself a sign of an unusable fit.</p> <div class="atten"> <b>On thresholds:</b> the mean trend share on SPX500 is 0.168, and over those 22,120 bars the trend term never exceeded the activity term in magnitude. In bins a tenth wide, 29% of bars fall below 0.1, 34% between 0.1 and 0.2, 28% between 0.2 and 0.3, 10% between 0.3 and 0.4, and none above. A rule such as "act when the trend share passes one half" would never fire, although the trend term is worth 0.171 of R-squared. Thresholds are not useless, but one borrowed from intuition sits outside the range the quantity occupies; rank the trend share against its own recent distribution instead. </div> <p><u>The multi-step forecast settles far more slowly than its half-life suggests</u>. Projecting forward with no new information is where the separate <i>UpdateParts</i> promised in section three earns its keep:</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//| Volatility this many bars ahead, given no further information.   |</span>
+<span class="comment">//|                                                                  |</span>
+<span class="comment">//|  With nothing new arriving the expected return is zero, so the   |</span>
+<span class="comment">//|  signed accumulators simply decay. The squared ones cannot decay |</span>
+<span class="comment">//|  to zero, because the model's own answer is what the market is   |</span>
+<span class="comment">//|  expected to deliver: each step feeds the current sigma squared  |</span>
+<span class="comment">//|  back in as the next bar's squared return. The recursion relaxes |</span>
+<span class="comment">//|  toward the model's fixed point, b0/(1-b2), rather than toward   |</span>
+<span class="comment">//|  nothing - which is why a long-horizon forecast flattens out     |</span>
+<span class="comment">//|  instead of collapsing. Note that the b2 feedback stretches the  |</span>
+<span class="comment">//|  relaxation well beyond the kernel's own half-life.              |</span>
+<span class="comment">//|                                                                  |</span>
+<span class="comment">//|  Working on a copy keeps this a query, so a caller can forecast  |</span>
+<span class="comment">//|  on every tick without disturbing the live reading.              |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">double</span> CPdvForecast::Forecast(<span class="keyword">const</span> <span class="keyword">int</span> steps) <span class="keyword">const</span>
+  {
+   <span class="keyword">if</span>(!m_ready)
+      <span class="keyword">return</span> <span class="number">0.0</span>;
+   <span class="keyword">if</span>(steps&lt;=<span class="number">0</span>)
+      <span class="keyword">return</span> Sigma();
+
+   CPdvState fwd;
+   fwd.CopyFrom(m_state);
+   <span class="keyword">double</span> sig=Sigma();
+
+   <span class="keyword">for</span>(<span class="keyword">int</span> k=<span class="number">0</span>;k&lt;steps;k++)
+     {
+      fwd.UpdateParts(<span class="number">0.0</span>,sig*sig);
+      <span class="keyword">const</span> <span class="keyword">double</span> root=fwd.RootR2();
+      <span class="keyword">const</span> <span class="keyword">double</span> raw =m_p.b0+m_p.b1*fwd.R1()+m_p.b2*root;
+      sig=Floored(raw,root);
+     }
+   <span class="keyword">return</span> sig;
+  }</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>The signed side is fed zero and the squared side the model's own answer, an asymmetry a single <i>Update</i> could not express. With b2 at 0.684 the fixed point b0 / (1 - b2) is about 1.65e-03 on SPX500, close to the unconditional mean in the evidence table, but the feedback stretches the approach far past the kernel's memory: a forecast built on a 40-bar half-life takes several hundred bars to settle, not forty. An answer stubbornly close to today's reading is that property of the specification, not a bug.</p> <div class="atten"> <b>Not measured here:</b> every out-of-sample number in this article scores the <i>one-step</i> feature set against a target 24 bars ahead. The multi-step projection is shipped and its behaviour understood, but it is not separately validated; treat it as a facility, not a benchmarked forecast. </div> <p><u>None of these differences carries a confidence interval</u>. The 24-bar targets overlap: the 6,629 scored SPX500 test bars hold only about 276 non-overlapping windows, and volatility persistence shrinks the effective sample further. The +0.17 on SPX500 is large against that; the currency differences of about a hundredth, gold's +0.023 and the cap sweep's thousandths are not distinguishable from noise without a formal test, such as Diebold-Mariano with autocorrelation-robust errors, which is not run here.</p> <p><u>Every result comes from one setup</u>: H1 bars, a 24-bar horizon, a Parkinson target, one 70/30 split, ten instruments, one broker's history. Nothing here shows the same holds on other timeframes, horizons, targets or data sources. GER30 is a warning: with one more month of history, every volatility model's out-of-sample R-squared on it, EWMA and GARCH included, falls from about 0.4 to about zero, while the gain from the trend term stays at +0.07 to +0.10. Levels are fragile; the comparison between models on one symbol is the sturdier reading.</p> <p><br></p> <h3 id="conclusion">Conclusion</h3> <p>We started from a structural complaint: a conditional-variance model reads past squared returns, and its asymmetric variants admit the sign only through the variance's own memory, never as a memory of the path's direction. We ported a model that has one, and measured what it is worth.</p> <ul> <li><u>The implementation is four numbers</u>. Two mixtures of two exponentials become four EWMA accumulators updated with eight multiplications per bar, with no lookback window, no matrix in the update and nothing that grows with history. Calibrating all nine parameters takes about 1.2 seconds on 22,000 bars.</li> <li><u>The trend term is worth a great deal on equity indices</u>. Against the same model without it, each fitted at its own optimum, it adds 0.073 to 0.171 of out-of-sample R-squared on all five indices tested, with 0.171 on SPX500 and 0.158 on US30 at the top, and it beats a fairly searched GARCH(1,1) by a similar margin on every one.</li> <li><u>It adds nothing measurable on currency pairs</u>. That fits the equity-based accounts of the leverage effect, but shows only that this specification finds nothing worth having at this horizon, not that currency volatility has no path dependence.</li> <li><u>The decomposition is the deliverable, not the R-squared</u>. Splitting volatility into direction and activity answers a question a single conditional-variance number cannot, at no extra cost.</li> <li><u>Read the caveats</u>. A noisy target keeps R-squared well below 1, the half-lives are weakly identified, memory beyond about 150 bars buys nothing out of sample, no difference carries a confidence interval, and every figure comes from one setup. The trend share never exceeds 0.4 on SPX500, so set thresholds from the observed distribution, not from intuition.</li> </ul> <p>To reproduce this on your instrument, run <i>PDV_Calibrate</i> on the symbol and timeframe you trade. Check that b1 is far enough from zero to do work and keeps its sign when you move the end of the history by a few weeks, and that the negative-raw-sigma count is near zero. Paste the nine printed numbers into <i>PDV_Decomposition</i>, and run <i>PDV_Evidence</i> to confirm the trend term earns its place before you rely on it. If the activity-only and full rows land within a hundredth of each other, as on EURUSD, the extra term buys nothing on that instrument, and you should say so.</p> <div class="atten"> The programs presented in this article are intended for educational purposes only. Backtested and in-sample results do not guarantee future performance, and the models discussed here forecast volatility rather than direction. Nothing in this article is a recommendation to trade. </div> <p><br></p> <p><b>Getting the Source Code via MQL5 Algo Forge</b></p> <p>All source files are attached to this article below, but the full repository is also available on <a href="https://forge.mql5.io/ayantrader/PDV" rel="noreferrer noopener nofollow" title="https://forge.mql5.io/ayantrader/PDV" target="_blank">MQL5 Algo Forge</a>, the community's Git-based platform for sharing and collaborating on trading projects.</p> <table cellspacing="0" cellpadding="3" width="100%" class="standart"> <thead> <tr> <th>File name<br></th> <th>Description<br></th> </tr> </thead> <tbody> <tr> <td>MQL5\Include\PDV\PdvTypes.mqh<br></td> <td>Shared vocabulary: kernel, parameter, fit and decomposition structs, buffer map, half-life conversions<br></td> </tr> <tr> <td>MQL5\Include\PDV\PdvState.mqh<br></td> <td>The model engine: four exponential accumulators updated in O(1) per bar<br></td> </tr> <tr> <td>MQL5\Include\PDV\PdvModel.mqh<br></td> <td>Calibration: forward-only target construction, closed-form regression, Nelder-Mead over the kernels, activity-only ablation<br></td> </tr> <tr> <td>MQL5\Include\PDV\PdvForecast.mqh<br></td> <td>Live model: decomposition, volatility floor, trend share, multi-step projection<br></td> </tr> <tr> <td>MQL5\Indicators\PDV\PDV_Decomposition.mq5<br></td> <td>Subwindow indicator plotting total volatility against its trend and activity components<br></td> </tr> <tr> <td>MQL5\Scripts\PDV\PDV_Calibrate.mq5<br></td> <td>Fits the model to one symbol and reports parameters, split scores and the decomposition summary<br></td> </tr> <tr> <td>MQL5\Scripts\PDV\PDV_Evidence.mq5<br></td> <td>Out-of-sample comparison against a constant, an EWMA volatility and GARCH(1,1), with the trend-term ablation<br></td> </tr> </tbody> </table>
+      </div>
+<div id="cb_24607" class="attachBlock">
+  <strong>Attached files</strong> |
+  <div class="grouped-attachments-help">
+    <a title="Download all attachments in the single ZIP archive" href="/en/articles/download/24607.zip">
+      <i class="attach-icon attach-icon_zip"></i>Download ZIP
+    </a>
+  </div>
+    <div class="attachItem">
+      <a title="Download MQL5.zip" href="/en/articles/download/24607/MQL5.zip"><i class="attach-icon attach-icon_zip"></i>MQL5.zip</a>
+      <span class="attachSize">(28.86 KB)</span>
+    </div>
+</div>
+    </div>
+
+  <div class="copyright">
+    <p><strong>Warning:</strong> All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.</p>
+      <p>This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.</p>
+  </div>
+
+
+
+    <div class="article__author-with-articles">
+      
+
+
+<div class="article-footer__author">
+  <div class="article-footer__author-avatar">
+    <img id="avatar" src="https://c.mql5.com/avatar/2026/1/69658e59-c4ec_big.png" title="Muhammad Minhas Qamar" alt="Muhammad Minhas Qamar" loading="lazy" width="164" height="164">
+  </div>
+  <div class="article-footer__author-content">
+    <div class="article-footer__author-name">
+      <a href="/en/users/ayantrader" title="Muhammad Minhas Qamar">Muhammad Minhas Qamar</a>
+    </div>
+    <div class="article-footer__author-info">
+      <ul>
+          <li>
+            <i title="Lives" class="icons-profile icons-profile_geo"></i>
+            <a target="_blank" rel="noreferrer noopener nofollow" title="Lives" href="https://maps.google.com/?z=4&amp;q=Pakistan">Pakistan</a>
+          </li>
+        <li>
+          <i title="Rating" class="icons-profile icons-profile_statistics"></i>
+          <a title="Rating" href="/en/users/ayantrader/achievements">12612</a>
+        </li>
+      </ul>
+    </div>
+    <div class="article-footer__author-contacts">
+          <li title="LinkedIn"><a class="icons-networks icons-networks_linkedin-mini" target="_blank" rel="noreferrer noopener nofollow" href="https://www.linkedin.com/in/ayan-minhas-167637210/"></a></li>
+
+    </div>
+    <div class="article-footer__author-bio">Developer by Profession, Trader by Hobby <br> <br>Gmail: ayanminhasshayar@gmail.com</div>
+  </div>
+</div>
+
+      <div class="other-author-articles ui">
+        <h4 class="other-author-articles__title">Other articles by this author</h4>
+        <ul class="other-author-articles__list">
+          <li><a href="/en/articles/24850" data-fz-event="MQL5+Article+From+Author+Article">Which Economic Releases Actually Move Your Symbol, and by How Much?</a></li>
+          <li><a href="/en/articles/24757" data-fz-event="MQL5+Article+From+Author+Article">Entropy Pooling and Scenario Budgets for Expected-Shortfall Sizing</a></li>
+          <li><a href="/en/articles/24577" data-fz-event="MQL5+Article+From+Author+Article">Online False Discovery Rate Control: Putting an Error Budget on a Live Signal Stream</a></li>
+          <li><a href="/en/articles/24742" data-fz-event="MQL5+Article+From+Author+Article">Beyond Tick Volume: Measuring Market Activity from the Waits Between Quotes</a></li>
+          <li><a href="/en/articles/24318" data-fz-event="MQL5+Article+From+Author+Article">Forecast Reconciliation (MinT): One Engine for Timeframe Hierarchies and Currency Graphs</a></li>
+          <li><a href="/en/articles/24221" data-fz-event="MQL5+Article+From+Author+Article">Foundation Models for Trading (Part III): Running a Generative AI Forecaster Inside MetaTrader 5</a></li>
+        </ul>
+      </div>
+    </div>
+
+</article>
+
+
+  <div class="article__last-comments" id="articleAdditional">
+    
+<div class="comments-preview">
+    <div class="title">
+      <span></span><b>
+ <a href="/en/forum/519232">Go to discussion</a>
+      </b>
+    </div>
+    <div>
+        
+    </div>
+</div>
+
+  </div>
+
+
+    <div class="articles-bottom-list">
+        <div class="articles-bottom-list__row">
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Bull Optimization Algorithm (BOA)" src="https://c.mql5.com/2/210/22390-algoritm-optimizacii-bikov-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/22390" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Bull Optimization Algorithm (BOA)</a>
+                <div class="articles-bottom-list__desc">We present an evolutionary algorithm without a selection operator: the best individual becomes the sole mating partner for the entire population, and classical mutation is replaced by multiplicative mutation with a self-adjusting step size. In this article, we examine three key ideas, implement the algorithm in MQL5 using the C_AO framework, and test it on the standard benchmark suite and in an anti-cheat test — where BOA comes very close to the cutoff for the top 45 but does not make the ranking.</div>
+              </div>
+          </div>
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Behavioural Cloning in a Live Trading System: What Live Experience Can and Cannot Teach" src="https://c.mql5.com/2/274/24619-behavioural-cloning-in-a-live-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/24619" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Behavioural Cloning in a Live Trading System: What Live Experience Can and Cannot Teach</a>
+                <div class="articles-bottom-list__desc">This article measures a live-to-train behavioral-cloning loop for an RL trading system across 83 models. Outcome-weighted imitation shifted the policy toward Hold (48% → 82%), with 12 final models not trading at all. Live records were instead used to fit spread and slippage to broker fills, revealing execution costs ~85× higher than in simulation. We describe the loop, the failure mechanism, the calibration, and a protocol to apply.</div>
+              </div>
+          </div>
+        </div>
+        <div class="articles-bottom-list__row">
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Market Simulation: First Steps with SQL in MQL5 (II)" src="https://c.mql5.com/2/151/13078-simula-o-de-mercado-iniciando-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/13078" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Market Simulation: First Steps with SQL in MQL5 (II)</a>
+                <div class="articles-bottom-list__desc">Although many people believe that we can easily embed SQL code into other code, this is usually not the case. The reason is that the SQL code is included in the executable as a string. Embedding SQL code as a string, while not a problem for small snippets, can ultimately cause us quite a few headaches.</div>
+              </div>
+          </div>
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Fundamentals of Bayesian Inference in Discrete and Continuous Settings: From Theory to Practical Model Implementation" src="https://c.mql5.com/2/210/22403-osnovi-bayesovskogo-vivoda-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/22403" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Fundamentals of Bayesian Inference in Discrete and Continuous Settings: From Theory to Practical Model Implementation</a>
+                <div class="articles-bottom-list__desc">The article discusses the fundamentals of Bayesian statistics in both discrete and continuous settings. We will progress from classical Bayes’ theorem and simple examples involving coin flips to conjugate distributions and dynamic Bayesian updating, which enables real-time analysis of market quotes. Using the beta-binomial model as an example, a simple change-point detection indicator has been implemented to help identify shifts in market regimes.</div>
+              </div>
+          </div>
+        </div>
+    </div>
+
+<div class="clear-fix"></div>
+
+<div id="wdausxxqrpvhekbwjrjlhqjghyhesrqqau" class="rx45ft5jkbtq9r7i2 rx45ft5jkbtq9r7i2_articles-view ghky8ic0v"><iframe width="800" height="80" frameborder="0" style="vertical-align: top; max-width: 100% !important; display: block;" scrolling="no" src="https://www.mql5.com/ff/sh/au4fqg4kms7s9mq1z2/index.html?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F13586&amp;a=uzpprdshbcrtxvjxpmescehprypbymxc&amp;s=516438f25b531570d9b7d49dcfb29c82fa1021f5ede6571df8026dbfbafcd13f&amp;v=1&amp;w=800&amp;h=80&amp;r=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F24607&amp;host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&amp;id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&amp;fz_uniq=5049974610882193610&amp;custom="></iframe></div>
+    
+
+<div class="hidden" id="popupRegisterLogin">
+  <div class="register-login-popup">
+    <div class="register-login-popup__header">
+      <img src="https://c.mql5.com/i/registerlandings/logo-2.png" srcset="https://c.mql5.com/i/registerlandings/logo-2_2x.png 2x" alt="MQL5 - Language of trade strategies built-in the MetaTrader 5 client terminal" loading="lazy" width="74" height="24">
+    </div>
+    <div class="register-login-popup__content">
+      <div class="register-login-popup__desc">
+        <div class="register-login-popup__title">You are missing trading opportunities:</div>
+        <ul>
+<li>Free trading apps</li>
+<li>Over 8,000 signals for copying</li>
+<li>Economic news for exploring financial markets</li>
+</ul>
+      </div>
+      <div class="register-login-popup__forms ui">
+        <div class="register-login-popup__tabs" id="registerLoginPopupTabs">
+          <span data-id="register" id="registerLoginPopupTab_register" class="register-login-popup__tab register-login-popup__tab_active">Registration</span>
+          <span data-id="login" id="registerLoginPopupTab_login" class="register-login-popup__tab">Log in</span>
+        </div>
+        <div id="registerLoginPopupTabContent_register">
+          <div class="ui auth-form__content">
+    
+  <script type="text/javascript">/*<![CDATA[*/ if (!window.V) var V = []; /*]]>*/</script>
+<script>/*<![CDATA[*/ if(! window.V) var V=[]; /*]]>*/</script>
+<form method="POST" action="/en/auth_register_short" id="PopupRegisterquickRegisterForm" onsubmit="PopupRegisterquickRegistration.OnSubmit(this,'en');if(Validate(this)) Ajax.form(this,{onready:PopupRegisterquickRegistration.OnSuccessPopup,onerror:PopupRegisterquickRegistration.OnError,onbeginrequest:PopupRegisterquickRegistration.DisableInputs,onendrequest:PopupRegisterquickRegistration.EnableInputs});return(false);" enctype="multipart/form-data"><input type="hidden" name="__signature" value="2d9befee5687871abad51c3ca0b93ceb">
+    <div class="auth-form__inputs">
+      <input type="hidden" value="0" name="IsValidate" id="PopupRegisterIsValidate">
+
+      <!--[if lt IE 10]><div class="note">Login:</div><![endif]-->
+      <div class="auth-form__box-input">
+        <input type="text" id="PopupRegisterusername" name="username" class="input" maxlength="32" onchange="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.CheckUserName();}" onkeyup="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.ValidateUserName(this, 'Enter a valid login');}" placeholder="Login" title="May contain Latin letters, digits, dots, dashes,underscore characters. Cannot start or end with a dot. The allowed length is 3 to 32 characters." onfocus="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnFocus(this,'');}" onblur="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnBlur(this);}">
+        <script id="validate_PopupRegisterusername">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['PopupRegisterusername',10,'You may use Latin characters, numbers, underscores and periods.',validate_username]);}); /*]]>*/</script>
+
+        <label class="label" for="PopupRegisterusername">latin characters without spaces</label>
+      </div>
+      <!--[if lt IE 10]><div class="note">Your email:</div><![endif]-->
+      <div class="auth-form__box-input">
+        <input class="input" type="email" id="PopupRegisteremail" name="email" placeholder="Your email" title="Please enter the email (it may not exceed 256 characters). For example: john@example.com" onchange="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnChange(this);}" onfocus="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnFocus(this,'');}" onblur="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnBlur(this);}">
+        <script id="validate_PopupRegisteremail">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['PopupRegisteremail',10,'Enter a valid email address',validate_email]);}); /*]]>*/</script>
+
+        <label class="label" for="PopupRegisteremail">a password will be sent to this email</label>
+      </div>
+      <input name="PrefixId" type="hidden" value="Popup+Register">
+    </div>
+    <span id="PopupRegisterquickRegisterSubmit">
+      <input type="submit" value="Register" id="PopupRegisterquickRegisterButton" title="Sign up and receive an email with your password" class="button button_yellow">
+    </span>
+    <span id="PopupRegisterquickRegisterErrorMessage" class="quick-register-error-message field-validation-error" style="text-align: center; margin-top: 16px; display: none;">
+      An error occurred
+    </span>
+</form>
+    
+</div>
+<div class="auth-social">
+  <ul class="auth-social-list" id="PopupRegistersocialList">
+    <li><a onclick="window.fpush({name: 'MQL5+Popup+Register+Google', unit: 'section', value: 'Articles'}); " href="https://www.mql5.com/en/auth_oauth2?provider=Google&amp;amp;return=popup&amp;amp;reg=1" class="auth-soc-button qa-google-button auth-soc-button_google" rel="nofollow">Log in With Google</a></li>
+  </ul>
+</div>
+<div class="auth-block-agree">
+  <p>
+    You agree to <a target="_blank" href="/en/about/privacy">website policy</a> and <a target="_blank" href="/en/about/terms">terms of use</a>
+  </p>
+</div>
+
+
+        </div>
+        <div id="registerLoginPopupTabContent_login" class="hidden">
+            <div id="loginRegistrationHint" class="auth-form__text">
+    If you do not have an account, please <a href="https://www.mql5.com/en/auth_register" rel="nofollow" style="vertical-align: top">register</a>
+  </div>
+<div class="ui auth-form__content auth-form__content_login" id="loginFormWrapper">
+    
+  <div id="needCookies" class="need-cookies hidden">
+    <div class="danger-box">
+      <p>Allow the use of cookies to log in to the MQL5.com website.</p>
+<p>Please enable the necessary setting in your browser, otherwise you will not be able to log in.</p>
+    </div>
+  </div>
+<script>/*<![CDATA[*/ if(! window.V) var V=[]; /*]]>*/</script>
+<form method="POST" action="/en/auth_login" id="loginForm" onsubmit="if(window.quickLogin){return window.quickLogin.onSubmit(this);}var result = Validate(this); if(result) { preventDoubleSubmit(this); } return result;"><input id="RedirectAfterLoginUrl" name="RedirectAfterLoginUrl" type="hidden" value=""><input id="RegistrationUrl" name="RegistrationUrl" type="hidden" value=""><input data-val="true" data-val-required="The ShowOpenId field is required." id="ShowOpenId" name="ShowOpenId" type="hidden" value="True"><input id="TrackingSection" name="TrackingSection" type="hidden" value="Articles">    <input name="ViewType" type="hidden" value="5">
+      <input name="PrefixId" type="hidden" value="Popup+Login">
+    <div id="loginCredentials">
+    <!--[if lt IE 10]><div class="note">Your login:</div><![endif]-->
+    <div class="auth-form__box-input">
+      <input aria-label="Your login" class="input qa-login" id="Login" name="Login" onchange="if(window.quickLogin){window.quickLogin.onChange(this);}" placeholder="Login" title="Your login" type="text" value="">
+      <script id="validate_Login">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['Login',1,'Enter login specified when signing up']);});mqGlobal.AddOnReady(function() {V.push(['Login',10,'Email cannot be used. Enter your login please',validateLogin]);}); /*]]>*/</script>
+    </div>
+    <!--[if lt IE 10]><div class="note">Password:</div><![endif]-->
+    <div class="auth-form__box-input">
+      <div class="input-with-show">
+        <input aria-label="Password" autocomplete="off" class="input qa-password" id="Password" name="Password" onchange="if(window.quickLogin){window.quickLogin.onChange(this);}" placeholder="Password" title="Enter the password please" type="password">
+        <button type="button" class="input-with-show__icon" title="Show password" aria-label="Show password" aria-pressed="false" onclick="if(window.quickLogin){window.quickLogin.showPass(this, 'Show password', 'Hide password');}"></button>
+      </div>
+      <script id="validate_Password">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['Password',1,'Please enter the password']);}); /*]]>*/</script>
+    </div>
+    </div>
+    <script type="text/javascript">
+    function validateLogin(input) {
+      return !/^\w+([-+.'']{1,2}\w+)* @\w+([-.]\w+)*\.\w+([-.]\w+)*$/i.test(input.value);
+    }
+    </script>
+    <div id="loginTwoFactor" style="display: none;" data-url="/en/auth_two_factor" data-signature="718bdfe7d71a073191600e6de591dee5" data-error="Error occurred. Please try again later." data-confirm="Confirm" data-code-prompt="Enter the six-digit code from your authenticator app." data-recovery-prompt="Enter recovery code number {0} from the list you saved during setup.">
+      <p id="loginTwoFactorPrompt">Enter the six-digit code from your authenticator app.</p>
+      <div class="auth-form__box-input">
+        <input class="input input_two-factor" type="text" id="loginTwoFactorCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" dir="ltr" placeholder="000000" aria-label="Authorization code verification" aria-describedby="loginTwoFactorPrompt" disabled="">
+      </div>
+    </div>
+    <p id="loginInlineError" class="field-validation-error" role="alert" style="display: none;"></p>
+    <p id="loginPasswordResetError" class="field-validation-error" role="alert" style="display: none;">Please use <a href="/en/auth_forgotten">Password recovery</a></p>
+    <div class="forgot" id="loginForgotBlock"><a id="loginForgotLink" href="https://www.mql5.com/en/auth_forgotten?return=popup">Forgot your login/password?</a></div>
+    <div class="forgot" id="loginTwoFactorRecoveryBlock" style="display: none;">
+      <a id="loginTwoFactorRecovery" class="link">Lost your authenticator?</a>
+    </div>
+    <input type="submit" class="button button_yellow qa-submit" id="loginSubmit" value="Log in" title="Enter">
+</form>  <div id="loginTwoFactorRecovered" style="display: none;">
+    <p>You are signed in. Two-factor authentication has been disabled. Set it up again and scan a new QR code, or continue with two-factor authentication disabled.</p>
+    <a id="loginTwoFactorSettings" class="button button_yellow">Enable two-factor authentication</a>
+    <a id="loginTwoFactorContinue" class="button" style="margin-top: 12px;">Continue</a>
+  </div>
+</div>
+
+  <div class="auth-social" id="authSocialBlock">
+    <ul class="auth-social-list" id="PopupLoginsocialList">
+      <li><a onclick="window.fpush({name: 'MQL5+Popup+Login+Google', unit: 'section', value: 'Articles'}); " href="https://www.mql5.com/en/auth_oauth2?provider=Google&amp;amp;return=popup" class="auth-soc-button qa-google-button auth-soc-button_google" rel="nofollow">Log in With Google</a></li>
+    </ul>
+  </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script id="popupSection" type="application/json">{"section": "Articles"}</script>
+<script id="popupTranslate" data-type="translate" type="application/json">
+{
+  "popup":
+  {
+  "EmailTitle" : "The password has been sent to {0}",
+  "EmailDescription" : "Log in using the obtained password and the login specified during the registration",
+  "SubmitButtonText" : "Activate account",
+  "RegistrationTip" : "If you have not received the password email, check the spam folder or &lt;a href={0}&gt;repeat the registration&lt;/a&gt;"
+  }
+}
+</script>
+
+    
+
+    
+
+
+            </div>
+          </div>
+    </div>
+  </main>
+
+
+<footer class="footer desktop" id="footer">
+  <ul class="links links_desktop">
+      <li id="navFooterCommunity">
+        <nav aria-label="Website: Sections">
+          <ul>
+            <li><a href="https://web.metatrader.app/terminal?mode=demo&amp;lang=en" target="_blank" rel="nofollow noopener" data-fz-event="MQL5+Footer+Trading">Online trading / WebTerminal</a></li>
+            <li><a href="/en/code" data-fz-event="MQL5+Footer+CodeBase">Free technical indicators and robots</a></li>
+            <li><a href="/en/articles" data-fz-event="MQL5+Footer+Articles">Articles about programming and trading</a></li>
+            <li><a href="/en/job" data-fz-event="MQL5+Footer+Job">Order trading robots on the Freelance</a></li>
+            <li><a href="/en/market" data-fz-event="MQL5+Footer+Market">Market of Expert Advisors and applications	</a></li>
+            <li><a href="/en/signals" data-fz-event="MQL5+Footer+Signals">Follow forex signals</a></li>
+            <li><a href="/en/vps" data-fz-event="MQL5+Footer+VPS">Low latency forex VPS</a></li>
+            <li><a href="/en/forum" data-fz-event="MQL5+Footer+Forum">Traders forum</a></li>
+            <li><a href="/en/blogs" data-fz-event="MQL5+Footer+Blogs">Trading blogs</a></li>
+            <li><a rel="nofollow" href="/en/charts" data-fz-event="MQL5+Footer+Charts">Charts</a></li>
+            <li><a href="/en/widgets" data-fz-event="MQL5+Footer+Widgets">Free widgets</a></li>
+          </ul>
+        </nav>
+      </li>
+      <li id="navFooterMt5">
+        <nav aria-label="MetaTrader 5 Trade Platform">
+          <ul>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com" data-fz-event="MQL5+Footer+MetaTrader+5"><span class="nobr">MetaTrader 5</span> Trading Platform</a></li>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/releasenotes" data-fz-event="MQL5+Footer+MetaTrader+5"><span class="nobr">MetaTrader 5</span> latest updates</a></li>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/news" data-fz-event="MQL5+Footer+MetaTrader+5">News, implementations and technology</a></li>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/terminal/help" data-fz-event="MQL5+Footer+MetaTrader+5"><span class="nobr">MetaTrader 5</span> User Manual</a></li>
+            <li><a href="/en/docs" data-fz-event="MQL5+Footer+Docs">MQL5 language of trading strategies</a></li>
+            <li><a rel="nofollow noopener" href="https://cloud.mql5.com" data-fz-event="MQL5+Footer+Cloud">MQL5 Cloud Network</a></li>
+            <li><a rel="noopener" href="https://forge.mql5.io/?lang=en" data-fz-event="MQL5+Footer+Forge" target="_blank">MQL5 Algo Forge</a></li>
+              <li><a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/mt5setup.exe?utm_source=www.mql5.com&amp;utm_campaign=download" data-fz-event="MetaTrader+5+Desktop+Download+Footer">Download <span class="nobr">MetaTrader 5</span></a></li>
+              <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/terminal/help/start_advanced/installation" data-fz-event="MQL5+Footer+MetaTrader+5">Install Platform</a></li>
+              <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/terminal/help/start_advanced/deinstallation" data-fz-event="MQL5+Footer+MetaTrader+5">Uninstall Platform</a></li>
+          </ul>
+        </nav>
+
+      </li>
+    <li id="navFooterWebsite">
+        <nav aria-label="Website">
+          <ul>
+            <li><a rel="nofollow" href="/en/about" data-fz-event="MQL5+Footer+About">About</a></li>
+              <li><a href="/en/wall" data-fz-event="MQL5+Footer+Wall">Timeline</a></li>
+            <li><a rel="nofollow" href="/en/about/terms" data-fz-event="MQL5+Footer+About">Terms and Conditions</a></li>
+            <li><a rel="nofollow" href="/en/about/autopayments" data-fz-event="MQL5+Footer+About">Recurring Payment Agreement</a></li>
+            <li><a rel="nofollow" href="/en/about/agencyagreement" data-fz-event="MQL5+Footer+About">Agency Agreement – Offer</a></li>
+            <li><a rel="nofollow" href="/en/about/privacy" data-fz-event="MQL5+Footer+About">Privacy and Data Protection Policy</a></li>
+            <li><a href="/en/data-sources" data-fz-event="MQL5+Footer+DataSources">Data Sources</a></li>
+            <li><a rel="nofollow" href="/en/about/cookies" data-fz-event="MQL5+Footer+About">Cookies Policy</a></li>
+            <li>
+                <a rel="nofollow" href="/en/contact" data-fz-event="MQL5+Footer+Contacts">Contacts and requests</a>
+            </li>
+          </ul>
+        </nav>
+    </li>
+
+      <li>
+        <div class="footer__products">
+          <div class="footer__product">
+            <a target="_blank" rel="nofollow noopener" href="https://www.metatrader5.com" class="footer__product-name">MetaTrader 5</a>
+            <div class="footer__product-links">
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/mt5setup.exe?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon windows" data-fz-event="MetaTrader+5+Desktop+Download+Footer"><div class="footer__product-link-hint footer__product-link-hint-short">Download MetaTrader 5 for Windows</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/MetaTrader5.pkg.zip?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon macos" data-fz-event="MetaTrader+5+Desktop+Download+Footer"><div class="footer__product-link-hint footer__product-link-hint-short">Download MetaTrader 5 for MacOS</div></a>
+            <a rel="nofollow noopener" href="https://www.mql5.com/en/articles/625?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon linux" data-fz-event="MetaTrader+5+Desktop+Download+Footer"><div class="footer__product-link-hint footer__product-link-hint-short">Download MetaTrader 5 for Linux</div></a>
+            <a rel="nofollow noopener" href="https://web.metatrader.app/terminal?mode=demo&amp;lang=en" class="icon web"><div class="footer__product-link-hint footer__product-link-hint-short">Open MetaTrader 5 WebTerminal</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mt5/ios?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes&amp;hl=en" class="icon ios" data-fz-event="MetaTrader+5+iOS+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/c1c4cd9cbd49e9f1.png)">Scan to install from App Store</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mt5/android?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes&amp;hl=en" class="icon android" data-fz-event="MetaTrader+5+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/afc2bab603ef62e7.png)">Scan to install from Google Play</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mt5/android/app-gallery?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes" class="icon huawei" data-fz-event="MetaTrader+5+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/bd10f45a3d61c404.png)">Scan to install from Huawei AppGallery</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.software.corp/mt5/metatrader5.apk?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes" class="icon ark" data-fz-event="MetaTrader+5+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/253081c4da455e66.png)">Scan to get Android APK file</div></a>
+            </div>
+          </div>
+          <div>
+            <div class="footer__product">
+              <a target="_blank" rel="nofollow noopener" href="https://www.metatrader5.com/en/news/2270" class="footer__product-name">MQL5 Channels</a>
+              <div class="footer__product-links">
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mql5.channels/ios?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon ios" data-fz-event="MQL5+Channels+iOS+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/1b697989dc2445d5.png)">Scan to install from App Store</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mql5.channels/android?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon android" data-fz-event="MQL5+Channels+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/aa3876298bf4b95b.png)">Scan to install from Google Play</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mql5.channels/android/app-gallery?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon huawei" data-fz-event="MQL5+Channels+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/0843a8a2e12f9b78.png)">Scan to install from Huawei AppGallery</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.software.corp/mql5channels/mql5channels.apk?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon ark" data-fz-event="MQL5+Channels+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/21805012f0baa519.png)">Scan to get Android APK file</div></a>
+              </div>
+            </div>
+            <div class="footer__product">
+              <a target="_blank" rel="nofollow noopener" href="https://www.tradays.com/en/download?utm_source=www.mql5.com&amp;utm_campaign=download" data-fz-event="MQL5+Footer+Download+Tradays" class="footer__product-name">Economic Calendar</a>
+              <div class="footer__product-links">
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/tradays/ios?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon ios" data-fz-event="Tradays+iOS+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/93dbd287c43b0f0e.png)">Scan to install from App Store</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/tradays/android?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon android" data-fz-event="Tradays+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/009272874cc05ac8.png)">Scan to install from Google Play</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/tradays/android/app-gallery?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon huawei" data-fz-event="Tradays+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/df384f0c0ea46413.png)">Scan to install from Huawei AppGallery</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.software.corp/tradays/tradays.apk?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon ark" data-fz-event="Tradays+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/fe67645e20910571.png)">Scan to get Android APK file</div></a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer__networks">
+          <a href="https://www.facebook.com/mql5.community/" target="_blank" rel="nofollow" title="Facebook"><i class="icons-networks icons-networks_fb"></i></a>
+          <a href="https://t.me/mql5dev" target="_blank" rel="nofollow" title="Telegram"><i class="icons-networks icons-networks_tg"></i></a>
+          <a href="https://x.com/mql5com" target="_blank" rel="nofollow" title="X (Twitter)"><i class="icons-networks icons-networks_tw"></i></a>
+          <a href="https://www.youtube.com/@MetaQuotesOfficial" target="_blank" rel="nofollow" title="YouTube"><i class="icons-networks icons-networks_yt"></i></a>
+          <a href="https://www.linkedin.com/company/mql5" target="_blank" rel="nofollow" title="LinkedIn"><i class="icons-networks icons-networks_linkedin"></i></a>
+          <span>Subscribe to algotrading news</span>
+        </div>
+  
+        <div class="footer__other">
+          <div class="footer__not-a-broker">Not a broker, no real trading accounts</div>
+          <div class="copyright">35 Dodekanisou str, Germasogeia, 4043,&nbsp;Limassol,&nbsp;Cyprus</div>
+          <div class="copyright">Copyright 2000-2026, <span class="nobr">MetaQuotes Ltd</span></div>
+        </div>
+      </li>
+  </ul>
+</footer>
+
+
+  <div class="shadow-layer" id="layer"></div>
+      
+  
+  <script>
+    mqGlobal.AddOnReady(function () { Mql5Cookie.init('mql5.com','5049974610882193610'); });
+    mqGlobal.AddOnReady(function(){if(!window.Pocket){window.Pocket=new PocketManager();}});mqGlobal.AddOnReady(function(){if(!window.translateManager){window.translateManager=new Translate(undefined,'Error: failed to translate. Please try again later.');}if(document.querySelectorAll){var translateElements=document.querySelectorAll(".translateMenu");if(translateElements){var i=0,count=translateElements.length;for(i;i<count;i++){(function(i){var contentid=dataset(translateElements[i],"contentid"),sourcelang=dataset(translateElements[i],"sourcelang"),targetlang=dataset(translateElements[i],"targetlang"),moduleid=parseInt(dataset(translateElements[i],"moduleid")),typeid=parseInt(dataset(translateElements[i],"typeid")),entityid=parseInt(dataset(translateElements[i],"entityid"));Core.AddHandler(translateElements[i],"mouseover",function(){return translateManager.SetMenu(this,contentid,sourcelang,targetlang,moduleid,typeid,entityid);});})(i);}}}});window.fz("show","wdausxxqrpvhekbwjrjlhqjghyhesrqqau");window.mqGlobal.AddOnLoad(function(){window.fpush('MQL5+Article+Open');Articles.CheckOnScrollDown();});mqGlobal.AddOnReady(function(){window.PopupRegisterquickRegistration=new QuickRegistration('PopupRegister','Popup+Register','Articles');});function validate_username(input){var reg=/^([a-z0-9]){1}([\-._a-z0-9]){1,30}([\-_a-z0-9]){1}$/i,value=input.value,result=true;if(reg.test(value)){result=true;}else{result=false;window.fpush({name:'MQL5+Popup+Register+Invalid+Login',unit:'section',value:'Articles'});}return result;}function validate_email(input){var reg=/^\w+([-+.'']{1,2}\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/i,value=input.value,result=true,length_value=value.length;if(reg.test(value)&&length_value>=1&&length_value<=40){result=true;}else{result=false;window.fpush({name:'MQL5+Popup+Register+Invalid+Email',unit:'section',value:'Articles'});}return result;};mqGlobal.AddOnReady(function(){var username=$('PopupRegisterusername'),email=$('PopupRegisteremail');if(username)username.value='';if(email)email.value='';});mqGlobal.AddOnReady(function(){window.quickLogin=new QuickLogin('Popup+Login','Articles');});mqGlobal.AddOnLoad(function(){window.showLoginRegisterPopupAtEnd();});mqGlobal.AddOnLoad(function(){window.tooltipUserInfo.init();});window.fz("show","bfogggabsofabcpxuzmgaibarmaxasdrj");window.fz("show","vgckrufggwxdtfscpyalmenexmvhljduja");mqGlobal.AddOnReady(function(){window.floatVerticalPanelNode=FloatVerticalPanel('This website uses cookies. Learn more about our <a href="/en/about/cookies">Cookies Policy</a>.','cookie_accept');});mqGlobal.AddOnReady(function(){window.initAddCopyButtonsToCodes('Copy to Clipboard');});
+    if (typeof Attach !== "undefined")
+      Attach.setAcceptFilter(".mq4,.jpeg,.webp,.gif,.mqproj,.txt,.log,.set,.mqh,.sqlite,.ex5,.mp4,.onnx,.webm,.png,.mq5,.ipynb,.mt5,.ex4,.jpg,.py,.csv,.ini,.zip,.tpl,.md,.cl");
+  </script>
+  <div class="b-fixed-mt" id="bFixedMt" style="display: none;">
+    
+  </div>
+  <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "url": "https://www.mql5.com",
+        "logo": "https://c.mql5.com/i/community/logo_mql5-2.png",
+        "sameAs": [
+          "https://www.facebook.com/mql5.community",
+          "https://www.x.com/mql5com",
+          "https://www.youtube.com/user/MetaQuotesOfficial"
+        ]
+      }
+       , 
+{"@context":"https://schema.org","@type":"ItemList","itemListElement":[{"@type":"SiteNavigationElement","position":1,"name":"Forum","description":"Discussions of trading strategies and algorithmic trading. MQL5.community  the largest forex forum","url":"https://www.mql5.com/en/forum","children":[]},{"@type":"SiteNavigationElement","position":2,"name":"Market","description":"MetaTrader Market - a Market of trading robots, indicators, trading books and magazines","url":"https://www.mql5.com/en/market","children":[]},{"@type":"SiteNavigationElement","position":3,"name":"Signals","description":"Social trading, copy trading and account monitoring with MetaTrader - Trading Signals on MQL5.com","url":"https://www.mql5.com/en/signals","children":[]},{"@type":"SiteNavigationElement","position":4,"name":"Freelance","description":"Order trading robots, technical indicators and algorithmic trading applications. Forex jobs. Freelance on MQL5.com. Hire MetaTrader experts and specialists","url":"https://www.mql5.com/en/job","children":[]},{"@type":"SiteNavigationElement","position":5,"name":"Quotes","description":"","url":"https://www.mql5.com/en/quotes/overview","children":[]},{"@type":"SiteNavigationElement","position":6,"name":"MetaTrader","description":"","url":"https://www.metatrader.com","children":[]},{"@type":"SiteNavigationElement","position":7,"name":"WebTerminal","description":"WebTerminal for the MetaTrader trading platform. Online forex trading.","url":"https://web.metatrader.app/terminal?mode=demo","children":[]},{"@type":"SiteNavigationElement","position":8,"name":"Calendar","description":"","url":"https://www.mql5.com/en/economic-calendar","children":[]},{"@type":"SiteNavigationElement","position":9,"name":"VPS","description":"","url":"https://www.mql5.com/en/vps","children":[]},{"@type":"SiteNavigationElement","position":10,"name":"Articles","description":"","url":"https://www.mql5.com/en/articles","children":[]},{"@type":"SiteNavigationElement","position":11,"name":"CodeBase","description":"Download trading robots, technical indicators and scripts with source code - MQL5 Code Base for MetaTrader 5","url":"https://www.mql5.com/en/code","children":[]},{"@type":"SiteNavigationElement","position":12,"name":"Algo Forge","description":"","url":"https://forge.mql5.io","children":[]},{"@type":"SiteNavigationElement","position":13,"name":"Documentation","description":"MetaQuotes Language 5 (MQL5) Reference - Documentation on MQL5.com","url":"https://www.mql5.com/en/docs","children":[]}]}    
+,
+{"@context":"https://schema.org","@type":"TechArticle","mainEntityOfPage":{"@type":"WebPage","@id":"https://www.mql5.com/en/articles/24607"},"headline":"Beyond Squared Returns: Path-Dependent Volatility","image":["https://c.mql5.com/2/253/PdvSignBlindGarch_960w.gif","https://c.mql5.com/2/253/PdvTwoTimescaleKernel_960w.gif","https://c.mql5.com/2/253/PdvSumToRecursion_960w.gif","https://c.mql5.com/2/253/indicator__2.png","https://c.mql5.com/2/253/pdv_fig05_trend_gain.png","https://c.mql5.com/2/253/pdv_fig06_cap_sweep.png"],"datePublished":"2026-10-26T14:43:27+00:00Z","dateModified":"2026-10-20T08:59:58+00:00Z","author":{"@type":"Person","name":"Muhammad Minhas Qamar","url":"https://www.mql5.com/en/users/ayantrader"},"editor":{"@type":"Organization","name":"MetaQuotes","url":"https://www.mql5.com/en/users/metaquotes","address":{"@type":"PostalAddress","addressCountry":"CY"}},"publisher":{"@type":"Organization","name":"MQL5 Community","url":"https://www.mql5.com","logo":{"@type":"ImageObject","url":"https://c.mql5.com/i/community/logo_mql5-2.png"}},"description":"This article implements a path-dependent volatility model in MQL5 that keeps the sign of returns. The engine uses two-timescale EWMA kernels (four accumulators) to form activity and trend features, with closed-form coefficients and a lightweight kernel search. We provide a calibration workflow and an indicator that plots the decomposition, then test out of sample against EWMA and GARCH on multiple symbols. Results show clear gains on equity indicators and minimal gains on FX."}
+,
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"item":"https://www.mql5.com/en/articles","name":"Articles"},{"@type":"ListItem","position":2,"item":"https://www.mql5.com/en/articles/mt5","name":"MetaTrader 5"},{"@type":"ListItem","position":3,"item":"https://www.mql5.com/en/articles/mt5/indicators","name":"Indicators"}]}
+
+    ]
+  </script>
+
+
+<div class="float-vertical-panel">This website uses cookies. Learn more about our <a href="/en/about/cookies">Cookies Policy</a>.<span class="float-vertical-panel__cross"></span></div></body></html>
