@@ -7,7 +7,6 @@ from datetime import datetime
 from typing import Dict, List, Optional, Set, Tuple
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright
 BASE_URL = "https://www.mql5.com"
 TARGET_SECTIONS = [
     "https://www.mql5.com/en/articles/mt5/machine_learning",
@@ -70,20 +69,31 @@ def extract_article_links(list_html: str) -> List[str]:
             if full_url not in links:
                 links.append(full_url)
     return links
+def _find_year(html: str, soup) -> Optional[int]:
+    """Год публикации. Если надёжно найти нельзя - None (а не текущий год)."""
+    time_tag = soup.find("time")
+    if time_tag:
+        m = re.search(r"(20\d{2})", time_tag.get("datetime") or time_tag.get_text(strip=True))
+        if m:
+            return int(m.group(1))
+    for pat in (
+        r'article:published_time"\s+content="(20\d{2})',
+        r'"datePublished"\s*:\s*"(20\d{2})',
+        r'itemprop="datePublished"[^>]*content="(20\d{2})',
+    ):
+        m = re.search(pat, html)
+        if m:
+            return int(m.group(1))
+    return None
+
+
 def parse_article_page(html: str, url: str) -> Optional[Dict]:
     soup = BeautifulSoup(html, "lxml")
+    pub_year = _find_year(html, soup)
     for tag in soup(["script", "style", "nav", "footer", "header"]):
         tag.decompose()
     title_tag = soup.find("h1")
     title = title_tag.get_text(strip=True) if title_tag else "Untitled"
-    pub_year = datetime.utcnow().year
-    pub_date_str = ""
-    time_tag = soup.find("time")
-    if time_tag:
-        pub_date_str = time_tag.get("datetime") or time_tag.get_text(strip=True)
-        year_match = re.search(r"(20\d{2})", pub_date_str)
-        if year_match:
-            pub_year = int(year_match.group(1))
     content_div = soup.find("div", class_=re.compile(r"(article|content|text)", re.I))
     raw_text = content_div.get_text("\n", strip=True) if content_div else soup.get_text("\n", strip=True)
     if len(raw_text) < 500:
@@ -91,11 +101,13 @@ def parse_article_page(html: str, url: str) -> Optional[Dict]:
     return {
         "url": url,
         "title": title,
-        "published_date": pub_date_str,
         "published_year": pub_year,
         "text": raw_text[:45000],
     }
+
+
 def collect_batch() -> Tuple[List[Dict], Dict]:
+    from playwright.sync_api import sync_playwright
     seen_urls = load_seen_urls()
     cursor = load_cursor()
     next_cursor = dict(cursor)
@@ -171,7 +183,7 @@ def collect_batch() -> Tuple[List[Dict], Dict]:
                         append_seen_url(link)
                         seen_urls.add(link)
                         continue
-                    if parsed["published_year"] < next_cursor.get("cutoff_year", CUTOFF_YEAR):
+                    if parsed["published_year"] is not None and parsed["published_year"] < next_cursor.get("cutoff_year", CUTOFF_YEAR):
                         reached_cutoff = True
                         break
                     collected.append(parsed)

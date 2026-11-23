@@ -1,42 +1,57 @@
 import json
 import os
+import re
+
 try:
-    from src.ai_judge_alibaba import evaluate_article
     from src.scraper import append_seen_url, collect_batch, save_cursor
+    from src.prefilter import prefilter
+    from src.jury import run_pending, CAND_DIR
 except ImportError:
-    from ai_judge_alibaba import evaluate_article
     from scraper import append_seen_url, collect_batch, save_cursor
-PASSED_EDGES_PATH = "data/passed_edges.jsonl"
-def save_passed_edge(record: dict) -> None:
-    os.makedirs(os.path.dirname(PASSED_EDGES_PATH), exist_ok=True)
-    with open(PASSED_EDGES_PATH, "a", encoding="utf-8") as f:
-        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    from prefilter import prefilter
+    from jury import run_pending, CAND_DIR
+
+REJECTED_LOG = "data/rejected.tsv"
+
+
+def _article_id(url: str) -> str:
+    m = re.search(r"/articles/(\d+)", url)
+    return m.group(1) if m else re.sub(r"\W+", "_", url)[-60:]
+
+
+def save_candidate(art: dict) -> None:
+    os.makedirs(CAND_DIR, exist_ok=True)
+    with open(os.path.join(CAND_DIR, _article_id(art["url"]) + ".json"), "w", encoding="utf-8") as f:
+        json.dump({**art, "status": "pending"}, f, ensure_ascii=False)
+
+
+def log_rejected(art: dict, reason: str) -> None:
+    os.makedirs(os.path.dirname(REJECTED_LOG), exist_ok=True)
+    with open(REJECTED_LOG, "a", encoding="utf-8") as f:
+        f.write(f"{art['url']}\t{reason}\t{art['title']}\n")
+
+
 def run() -> None:
-    print("Starting MQL5 targeted collection + Alibaba Grill Protocol...")
+    print("Сбор статей MQL5 (фильтр 1 без модели, суд - отдельным шагом)")
     articles, next_cursor = collect_batch()
-    print(f"Collected {len(articles)} articles for judicial review.")
-    if not articles:
-        save_cursor(next_cursor)
-        return
-    api_failures = 0
+    print(f"Собрано статей: {len(articles)}")
+    kept = 0
     for art in articles:
-        verdict_data = evaluate_article(art)
-        if verdict_data is None:
-            api_failures += 1
-            print(f" - [SKIP_API] {art['url']} (will retry next run)")
-            continue
-        verdict = verdict_data.get("verdict", "REJECT").upper()
-        if verdict == "PASS":
-            print(f" - [PASS] {art['title']} ({art['url']})")
-            save_passed_edge(verdict_data)
+        reason = prefilter(art)
+        if reason:
+            log_rejected(art, reason)
         else:
-            reason = verdict_data.get("reject_reason", "No edge")
-            print(f" - [REJECT] {art['title']} -> {reason}")
+            save_candidate(art)
+            kept += 1
         append_seen_url(art["url"])
-    if api_failures <= len(articles) // 2:
-        save_cursor(next_cursor)
-        print("Cursor updated successfully.")
-    else:
-        print(f"[WARN] Too many API failures ({api_failures}/{len(articles)}). Cursor NOT advanced.")
+    # Курсор двигается всегда: от модели он не зависит.
+    save_cursor(next_cursor)
+    print(f"Отсеяно фильтром 1: {len(articles) - kept}, в очередь суда: {kept}. Курсор сохранён: {next_cursor}")
+    try:
+        run_pending()
+    except Exception as e:
+        print(f"[JURY] неожиданный сбой, сбор не затронут: {e}")
+
+
 if __name__ == "__main__":
     run()
