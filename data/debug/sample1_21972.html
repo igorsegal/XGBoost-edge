@@ -1,0 +1,1291 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="x-dns-prefetch-control" content="on">
+  <link rel="dns-prefetch" href="https://c.mql5.com">
+  <meta name="robots" content="max-snippet:250,max-image-preview:large">
+  <meta name="description" content="We analyze why ratings may be inflated due to the alignment of algorithm trajectories with benchmark diagonals, and we supplement the testing methodology with a requirement to keep the global extremum away from the diagonals. We update Forest and Megacity, and perform RAW verification and calibration using VerifyExtremes.mq5. A drop in HHO and DOAm performance serves as a practical indicator of false leaders.">
+  <meta property="og:url" content="https://www.mql5.com/en/articles/21972">
+  <meta property="og:title" content="Benchmark Champions vs. Real-World Optimization Problems">
+  <meta property="og:description" content="We analyze why ratings may be inflated due to the alignment of algorithm trajectories with benchmark diagonals, and we supplement the testing methodology with a requirement to keep the global extremum away from the diagonals. We update Forest and Megacity, and perform RAW verification and calibration using VerifyExtremes.mq5. A drop in HHO and DOAm performance serves as a practical indicator of false leaders.">
+  <meta property="og:image" content="https://c.mql5.com/2/206/21972-testovie-chempioni-protiv-realnih-zadach-optimizacii_1200x628.jpg">
+  <meta property="og:image:secure_url" content="https://c.mql5.com/2/206/21972-testovie-chempioni-protiv-realnih-zadach-optimizacii_1200x628.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:type" content="article">
+  <meta property="article:published_time" content="2026-10-20T14:44:55.0000000Z">
+  <meta property="article:author" content="https://www.mql5.com/en/users/joo">
+  <meta property="article:section" content="MetaTrader 5">
+  <meta property="article:tag" content="Trading">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@mql5com">
+  <meta name="twitter:image" content="https://c.mql5.com/2/206/21972-testovie-chempioni-protiv-realnih-zadach-optimizacii_1200x628.jpg">
+  <meta name="theme-color" content="#4a76b8">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="https://www.mql5.com/manifest.json">
+  <link rel="apple-touch-icon" sizes="57x57" href="https://www.mql5.com/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://www.mql5.com/apple-touch-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="https://www.mql5.com/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="https://www.mql5.com/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="https://www.mql5.com/apple-touch-icon-167x167.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://www.mql5.com/apple-touch-icon-180x180.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="https://www.mql5.com/apple-touch-icon-192x192.png">
+  <link rel="icon" sizes="192x192" href="https://www.mql5.com/android-touch-icon-192x192.png">
+  <link rel="icon" sizes="128x128" href="https://www.mql5.com/android-touch-icon-128x128.png">
+  <link rel="shortcut icon" href="https://c.mql5.com/i/favicon4.ico">
+  <link rel="describedby" href="https://www.mql5.com/llms.txt" type="text/markdown">
+  <meta name="msapplication-config" content="none">
+  <meta name="referrer" content="no-referrer-when-downgrade">
+  <meta property="qc:admins" content="36367170677651456375">
+  <meta property="wb:webmaster" content="073d7690269bcd81">
+  <link href="https://c.mql5.com/styles/core.014c88f485403b7cba7e3a47af5df221.css" type="text/css" rel="stylesheet" media="all">
+  <link href="https://c.mql5.com/styles/all.a5418197f583e92c77667d6e88d3bfa3.css" type="text/css" rel="stylesheet" media="all">
+  <link href="https://c.mql5.com/styles/articles.aa7cb07010062a9d4f26dbad7eb36197.css" type="text/css" rel="stylesheet" media="all">
+  <link href="/en/articles/rss" rel="alternate" type="application/rss+xml" title="Articles on the development and application of MetaTrader 5 trading robots and technical indicators">
+  <link rel="canonical" href="https://www.mql5.com/en/articles/21972">
+  <link rel="alternate" hreflang="en" href="https://www.mql5.com/en/articles/21972">
+  <link rel="alternate" hreflang="ru" href="https://www.mql5.com/ru/articles/21972">
+  <title>Benchmark Champions vs. Real-World Optimization Problems - MQL5 Articles</title>
+  <script async="" src="https://www.mql5.com/ff/rq?tz_offset=0&amp;ids=wdausxxqrpvhekbwjrjlhqjghyhesrqqau%2Cbfogggabsofabcpxuzmgaibarmaxasdrj%2Cvgckrufggwxdtfscpyalmenexmvhljduja&amp;ssn=1795477505932060671&amp;ssn_dr=20&amp;ssn_sr=0&amp;fv_date=1795477505&amp;ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F21972&amp;title=Benchmark%20Champions%20vs.%20Real-World%20Optimization%20Problems%20-%20MQL5%20Articles&amp;scr_res=1366x768&amp;ac=17954775250041184&amp;fz_uniq=5059129965033832960&amp;sv=2552"></script><script async="" defer="" src="/ff/core.js"></script><script>
+    (function(a,e,f,g,b,c,d){a[b]||(a.FintezaCoreObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=!0,c.defer=!0,c.src=g,d&&d.parentNode&&d.parentNode.insertBefore(c,d))})
+      (window, document, "script", "/ff/core.js", "fz");
+    window.fz("register", "website", {id: "sqjxkxkswybhifrohpyooonwgbvsfzmayq",trackLinks: true,sendEventsByBeacon: true,});
+  </script>
+  <script>
+    !function(){window.mqGlobal={};var t=!1,n=!1,e=[],o=[],i=[];function d(t){var n;for(n=0;n<t.length;n+=1)t[n]()}function c(){t||(t=!0,d(e),d(o),o=[],e=[])}function a(){c(),n||(n=!0,d(i),i=[])}if(mqGlobal.AddOnReady=function(n,i){t?n(document):i?e.push(n):o.push(n)},mqGlobal.AddOnLoad=function(t){n?t(document):i.push(t)},mqGlobal.AddOnActiveWindowChange=function(t){this._onvisibility||(this._onvisibility=[]),this._onvisibility[this._onvisibility.length]=t},document.addEventListener)document.addEventListener("DOMContentLoaded",c,!1),window.addEventListener("load",a,!1);else if(document.attachEvent&&(document.attachEvent("onreadystatechange",(function(){switch(document.readyState){case"interactive":c();break;case"complete":a()}})),window.attachEvent("onload",a),document.documentElement.doScroll&&window==window.top)){!function n(){if(!t&&document.body)try{document.documentElement.doScroll("left"),c()}catch(t){setTimeout(n,0)}}()}}();
+    mqGlobal.CookieDomain = ".mql5.com";
+    mqGlobal.Language = 'en';
+    mqGlobal.IsMobile = false;
+    mqGlobal.ClearRteStorage = function (e) { if (window.GStorage || (window.GStorage = globalStorage()), window.GStorage.supported) try { var o = e; window.GStorage.getItem("rte_autosave_uid", function (e, t) { t == o && (window.GStorage.removeItem("rte_autosave_text"), window.GStorage.removeItem("rte_autosave_date"), window.GStorage.removeItem("rte_autosave_uid")) }) } catch (e) { } };
+  </script>
+  
+  <script src="https://c.mql5.com/js/all.33b519888d8f16d7894ad5f6e870daa4.js" defer="defer"></script>
+  <script src="https://c.mql5.com/js/vendor.255ec4ae38267278c2823d8c90fea431.js" defer="defer"></script>
+  <script src="https://c.mql5.com/js/articles.c443d16c59e317d536ae7477d0c6f7e6.js" defer="defer"></script>
+<style id="c-nvz9zt">.s-suggestions.c-nvz9zt {position:absolute;left:0;right:0;top:100%;z-index:100;background:#fff;box-shadow:0 2px 6px rgba(0, 0, 0, 0.1);border-top:1px solid #dadada;}</style><style id="c-b8amxo">.copy-code-btn.c-b8amxo {background:#fbf9f5;padding:0;border:0;position:absolute;right:8px;top:8px;}
+@media (hover: hover) and (pointer: fine) {.copy-code-btn.c-b8amxo:hover {cursor:pointer;}.copy-code-btn.c-b8amxo:hover svg path {stroke:#707070;}
+}</style></head>
+<body class="cover" id="cover">
+    <header class="head">
+      <a href="https://www.mql5.com" class="head__logo" title="MQL5 - Language of trade strategies built-in the MetaTrader 5 client terminal" aria-label="MQL5 - Language of trade strategies built-in the MetaTrader 5 client terminal"></a>
+        <div class="head__content">
+<nav class="main-menu" id="mainmenu" aria-label="Sections">
+  <ul class="main-menu__top-level" id="menuTopLevel">
+      <li><a href="/en/forum" data-fz-event="MQL5+Menu+Forum">Forum</a></li>
+      <li><a href="/en/market" data-fz-event="MQL5+Menu+Market">Market</a></li>
+      <li><a href="/en/signals" data-fz-event="MQL5+Menu+Signals">Signals</a></li>
+      <li><a href="/en/job" data-fz-event="MQL5+Menu+Job">Freelance</a></li>
+      <li><a href="/en/vps" data-fz-event="MQL5+Menu+VPS">VPS</a></li>
+      <li><a href="/en/quotes/overview" data-fz-event="MQL5+Menu+Overview">Quotes</a></li>
+      <li><a href="https://www.metatrader.com" target="_blank" rel="noopener" data-fz-event="MQL5+Menu+MetaTrader">MetaTrader</a></li>
+        </ul>
+        <ul class="main-menu__second-level" id="menuSecondLevel">
+      <li class="main-menu__selected"><a href="/en/articles" data-fz-event="MQL5+Menu+Articles"> <img src="https://c.mql5.com/i/menu/icon-articles4.svg" alt="" width="16" height="16"> Articles</a></li>
+      <li><a href="/en/code" data-fz-event="MQL5+Menu+CodeBase"> <img src="https://c.mql5.com/i/menu/icon-code4.svg" alt="" width="16" height="16"> CodeBase</a></li>
+      <li><a href="https://forge.mql5.io/?lang=en" target="_blank" rel="noopener" data-fz-event="MQL5+Menu+AlgoForge"> <img src="https://c.mql5.com/i/menu/icon-algoforge4.svg" alt="" width="16" height="16"> Algo Forge</a></li>
+      <li><a href="/en/docs" data-fz-event="MQL5+Menu+Docs"> <img src="https://c.mql5.com/i/menu/icon-docs4.svg" alt="" width="16" height="16"> Documentation</a></li>
+      <li><a href="/en/book" data-fz-event="MQL5+Menu+Book"> <img src="https://c.mql5.com/i/menu/icon-book4.svg" alt="" width="16" height="16"> AlgoBook</a></li>
+      <li><a href="/en/neurobook" data-fz-event="MQL5+Menu+Neurobook"> <img src="https://c.mql5.com/i/menu/icon-neurobook4.svg" alt="" width="16" height="16"> NeuroBook</a></li>
+      <li><a href="/en/economic-calendar" data-fz-event="MQL5+Menu+Economic+Calendar"> <img src="https://c.mql5.com/i/menu/icon-economic-calendar4.svg" alt="" width="16" height="16"> Calendar</a></li>
+      <li><a href="https://web.metatrader.app/terminal?mode=demo&amp;lang=en" target="_blank" rel="nofollow noopener" data-fz-event="MQL5+Menu+Trading"> <img src="https://c.mql5.com/i/menu/icon-trading4.svg" alt="" width="16" height="16"> WebTerminal</a></li>
+      <li><a href="/en/tools" data-fz-event="MQL5+Menu+Tools"> <img src="https://c.mql5.com/i/menu/icon-tools4.svg" alt="" width="16" height="16"> Tools</a></li>
+
+
+    <li class="main-menu__mobile"><a href="/en/about">About</a></li>
+
+          <li class="main-menu__second-tools"><a rel="noopener" href="/en/vps" title="Reliable trader hosting for uninterrupted operation of robots and instant copying of trades" class="button-mt" data-vars-fz="Start+VPS+Trial+Submenu"><img width="18" height="18" src="https://c.mql5.com/i/sidebar/vpstrial2.svg" alt="" loading="lazy">Start VPS Trial</a></li>
+  </ul>
+</nav>
+<div class="main-menu__active">
+  <a id="mainMenuSelected" href="#">
+    <span class="main-menu__primary">Articles</span><span class="main-menu__secondary">Sections</span>
+  </a>
+</div>
+  <form action="https://www.mql5.com/en/search" onsubmit="return false;" autocomplete="off" id="headerSearchForm" class="header-search" method="post">
+    <button type="button" id="headerSearchButton" title="Search" aria-label="Search" class="header-search__button"></button>
+    <div class="header-search__input">
+      <input name="keyword" type="text" enterkeyhint="search" title="Enter search text" placeholder="Search" id="headerSearchKeyword" autocomplete="off">
+      <label for="headerSearchKeyword" class="header-search__placeholder">Type <span>/</span> to search:  @user, $symbol, ...</label>
+      <button type="submit" id="headerSearchSubmit" aria-label="Search" class="header-search__submit"></button>
+    <!----></div>
+    <button type="button" id="headerSearchClean" title="Close" aria-label="Close" class="header-search__clean"></button>
+  </form>
+  <script>mqGlobal.AddOnReady(function(){window.initHeaderSearch('', 'https://www.mql5.com/en/search');});</script>
+  <script>mqGlobal.AddOnReady(function(){window.initSuggestions("headerSearchKeyword","en","https://search.mql5.com/api/query","https://www.mql5.com/en/users_search/suggestion");});</script>
+          <input class="blurHandler" id="mainMenuBlurHandler" type="checkbox">
+        </div>
+        <div class="head__toolbar" id="headerToolbar">
+<div class="container loginRegister">
+  <nav aria-label="Account">
+    <ul id="loginRegisterButtons">
+      <li><a class="login" title="Please sign in. OpenID supported" href="/en/auth_login" rel="nofollow" data-fz-event="MQL5+Menu+Siginin">Log in</a></li>
+      <li><a class="registration en" title="Please register" href="/en/auth_register" rel="nofollow" data-fz-event="MQL5+Menu+Register" onclick="window.fpush('MQL5+Button+Click');">Create an account</a></li>
+    </ul>
+  </nav>
+</div>
+          <div class="container">
+            <div class="toggle-button" id="sidebarToggleButton">
+              <i></i>
+            </div>
+          </div>
+
+          <div class="group-menu" id="groupMenu">
+            <div class="container lang-menu-container">
+              <div id="langMenuContainer" class="lang-menu">
+                <input class="blurHandler" id="langmenuBlurHandler" type="checkbox">
+                <nav aria-label="Language">
+                  <ul class="lang-menu__list" id="langmenu">
+  <li class="lang-menu__list-item lang-menu__list-item_selected"><a href="/en/articles" aria-label="English (English)"><i class="icons-languages icons-languages_en"></i><span>English</span></a></li>
+  <li class="lang-menu__list-item"><a href="/ru/articles" aria-label="Русский (Russian)"><i class="icons-languages icons-languages_ru"></i><span>Русский</span></a></li>
+  <li class="lang-menu__list-item"><a href="/zh/articles" aria-label="中文 (Chinese)"><i class="icons-languages icons-languages_zh"></i><span>中文</span></a></li>
+  <li class="lang-menu__list-item"><a href="/es/articles" aria-label="Español (Spanish)"><i class="icons-languages icons-languages_es"></i><span>Español</span></a></li>
+  <li class="lang-menu__list-item"><a href="/pt/articles" aria-label="Português (Portuguese)"><i class="icons-languages icons-languages_pt"></i><span>Português</span></a></li>
+  <li class="lang-menu__list-item"><a href="/ja/articles" aria-label="日本語 (Japanese)"><i class="icons-languages icons-languages_ja"></i><span>日本語</span></a></li>
+  <li class="lang-menu__list-item"><a href="/de/articles" aria-label="Deutsch (German)"><i class="icons-languages icons-languages_de"></i><span>Deutsch</span></a></li>
+  <li class="lang-menu__list-item"><a href="/ko/articles" aria-label="한국어 (Korean)"><i class="icons-languages icons-languages_ko"></i><span>한국어</span></a></li>
+  <li class="lang-menu__list-item"><a href="/fr/articles" aria-label="Français (French)"><i class="icons-languages icons-languages_fr"></i><span>Français</span></a></li>
+  <li class="lang-menu__list-item"><a href="/it/articles" aria-label="Italiano (Italian)"><i class="icons-languages icons-languages_it"></i><span>Italiano</span></a></li>
+  <li class="lang-menu__list-item"><a href="/tr/articles" aria-label="Türkçe (Turkish)"><i class="icons-languages icons-languages_tr"></i><span>Türkçe</span></a></li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
+    </header>
+  <main class="site-main">
+<div id="bfogggabsofabcpxuzmgaibarmaxasdrj" class="rclnd1pm17phgt3ha ghky8ic0v"><iframe width="800" height="80" frameborder="0" style="vertical-align: top; max-width: 100% !important; display: block;" scrolling="no" src="https://www.mql5.com/ff/sh/0xb0c8bjq5sadh89z2/index.html?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F13586&amp;a=gxygkojxdwrcfbbgfrchvjgelflsnelu&amp;s=49eab2fb45d89f59a191e88145774dcd7f9533039acb10dd9c28061b04fa92fe&amp;v=1&amp;w=800&amp;h=80&amp;r=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F21972&amp;host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&amp;id=bfogggabsofabcpxuzmgaibarmaxasdrj&amp;fz_uniq=5059129965033832960&amp;custom="></iframe></div>    <div class="body" id="bodyContent">
+
+  <div id="left-sidebar-selector" class="left-sidebar__selector left-sidebar__selector_padding">
+    <div class="left-sidebar__title">
+MetaTrader 5 /     Trading
+    </div>
+    <i class="icons-ux icons-ux_arrow-down-black"></i>
+  </div>
+          <div class="articles-container block-with-sidebar">
+            <aside class="left-sidebar left-sidebar_270" id="left-sidebar">
+              
+
+    <ul class="tree-menu-ul">
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/examples">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/examples.svg" alt="" loading="lazy">
+            Examples
+          </a>
+            <ul class="tree-menu__list tree-menu__list_nested">
+                <li class="tree-menu__item">
+                  <a class="tree-menu__link" href="/en/articles/examples_indicators">
+                      <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/examples_indicators.svg" alt="" loading="lazy">
+                    Indicators
+                  </a>
+                </li>
+                <li class="tree-menu__item">
+                  <a class="tree-menu__link" href="/en/articles/examples_experts">
+                      <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/examples_experts.svg" alt="" loading="lazy">
+                    Experts
+                  </a>
+                </li>
+            </ul>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/strategy_tester">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/strategy_tester.svg" alt="" loading="lazy">
+            Tester
+          </a>
+        </li>
+        <li class="tree-menu__item tree-menu__item_selected">
+          <a class="tree-menu__link" href="/en/articles/trading">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/trading.svg" alt="" loading="lazy">
+            Trading
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/trading_systems">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/trading_systems.svg" alt="" loading="lazy">
+            Trading systems
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/integration">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/integration.svg" alt="" loading="lazy">
+            Integration
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/indicators">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/indicator.svg" alt="" loading="lazy">
+            Indicators
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/expert_advisors">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/expert.svg" alt="" loading="lazy">
+            Expert Advisors
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/statistics">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/statistics.svg" alt="" loading="lazy">
+            Statistics and analysis
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/machine_learning">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/machine_learning.svg" alt="" loading="lazy">
+            Machine learning
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/interviews">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/interviews.svg" alt="" loading="lazy">
+            Interviews
+          </a>
+        </li>
+    </ul>
+  
+
+    <div class="hints-panel">
+      <div class="hints-panel__item">
+        <i class="icons-hints icons-hints_like"></i>
+        <div class="hints-panel__content">
+          Do you like the article?<br>
+          Share it with others —<br>post a <a href="https://www.mql5.com/en/articles/21972" target="_blank">link</a> to it!
+        </div>
+      </div>
+
+      <div class="hints-panel__item">
+        <i class="icons-hints icons-hints_tw-square icons-hints_24px"></i><div class="hints-panel__content">
+Find us on <a href="https://x.com/mql5com" target="_blank" rel="nofollow">Twitter</a>!<br> Join our fan page</div>
+      </div>
+
+      <div class="hints-panel__item">
+        <i class="icons-hints icons-hints_mt-5"></i>
+        <div class="hints-panel__content">
+          Use new possibilities of <a href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/mt5setup.exe?utm_source=www.mql5.com&amp;utm_campaign=download" data-fz-event="MetaTrader+5+Desktop+Download+Article" rel="nofollow sponsored noopener noreferrer">MetaTrader 5</a>
+        </div>
+      </div>
+    </div>
+<div id="vgckrufggwxdtfscpyalmenexmvhljduja" class="rnbn5s4ly03dyhm81 ghky8ic0v"><iframe width="220" height="400" frameborder="0" style="vertical-align: top; max-width: 100% !important; display: block;" scrolling="no" src="https://www.mql5.com/ff/sh/sm4wqgxpy6553ggyp2/index.html?link=https%3A%2F%2Fwww.metatrader.com%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay%26utm_content%3Dvisit%26utm_campaign%3Dvisit.metatrader.com.426&amp;a=arztkvuejlwhtdiqmnplzyxxbcdvqyio&amp;s=d47bcfab6252db327a4605dd76e34a34f9ae856861c96abd7751bd37daae5b62&amp;v=1&amp;w=220&amp;h=400&amp;r=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F21972&amp;host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&amp;id=vgckrufggwxdtfscpyalmenexmvhljduja&amp;fz_uniq=5059129965033832960&amp;custom="></iframe></div>      <div class="similar-author-articles ui">
+        <h4 class="similar-author-articles__title">Similar articles</h4>
+        <ul class="similar-author-articles__list">
+            <li>
+              <a href="/en/articles/21898" data-fz-event="MQL5+Article+Similar+Article">Harris Hawks Optimization (HHO)</a>
+            </li>
+            <li>
+              <a href="/en/articles/23232" data-fz-event="MQL5+Article+Similar+Article">Bacterial Evolutionary Algorithm (BEA)</a>
+            </li>
+            <li>
+              <a href="/en/articles/21821" data-fz-event="MQL5+Article+Similar+Article">Swarm Optimizer with Hierarchical Sub-Flocks — Flock by Leader</a>
+            </li>
+            <li>
+              <a href="/en/articles/19187" data-fz-event="MQL5+Article+Similar+Article">Dingo Optimization Algorithm Modification (DOAm)</a>
+            </li>
+            <li>
+              <a href="/en/articles/16655" data-fz-event="MQL5+Article+Similar+Article">Black Hole Algorithm (BHA)</a>
+            </li>
+        </ul>
+      </div>
+    <div class="freelance-hint">
+      <img src="https://c.mql5.com/i/articles/icon_freelance.svg" width="24" height="24" alt="" loading="lazy">
+      <div class="freelance-hint__text">
+        Use the ideas from this article<br>to order your own robot<br>on Freelance
+      </div>
+        <a target="_blank" class="button button_blue-gray-border" title="Go to Freelance" href="/en/job/new" data-fz-event="MQL5+Article+New+Job">Go to Freelance</a>
+    </div>
+
+            </aside>
+            <div class="content-with-sidebar articles-content splashed">
+              
+
+
+<article>
+  <header class="article-header article-header_light">
+    <section class="article-tools-panel">
+        <div class="article-tools-panel__item">
+          <span class="popup framed client flags">
+            <a class="dropdown" href="javascript:void(false);" aria-label="Language">
+              <span class="icons-languages icons-languages_en"></span><i></i>
+            </a>
+            <span class="popup">
+              <span class="tip">
+                <span></span>
+              </span>
+              <span class="items">
+                    <a href="/ru/articles/21972">Русский</a>
+              </span>
+            </span>
+          </span>
+        </div>
+        
+      <div class="article-tools-panel__item">
+        <a href="#pocket" title="Pocket allows you to insert a complete content description to the appropriate comment" aria-label="to pocket" onclick="return Pocket.Add(this,'en',2,1,21972);" class="article-tools-panel__rounded">
+          <i class="article-pocket-icon"></i>
+        </a>
+      </div>
+      <div class="article-tools-panel__item">
+        <a href="/en/articles/21972?print=" target="_blank" class="article-tools-panel__rounded" rel="nofollow" title="Printer friendly version" aria-label="Printer friendly version">
+          <i class="article-print-icon"></i>
+        </a>
+      </div>
+
+    </section>
+    <section class="article-header__image-box" style="background-color: rgb(34,36,32)">
+        <img class="article-header__image-preview" loading="lazy" width="32" height="16" alt="preview" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAsICAoIBwsKCQoNDAsNERwSEQ8PESIZGhQcKSQrKigkJyctMkA3LTA9MCcnOEw5PUNFSElIKzZPVU5GVEBHSEX/2wBDAQwNDREPESESEiFFLicuRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUX/wAARCAAQACADASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAwQCBQf/xAAdEAACAgIDAQAAAAAAAAAAAAABAgAEAxEFEjFB/8QAFQEBAQAAAAAAAAAAAAAAAAAAAwL/xAAYEQADAQEAAAAAAAAAAAAAAAAAESEBIv/aAAwDAQACEQMRAD8Azavx7ZDswr8c2/IbHmKSbWCYfTL1IXNDqnoij1CD8lg1g69gGckxoDT/2Q==">
+      <div class="article-header__gradient" style="background: linear-gradient(90deg, rgba(34,36,32, 1) 0%, rgba(34,36,32, 0.72) 8.31%, rgba(34,36,32, 0) 17.1%), linear-gradient(270deg, rgba(34,36,32, 1) 0%, rgba(34,36,32, 0.72) 8.06%, rgba(34,36,32, 0) 16.59%), linear-gradient(0deg, rgba(34,36,32, 1) 8.26%, rgba(34,36,32, 0.8) 65%, rgba(34,36,32, 0) 100%);"></div>
+        <picture>
+          <source srcset="https://c.mql5.com/2/206/21972-testovie-chempioni-protiv-realnih-zadach-optimizacii_600x314.jpg, https://c.mql5.com/2/206/21972-testovie-chempioni-protiv-realnih-zadach-optimizacii_1200x628.jpg 2x" media="(min-width:700px)">
+          <img class="article-header__image" loading="lazy" width="600" height="314" srcset="https://c.mql5.com/2/206/21972-testovie-chempioni-protiv-realnih-zadach-optimizacii_300x157.jpg, https://c.mql5.com/2/206/21972-testovie-chempioni-protiv-realnih-zadach-optimizacii_600x314.jpg 2x" src="https://c.mql5.com/2/206/21972-testovie-chempioni-protiv-realnih-zadach-optimizacii_600x314.jpg" alt="Benchmark Champions vs. Real-World Optimization Problems" onerror="this.style.display='none';">
+        </picture>
+    </section>
+    <section class="article-header__content">
+      <h1>Benchmark Champions vs. Real-World Optimization Problems</h1>
+      <div class="article-header__info">
+        <a href="/en/articles/mt5">MetaTrader 5</a>
+          —
+          <a href="/en/articles/mt5/trading">Trading</a>
+        | <time datetime="2026-10-20T14:44Z" title="2026.10.20 14:44" datetime-type="datetime">20 October 2026 at 14:44</time>
+      </div>
+      <div class="article-header__indicators">
+        <span title="Views">
+          <img src="https://c.mql5.com/i/icons.svg#views-white-usage" width="20" height="20" alt="">
+          853
+        </span>
+        
+          <a title="Comments" href="/en/forum/518795">
+            <img src="https://c.mql5.com/i/icons.svg#comments-white-usage" width="20" height="20" alt="">
+            0
+          </a>
+      </div>
+      <div class="article-header__author">
+          <div class="article-header__avatar">
+            <img src="https://c.mql5.com/avatar/2024/8/66be0662-3c24.png" srcset="https://c.mql5.com/avatar/2024/8/66be0662-3c24_big.png 2x" data-user-login="joo" title="Andrey Dik" alt="Andrey Dik" loading="lazy" width="60" height="60">
+          </div>
+<a class="author" href="/en/users/joo" data-user-login="joo">Andrey Dik</a>      </div>
+    </section>
+  </header>
+
+    <div class="content">
+      <div class="inner formatted-content">
+        <p><b>Table of Contents</b></p> <ol> <li><a href="/en/articles/21972#vvedenie">Introduction</a></li> <li><a href="/en/articles/21972#trebovaniya_k_testovim_funkciyam_benchmarkam">Requirements for Test Functions (Benchmarks)</a></li> <li><a href="/en/articles/21972#modifikaciya_testovih_funkciy">Modifying Test Functions to Filter Out Duds</a></li> <li><a href="/en/articles/21972#vivodi">Conclusions</a></li> </ol> <p></p> <p><br></p> <h3 id="vvedenie">Introduction<br></h3> <p></p> <p></p> <p><span>You run dozens of population-based optimizers on the same test bench and see a neat table of top performers. The problem is that some of these victories do not reflect the algorithm’s true search power: a high result may stem not from the algorithm’s ability to find the optimum, but from a coincidence between the geometry of the algorithm’s steps and the geometry of a specific test function. A maximum located on the boundary, at the center, or near the diagonal of the normalized space gives certain classes of methods a systematic advantage. </span></p> <p><span>In this article, we formalize this risk, especially the “diagonal effect,” provide a measurable diagnostic criterion, and show how to eliminate structural advantages from a benchmark set. After reading this, you will get not an abstract diagnosis, but concrete tools: a rule for checking the position of an extremum, a procedure for verifying RAW extrema (VerifyExtremes.mq5), and an example of practical correction of test functions.</span></p> <p></p> <p><b>Spiral Dynamics Optimization (SDO) Algorithm</b></p> <p><a href="/en/articles/12252">The article on the SDO algorithm</a> provided a detailed analysis of the following mechanism. The original SDO algorithm, proposed by Tamura and Yasuda in 2011, uses pairwise coupling of coordinates when moving agents in multidimensional space: a separate two-dimensional rotation spiral is constructed for each pair of coordinates. The test functions in our series, in their multidimensional form, are structured as multiple copies of two-dimensional functions — with exactly the same pairwise structure. The conclusion was already explicitly stated in the article’s analysis of the algorithm: “Since the articles use multidimensional functions made up of repeated two-dimensional functions, the original SDO may show unjustifiably high results, because it uses pairwise coupling of coordinates. Thus, in other multidimensional problems where the coordinates are not related to one another in any way, the spiral algorithm will yield poor results. In other words, for the spiral algorithm in this example, artificially favorable conditions will inadvertently be created on the duplicated functions.</p> <p>The decision made then was to replace the pairwise spiral rotation with the projection of a two-dimensional spiral onto a single coordinate axis. In the modified version of SDOm, each coordinate was updated independently according to the damped harmonic oscillation formula: x(t) = A·e^(−γt)·cos(ωt + φ), which completely eliminated coupling between coordinates and removed the artificially favorable conditions. The algorithm became fair, but the result, of course, declined — SDOm ranked 8th out of 23 algorithms.</p> <p>This case demonstrated an important principle: when the internal geometry of the algorithm (the pairwise coupling of coordinates) coincides with the geometry of the test function (a pairwise duplicated two-dimensional structure), the algorithm scores points not through optimization, but because of this coincidence.</p> <p><b>Modified Dingo Optimization Algorithm (DOAm)</b></p> <p>In the <a href="/en/articles/19187">article on the DOA modification</a>, DOAm demonstrated a characteristic asymmetry in its results: an outstanding score on the Forest function — and a significantly weaker result on the Hilly function. Such a discrepancy between the results on two functions of the same test bench is a reliable indicator: the algorithm may not possess universal optimization power, but may instead structurally match one specific test function. The matching mechanism in the case of DOAm may differ from that of SDO, but the pattern is the same — and it is precisely this pattern that drew our attention to the need for a more in-depth analysis.</p> <p>After reading this, you will know exactly how to tell a true “detective” from a polished dud among optimization algorithms.</p> <p></p> <h3><br></h3> <h3 id="trebovaniya_k_testovim_funkciyam_benchmarkam">Requirements for Test Functions (Benchmarks)<br></h3> <p>The question of the properties of test functions was raised as early as the test bench design phase. In the <a href="/en/articles/11785">article on the Grey Wolf Optimizer (GWO)</a>, four key conditions were identified that test functions must satisfy in order to eliminate unintended advantages for the algorithms under test.</p> <p><u>First condition</u>: the global extremum must not be located on the boundary of the domain. The search strategies of many algorithms do not include mechanisms for handling cases where optimized parameter values go outside the permissible range; hard clipping at the edges of permissible ranges is always added to the code artificially in order to enforce the search boundaries. If the global maximum is located on the boundary, such an algorithm may accidentally “run into” it when it overshoots the allowable range — and produce an excellent result that has nothing to do with the quality of the search. A high score is not the result of optimization, but rather a side effect of the lack of boundary checks.</p> <p><u>Second condition</u>: the global extremum must not be located at the center of the coordinate range. This point deserves a detailed analysis, since violating it leads to one of the most common — and yet most subtle — forms of “cheating.”</p> <p><u>Third condition</u>: the global minimum must be close to the center of the range. This is the mirror counterpart to the second condition: averaging the coordinates must not produce an advantage under any circumstances.</p> <p><u>Fourth condition</u>: the mean value of the surface must be significantly below the 50% level of the [min; max] range. Otherwise (especially when there are many variables), random coordinates may yield a result of about 50% of the maximum or higher.</p>Three of the four conditions were fully satisfied when designing the series of test functions: Hilly, Forest, and Megacity (the third condition is practically satisfied; the center of the search range is very close to the point of the global minimum). However, as algorithm testing has shown, this list turned out to be incomplete. There is another structural feature that allows certain algorithms to systematically achieve unjustifiably high scores. <p><b>Why should an extremum not be at the center of the range?</b></p> <p>This question seems obvious, but the mechanism behind it is worth examining in detail, because it is by analogy with it that we will discover a new type of “cheating.”</p> <p>There is an entire class of algorithms in which the coordinates of agents tend toward the midpoint of the range. The reasons vary: (1) uniform initialization followed by convergence toward the center of mass; (2) averaging the positions of several agents; (3) symmetric increments with zero expected value, which, with a sufficient number of iterations, lead to a drift toward the center of the range.</p> <p>If the global maximum of the test function is located at the geometric center of the domain, all of these algorithms gain a systematic advantage: their agents either begin optimization already near the goal or inevitably drift toward it without performing any meaningful search. In this case, the ranking table measures not search ability, but the extent to which the algorithm tends toward the center.</p> <p>The decision was made back when the test bench was being designed: the global maximum is shifted away from the center of the range, while the global minimum, conversely, is placed closer to the center — to ensure that averaging the coordinates leads to the worst result rather than the best one. This principle remains fundamental.</p> <p>But what is the analogy with the problem we discovered later? It is that the “center of the range” is only one of several privileged geometric structures. The diagonal of the space is another. And just as an extremum at the center helps algorithms that average coordinates, an extremum on the diagonal helps algorithms&nbsp;with homogeneous coordinate updates.</p> <p><b>What is the diagonal effect, and why is it dangerous?</b></p> <p>The <a href="/en/articles/21898">HHO (Harris Hawks Optimization)</a> algorithm, proposed in 2019 and implemented in our previous article, was the catalyst that led to the formulation of a new requirement for test functions. The “cheating” mechanism here is not related to either pairwise coupling of coordinates (as in SDO) or any specific search strategy — it is more fundamental and affects an entire class of algorithms.</p> <p>A key element of HHO is the scalar “escape energy” E, which decreases from ±2 to zero as the iteration budget is consumed: E = 2·E₀·(1 − t/T), where E₀ ~ U(−1, 1) is a random initial energy. When |E| ≥ 1, the algorithm operates in exploration mode; when |E| &lt; 1, it switches to the attack phase, which includes four strategies. This is where the root of the problem lies: in most attack strategies, the factor E is applied to all coordinates simultaneously as a single scalar coefficient.</p> <p>Let us examine this using specific formulas from the implementation. Strategy 2 (hard besiege, r ≥ 0.5, |E| &lt; 0.5) is expressed as:</p> <p style="text-align:center;"><i>X_next[i] = X_prey − E · |X_prey − X[i]|</i></p> <p>Here, E is the same number for all coordinates. This means that if the agent is at the point (0.3, 0.5) and the “rabbit” (the best solution) is at the point (0.6, 0.8), then the increment in each coordinate is proportional to the same value, E. Geometrically, the agent moves in a straight line from its current position to the target. Strategy 1 (soft besiege) uses the formula X_next[i] = (X_prey − X[i]) − E·|J·X_prey − X[i]|, where J is the “rabbit’s” jump strength, but E remains the same for all coordinates. Strategies 3 and 4 add Lévy flight, but only as a fallback maneuver — the main candidate Y is calculated using the same formulas with the same scalar E.</p> <p>There is also a second factor that exacerbates the problem: classical HHO lacks an agent personal best component (pbest). All agents are guided by a single global best solution — the “rabbit” (X_prey). This means that the entire swarm moves toward the same point, generating a bundle of correlated diagonal trajectories. In the article on HHO, we explicitly pointed this out: “the narrow ‘needle’ of the global maximum requires the accumulation of the agent’s personal experience (the personal best component), which classical HHO lacks — and the algorithm’s diagonally correlated steps generally do not hit it.”</p> <p>Visualization in the 3D test bench clearly confirmed this: throughout the optimization process, the agents’ movements remain linear and oriented at the same angle. This motion in itself is not a defect, but rather a normal search mechanism: the agent moves toward the goal along the shortest path. The problem arises when the structure of the test function matches this mechanism.</p> <p>In its original form, the Forest function has a maximum in normalized coordinates at x_norm ≈ 0.591 and y_norm ≈ 0.731. The distance from this point to the main diagonal y = x is only |0.731 − 0.591| = 0.140. The maximum lies almost on the diagonal. Correlated diagonal HHO trajectories are highly likely to cross the region of attraction of this maximum: a cluster of agents converging on the “rabbit” inevitably combs through the vicinity of the global optimum. The result is consistently high performance, virtually independent of the problem dimensionality: 0.929 for 5 × 2 = 10 variables, 0.960 for 25 × 2 = 50, and 0.951 for 500 × 2 = 1,000 — absolute first place among 45 algorithms on this function.</p> <p>The picture for the Hilly function is the exact opposite. The Hilly maximum is a narrow Gaussian peak with a width of approximately 0.3 units, located at the normalized coordinates x_norm ≈ 0.253 and y_norm ≈ 0.604. The difference |0.604 − 0.253| = 0.351 — the maximum is well away from the diagonal. The diagonal trajectories of the HHO agents pass by this peak. The absence of a personal best (pbest) prevents the algorithm from “remembering” random close approaches to the needle and returning to them. As a result, HHO yields 0.585, 0.406, and 0.342 for 10, 50, and 1,000 variables, respectively — values that are nearly indistinguishable from random search (random walk yielded 0.488, 0.322, and 0.258 on the same function). HHO ranks last among all algorithms in the table for this function — and at the same time ranks absolute first on Forest.</p> <p>It is precisely this contrasting combination that serves as a diagnostic indicator of “cheating.” In <a href="/en/articles/21898">our article on the HHO implementation</a>, we had already recorded the following conclusion: “the top ranking is not due to universal effectiveness, but rather to the partial ‘compatibility’ of the algorithm’s mechanics with the structure of a specific benchmark.” The final score of 68.32% and the formal first place in the table resulted not from optimization capabilities, but from structural resonance with a single function: Forest gave HHO 2.841 out of a possible 3.0 points, while Hilly gave it only 1.333 out of 3.0. Without the anomalous result on Forest, the algorithm would have ranked in the bottom half of the table.</p> <p>An analysis of three cases — SDO with pairwise coupling of coordinates, DOAm with asymmetry in the Forest/Hilly results, and HHO with the diagonal effect — leads to a general conclusion. The two existing requirements (the extremum is neither on the boundary nor at the center) must be supplemented by one more:</p> <p><b>The global extremum must be located away from the main diagonals of the normalized search space</b></p> <p>Specifically: the normalized coordinates x_norm and y_norm of the global maximum should not be close to each other. Practical threshold: |x_norm − y_norm| &gt; 0.3.</p> <p>Why the diagonal specifically? In many algorithms, all coordinates are updated in proportion to the same scalar quantity: (target − current position), multiplied by a common coefficient. This holds true not only for HHO with its “escape energy” E: any algorithm in which the step along each coordinate is determined by a single scalar multiplier (a common contraction coefficient, a uniform convergence rate, or a common inertia parameter) de facto moves agents along diagonal directions. If the maximum of the test function lies near the diagonal, all such algorithms gain an undeserved advantage — just as algorithms with uncontrolled boundaries gain an advantage when the maximum is located at the edge of the range, and just as algorithms that average coordinates gain an advantage when the maximum is located at the center.</p> <p>These three requirements now form a closed system of safeguards against the three main classes of structural coincidences:</p> <p><u>The extremum is not on the boundary</u> — this rules out the advantage of algorithms with defective boundary control, whose coordinates “spill over” the edge of the range and accidentally land at the maximum.</p> <p><u>The extremum is not at the center</u> — this rules out the advantage of algorithms whose agents tend to average their coordinates across the range, whether through symmetric initialization, averaging the positions of multiple agents, or symmetric random increments with a zero expected value.</p> <p><u>The extremum is not on the diagonal</u> — this rules out the advantage of algorithms with uniform coordinate scaling, which move agents toward the target proportionally across all dimensions at once, producing straight diagonal trajectories in normalized space.</p> <p>Each of these requirements closes a specific “cheating” channel — a situation in which the algorithm’s mechanics resonate with the structure of the test function, creating the illusion of high-quality optimization. All modifications to the Forest and Megacity functions described below are governed by this third condition.</p> <p><br></p> <p></p> <h3 id="modifikaciya_testovih_funkciy">Modification of Test Functions<br></h3> <p>The purpose of this modification is not to change the nature of the functions, but to eliminate the geometric advantage that algorithms using diagonal trajectories gain for free. The functions should remain just as difficult to search, but should no longer be “convenient” for a specific mechanism. The Hilly function was not changed — its maximum is already sufficiently far from the diagonal (|x_norm − y_norm| = 0.351). Two different approaches were used for the remaining two functions: for Forest, shifting the boundaries of the domain (the search window) while keeping the formula unchanged; for Megacity, changing the formula while preserving the overall structure.</p> <p><b>Forest</b></p> <p>The original function is built on a basic oscillating background a + b raised to the fourth power, with two Gaussian peaks added — a broad one (σ = 0.9) and a narrow one (σ = 0.3) — as well as a negative Gaussian term that forms a minimum. The Core() formula has not changed in the modified version — all coefficients, centers, and Gaussian sigmas remain the same. The boundaries of the domain have changed — the search window has been shifted:</p> <table cellpadding="3" class="standart" width="100%"> <thead> <tr> <th>Parameter</th> <th>Original</th> <th>Modification</th> </tr> </thead> <tbody> <tr> <td>xMinRange</td> <td>−43.50</td> <td>−42.50</td> </tr> <tr> <td>xMaxRange</td> <td>−39.00</td> <td>−37.00</td> </tr> <tr> <td>yMinRange</td> <td>−47.35</td> <td>−45.00</td> </tr> <tr> <td>yMaxRange</td> <td>−40.00</td> <td>−39.80<br></td> </tr> </tbody> </table> <p>Expanding the window to the right (xMaxRange from −39 to −37) brought a different maximum of the base oscillation (a+b)⁴ into the viewing area, with a significantly higher raw value: raw_max = 3.027 instead of the previous 1.878. The global maximum shifted from the point (−40.84, −41.98) to the point (−37.70, −41.98). The normalized coordinates changed: in the original, x_norm ≈ 0.591, y_norm ≈ 0.731, Δ = 0.140 — the maximum is almost on the diagonal.</p> <p>In the modified version, x_norm ≈ 0.873, y_norm ≈ 0.580, and Δ = 0.293 — the maximum is far from the diagonal, although it does not reach the formal threshold of 0.3. Nevertheless, as the test results will show, even this shift is enough to cause a sharp drop in HHO results — which confirms the sensitivity of diagonal algorithms to the position of the maximum.</p> <p></p> <p style="text-align:center;"><img alt="Forest" height="611" loading="lazy" src="https://c.mql5.com/2/205/Forest.png" title="Forest" width="750"></p> <p style="text-align:center;"><span class="small">Forest Test Function</span></p> <p style="text-align:left;">In this form, the Forest function is now included in the library of test functions.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span class="keyword">class</span> C_Forest : <span class="keyword">public</span> C_Function
+{
+<span class="keyword">public</span>: <span class="comment">//===================================================================</span>
+&nbsp;&nbsp;C_Forest ()
+&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;fuName = <span class="string">"Forest"</span>;
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">//function boundaries</span>
+&nbsp;&nbsp;&nbsp;&nbsp;xMinRange = -<span class="number">42.50</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;xMaxRange = -<span class="number">37</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;yMinRange = -<span class="number">45</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;yMaxRange = -<span class="number">39.8</span>;
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">//maximum coordinates</span>
+&nbsp;&nbsp;&nbsp;&nbsp;globalMaxFunValue = <span class="number">1.0</span>;&nbsp;&nbsp;<span class="comment">// raw: 3.0269632693877031</span>
+&nbsp;&nbsp;&nbsp;&nbsp;xGlobalMax&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= -<span class="number">37.6991104999996764</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;yGlobalMax&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= -<span class="number">41.9822944000032692</span>;
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">//minimum coordinates</span>
+&nbsp;&nbsp;&nbsp;&nbsp;globalMinFunValue = <span class="number">0.0</span>;&nbsp;&nbsp;<span class="comment">// raw: 0.0000000000000000</span>
+&nbsp;&nbsp;&nbsp;&nbsp;xGlobalMin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= -<span class="number">39.0288234999996675</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;yGlobalMin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= -<span class="number">39.9586780000031325</span>;
+&nbsp;&nbsp;}
+
+&nbsp;&nbsp;<span class="keyword">double</span> Core (<span class="keyword">double</span> x, <span class="keyword">double</span> y)
+&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> a = <span class="functions">MathSin</span> (<span class="functions">MathSqrt</span> (<span class="functions">MathAbs</span> (x - <span class="number">1.13</span>) + <span class="functions">MathAbs</span> (y - <span class="number">2.0</span>)));
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> b = <span class="functions">MathCos</span> (<span class="functions">MathSqrt</span> (<span class="functions">MathAbs</span> (<span class="functions">MathSin</span> (x))) + <span class="functions">MathSqrt</span> (<span class="functions">MathAbs</span> (<span class="functions">MathSin</span> (y - <span class="number">2.0</span>))));
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> f = a + b
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; + <span class="number">1.01</span> * <span class="functions">exp</span> (-(<span class="functions">pow</span> (x + <span class="number">42</span>, <span class="number">2</span>) + <span class="functions">pow</span> (y + <span class="number">43.5</span>, <span class="number">2</span>)) / <span class="number">0.9</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; + <span class="number">1.0</span>&nbsp;&nbsp;* <span class="functions">exp</span> (-(<span class="functions">pow</span> (x + <span class="number">40.2</span>, <span class="number">2</span>) + <span class="functions">pow</span> (y + <span class="number">46</span>, <span class="number">2</span>)) / <span class="number">0.3</span>);
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> res = <span class="functions">MathPow</span> (f, <span class="number">4</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - <span class="number">0.3</span>&nbsp;&nbsp;* <span class="functions">exp</span> (-(<span class="functions">pow</span> (x + <span class="number">42.3</span>, <span class="number">2</span>) + <span class="functions">pow</span> (y + <span class="number">46.0</span>, <span class="number">2</span>)) / <span class="number">0.02</span>);
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">//return res;</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> Scale (res, <span class="number">0.0000000000000000</span>, <span class="number">3.0269632693877031</span>, <span class="number">0.0</span>, <span class="number">1.0</span>);
+&nbsp;&nbsp;}
+};
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span></pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p><b>Megacity</b></p> <p>The original function is built on the same base pair a + b as Forest, but after raising it to the fourth power, floor() is applied, creating a discrete, stepped landscape. The global maximum is determined by the points where sin(x) = 0 and sin(y−2) = 0 simultaneously, that is, x = nπ and y = 2 + mπ. The point closest to the center had normalized coordinates x_norm ≈ 0.858, y_norm ≈ 0.610, and a distance from the diagonal of 0.248 — not far enough.</p> <p>In the modified version, the center of function a is shifted: (x + 10.13) is used instead of (x − 1.13), and (y − 5.0) is used instead of (y − 2.0). This shifts the regions where a reaches its maximum to another part of the search space. Normalized coordinates of the new maximum: x_norm ≈ 0.072, y_norm ≈ 0.610, distance from the diagonal: 0.538. The maximum has shifted to the left side of the space — diagonal trajectories oriented along the y ≈ x axis hardly ever reach that region. The value of raw_max changed from 12 to 14 — because at the new point, the base function has a different value, and floor((a+b)⁴) yields a different result. That is precisely why RAW scanning was necessary during verification: without it, Scale() would have been calibrated to the wrong range.</p> <p style="text-align:center;"><img alt="Megacity" height="610" loading="lazy" src="https://c.mql5.com/2/205/Mega.png" title="Megacity" width="750"></p> <p style="text-align:center;"><span class="small">Megacity Test Function</span></p> <p style="text-align:left;">The Megacity function is now included in the test function library in this form.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span class="keyword">class</span> C_Megacity : <span class="keyword">public</span> C_Function
+{
+<span class="keyword">public</span>: <span class="comment">//===================================================================</span>
+&nbsp;&nbsp;C_Megacity ()
+&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;fuName = <span class="string">"Megacity"</span>;
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">//function boundaries</span>
+&nbsp;&nbsp;&nbsp;&nbsp;xMinRange = -<span class="number">10.0</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;xMaxRange = -<span class="number">2</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;yMinRange = -<span class="number">10.5</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;yMaxRange = <span class="number">10</span>;
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">//maximum coordinates</span>
+&nbsp;&nbsp;&nbsp;&nbsp;globalMaxFunValue = <span class="number">1.0</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;xGlobalMax&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= -<span class="number">9.428</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;yGlobalMax&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= <span class="number">2.0009</span>;
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">//minimum coordinates</span>
+&nbsp;&nbsp;&nbsp;&nbsp;globalMinFunValue = <span class="number">0.0</span>; <span class="comment">//-1</span>
+&nbsp;&nbsp;&nbsp;&nbsp;xGlobalMin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= -<span class="number">10.0</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;yGlobalMin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= -<span class="number">7.66485</span>;
+&nbsp;&nbsp;}
+
+&nbsp;&nbsp;<span class="keyword">double</span> Core (<span class="keyword">double</span> x, <span class="keyword">double</span> y)
+&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> a = <span class="functions">MathSin</span> (<span class="functions">MathSqrt</span> (<span class="functions">MathAbs</span> (x + <span class="number">10.13</span>) + <span class="functions">MathAbs</span> (y - <span class="number">5.0</span>)));
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> b = <span class="functions">MathCos</span> (<span class="functions">MathSqrt</span> (<span class="functions">MathAbs</span> (<span class="functions">MathSin</span> (x))) + <span class="functions">MathSqrt</span> (<span class="functions">MathAbs</span> (<span class="functions">MathSin</span> (y - <span class="number">2.0</span>))));
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> f = a + b;
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> res = <span class="functions">floor</span> (<span class="functions">MathPow</span> (f, <span class="number">4</span>)) -
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="functions">floor</span> (<span class="number">2</span> * <span class="functions">exp</span> (-(<span class="functions">pow</span> (x + <span class="number">9.5</span>, <span class="number">2</span>) + <span class="functions">pow</span> (y + <span class="number">7.5</span>, <span class="number">2</span>)) / <span class="number">0.4</span>));
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (res &lt; -<span class="number">1.0</span>) res = -<span class="number">1.0</span>;
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> Scale (res, -<span class="number">1.0</span>, <span class="number">14.0</span>, <span class="number">0.0</span>, <span class="number">1.0</span>);
+&nbsp;&nbsp;}
+};
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span></pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p></p> <p>Final comparison of the normalized coordinates of the maxima:</p> <table cellpadding="3" class="standart" width="100%"> <thead> <tr> <th>Function</th> <th>x_norm (original)</th> <th>y_norm (original)</th> <th>Δ orig.</th> <th>x_norm mod.</th> <th>y_norm mod.</th> <th>Δ mod.</th> </tr> </thead> <tbody> <tr> <td data-label="Function">Hilly</td> <td data-label="x_norm (original)">0.253</td> <td data-label="y_norm (original)">0.604</td> <td data-label="Δ orig.">0.351</td> <td data-label="x_norm mod.">unchanged</td> <td data-label="y_norm mod."></td> <td data-label="Δ mod."></td> </tr> <tr> <td data-label="Function">Forest</td> <td data-label="x_norm (original)">0.591</td> <td data-label="y_norm (original)">0.731</td> <td data-label="Δ orig.">0.140</td> <td data-label="x_norm mod.">0.873</td> <td data-label="y_norm mod.">0.580</td> <td data-label="Δ mod.">0.293</td> </tr> <tr> <td data-label="Function">Megacity</td> <td data-label="x_norm (original)">0.858</td> <td data-label="y_norm (original)">0.610</td> <td data-label="Δ orig.">0.248</td> <td data-label="x_norm mod.">0.072</td> <td data-label="y_norm mod.">0.610</td> <td data-label="Δ mod.">0.538</td> </tr> </tbody> </table> <p>Hilly already met the criterion Δ &gt; 0.3 and remained unchanged. Megacity exceeds the threshold by a wide margin (Δ = 0.538). Forest does not formally reach the 0.3 threshold; however, Δ doubled — from 0.140 to 0.293 — and, as the test results will show, this proved sufficient to cause the HHO results to collapse. This observation suggests that the 0.3 threshold is not an absolute limit, but rather a guideline: the sensitivity of a particular algorithm to the position of the maximum relative to the diagonal depends on its mechanics.</p> <p><br></p> <h3>Verification of Modified Functions<br></h3> <p>The VerifyExtremes.mq5 helper script was developed to accurately determine the extrema of modified functions and visually verify them. It performs three tasks at once: determines the exact raw values raw_min and raw_max for the function before Scale(), draws a heat map of the function directly on the MetaTrader 5 chart (identical to the visualization in the main test bench), and verifies the correctness of the calibration via CalcFunc().</p> <p>The need for this script stems from the class architecture in TestFunctions.mqh: the Core() method always returns a result that has already been normalized via Scale(). To find the actual raw_min and raw_max values for calibration, you need to compute res before Scale() — this is exactly what the CoreRaw_*() functions do; their bodies exactly replicate Core(), except for the last line.</p> <p>The verification procedure following any modification to a function consists of two runs. The first run scans the RAW values across a GridN×GridN grid (a value of 10,000 yields 100 million points — enough to accurately locate any extremum) and outputs ready-to-use code snippets to the log for insertion into the class constructor and Core(). For example, for Megacity, the result looks like this:</p> <div class="fquote"> <p>--- insert into the class constructor ---<br> globalMaxFunValue = 1.0; // raw: 14.0000000000000000<br> xGlobalMax = -9.4280000000000008;<br> yGlobalMax = 2.0009000000000015;<br> globalMinFunValue = 0.0; // raw: -1.0000000000000000<br> xGlobalMin = -10.0000000000000000;<br> yGlobalMin = -7.6648499999999995;<br><br>--- insert into Core() ---<br> return Scale (res, -1.0000000000000000, 14.0000000000000000, 0.0, 1.0);</p> </div> <p>These lines are copied into TestFunctions.mqh, and the file is recompiled. The second run verifies the calibration: the script calls CalcFunc() with the updated coordinates and checks that the function returns 1.0 at the maximum point and 0.0 at the minimum point.</p> <div class="fquote"> <p>CalcFunc CHECK (applicable after inserting the new Scale() calls):<br> CalcFunc at the max point = 1.00000000 (should be approximately 1.0)<br> CalcFunc at the min point = 0.00000000 (should be approximately 0.0)</p> </div> <p>If both values match, calibration is complete and you can begin testing the algorithms. If the script displays the warning “⚠ max is far from 1.0,” this means either that TestFunctions.mqh has not been recompiled, or that the found point lies on the boundary of a discrete floor() cell and is unstable — in this case, simply shift xGlobalMax by a few thousandths toward the center of the cell.</p> <p>The heat map is generated in parallel with the calculations using CCanvas. The HSL color scheme is identical to that of the main test bench: blue represents minimum values, green represents average values, and red represents maximum values. The maximum is marked with a large black circle, and the minimum with a small one. A heat map immediately shows whether a peak is sharp, whether it is located where it should be, and whether there are any competing peaks of comparable height. If the global maximum is far from the main diagonals, the conditions for a fair comparison of algorithms are met.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span class="comment">// RAW functions — res before Scale().</span>
+<span class="comment">// *** SYNCHRONIZE the bodies with Core() in TestFunctions.mqh ***</span>
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span class="keyword">double</span> CoreRaw_Forest (<span class="keyword">double</span> x, <span class="keyword">double</span> y)
+{
+&nbsp;&nbsp;<span class="keyword">double</span> a = <span class="functions">MathSin</span> (<span class="functions">MathSqrt</span> (<span class="functions">MathAbs</span> (x - <span class="number">1.13</span>) + <span class="functions">MathAbs</span> (y - <span class="number">2.0</span>)));
+&nbsp;&nbsp;<span class="keyword">double</span> b = <span class="functions">MathCos</span> (<span class="functions">MathSqrt</span> (<span class="functions">MathAbs</span> (<span class="functions">MathSin</span> (x))) + <span class="functions">MathSqrt</span> (<span class="functions">MathAbs</span> (<span class="functions">MathSin</span> (y - <span class="number">2.0</span>))));
+&nbsp;&nbsp;<span class="keyword">double</span> f = a + b
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; + <span class="number">1.01</span> * <span class="functions">MathExp</span> (-(<span class="functions">MathPow</span> (x + <span class="number">41.5</span>, <span class="number">2</span>) + <span class="functions">MathPow</span> (y + <span class="number">46.0</span>, <span class="number">2</span>)) / <span class="number">0.9</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; + <span class="number">3.0</span>&nbsp;&nbsp;* <span class="functions">MathExp</span> (-(<span class="functions">MathPow</span> (x + <span class="number">41.5</span>, <span class="number">2</span>) + <span class="functions">MathPow</span> (y + <span class="number">46.0</span>, <span class="number">2</span>)) / <span class="number">0.3</span>);
+&nbsp;&nbsp;<span class="keyword">return</span> <span class="functions">MathPow</span> (f, <span class="number">4</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - <span class="number">0.3</span> * <span class="functions">MathExp</span> (-(<span class="functions">MathPow</span> (x + <span class="number">42.3</span>, <span class="number">2</span>) + <span class="functions">MathPow</span> (y + <span class="number">46.0</span>, <span class="number">2</span>)) / <span class="number">0.02</span>);
+}
+
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//|                                                                  |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">double</span> CoreRaw_Megacity (<span class="keyword">double</span> x, <span class="keyword">double</span> y)
+{
+<span class="comment">// *** SYNCHRONIZED with Core() in TestFunctions.mqh ***</span>
+&nbsp;&nbsp;<span class="keyword">double</span> a&nbsp;&nbsp; = <span class="functions">MathSin</span> (<span class="functions">MathSqrt</span> (<span class="functions">MathAbs</span> (x + <span class="number">10.13</span>) + <span class="functions">MathAbs</span> (y - <span class="number">5.0</span>)));
+&nbsp;&nbsp;<span class="keyword">double</span> b&nbsp;&nbsp; = <span class="functions">MathCos</span> (<span class="functions">MathSqrt</span> (<span class="functions">MathAbs</span> (<span class="functions">MathSin</span> (x))) + <span class="functions">MathSqrt</span> (<span class="functions">MathAbs</span> (<span class="functions">MathSin</span> (y - <span class="number">2.0</span>))));
+&nbsp;&nbsp;<span class="keyword">double</span> f&nbsp;&nbsp; = a + b;
+&nbsp;&nbsp;<span class="keyword">double</span> res = <span class="functions">MathFloor</span> (<span class="functions">MathPow</span> (f, <span class="number">4</span>))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - <span class="functions">MathFloor</span> (<span class="number">2.0</span> * <span class="functions">MathExp</span> (-(<span class="functions">MathPow</span> (x + <span class="number">9.5</span>, <span class="number">2</span>) + <span class="functions">MathPow</span> (y + <span class="number">7.5</span>, <span class="number">2</span>)) / <span class="number">0.4</span>));
+&nbsp;&nbsp;<span class="keyword">if</span> (res &lt; -<span class="number">1.0</span>) res = -<span class="number">1.0</span>;
+&nbsp;&nbsp;<span class="keyword">return</span> res;
+}
+
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//|                                                                  |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">double</span> CoreRaw_Hilly (<span class="keyword">double</span> x, <span class="keyword">double</span> y)
+{
+&nbsp;&nbsp;<span class="keyword">return</span> <span class="number">20.0</span> + x*x + y*y
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - <span class="number">10.0</span> * <span class="functions">MathCos</span> (<span class="number">2.0</span>*<span class="macro">M_PI</span>*x) - <span class="number">10.0</span> * <span class="functions">MathCos</span> (<span class="number">2.0</span>*<span class="macro">M_PI</span>*y)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - <span class="number">30.0</span>&nbsp;&nbsp;* <span class="functions">MathExp</span> (-(<span class="functions">MathPow</span> (x-<span class="number">1.0</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="number">2</span>) + y*y) / <span class="number">0.1</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; + <span class="number">200.0</span> * <span class="functions">MathExp</span> (-(<span class="functions">MathPow</span> (x+<span class="macro">M_PI</span>*<span class="number">0.47</span>, <span class="number">2</span>) + <span class="functions">MathPow</span> (y-<span class="macro">M_PI</span>*<span class="number">0.2</span>, <span class="number">2</span>)) / <span class="number">0.1</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; + <span class="number">100.0</span> * <span class="functions">MathExp</span> (-(<span class="functions">MathPow</span> (x-<span class="number">0.5</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="number">2</span>) + <span class="functions">MathPow</span> (y+<span class="number">0.5</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="number">2</span>)) / <span class="number">0.01</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - <span class="number">60.0</span>&nbsp;&nbsp;* <span class="functions">MathExp</span> (-(<span class="functions">MathPow</span> (x-<span class="number">1.33</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="number">2</span>) + <span class="functions">MathPow</span> (y-<span class="number">2.0</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="number">2</span>)) / <span class="number">0.02</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - <span class="number">40.0</span>&nbsp;&nbsp;* <span class="functions">MathExp</span> (-(<span class="functions">MathPow</span> (x+<span class="number">1.3</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="number">2</span>) + <span class="functions">MathPow</span> (y+<span class="number">0.2</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="number">2</span>)) / <span class="number">0.5</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; + <span class="number">60.0</span>&nbsp;&nbsp;* <span class="functions">MathExp</span> (-(<span class="functions">MathPow</span> (x-<span class="number">1.5</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="number">2</span>) + <span class="functions">MathPow</span> (y+<span class="number">1.5</span>,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="number">2</span>)) / <span class="number">0.1</span>);
+}
+
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//|                                                                  |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">double</span> CoreRaw (EFunc f, <span class="keyword">double</span> x, <span class="keyword">double</span> y)
+{
+&nbsp;&nbsp;<span class="keyword">switch</span> (f)
+&nbsp;&nbsp;{
+&nbsp;&nbsp;<span class="keyword">case</span> Forest:
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> CoreRaw_Forest&nbsp;&nbsp; (x, y);
+&nbsp;&nbsp;<span class="keyword">case</span> Megacity:
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> CoreRaw_Megacity (x, y);
+&nbsp;&nbsp;<span class="keyword">case</span> Hilly:
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> CoreRaw_Hilly&nbsp;&nbsp;&nbsp;&nbsp;(x, y);
+&nbsp;&nbsp;<span class="keyword">default</span>:
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="number">0.0</span>;
+&nbsp;&nbsp;}
+}
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span>
+</span></pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>The block above is needed for one reason: the function classes in TestFunctions.mqh do not provide access to the raw value of `res` — the `Core()` method always returns the result already normalized via `Scale()`. To find the actual raw_min and raw_max values for calibration, you need to calculate res before Scale() — and that is exactly what the CoreRaw_*() functions do.</p> <p>Why only three and not all of them? Because the script was created specifically to verify modified functions. In our study, only Forest and Megacity were modified. Hilly has been added for completeness as a reference point — it has not changed, and its RAW values are already known.</p> <p>For the other functions in EFunc — Rastrigin, Ackley, Rosenbrock, Peaks, and others — RAW scanning is not necessary in the context of this study. If you need to modify any of them in the future, simply add the corresponding CoreRaw_*() function and a line to the switch statement. The pattern is always the same: copy the body of Core() from the class, remove the last line `return Scale(...)`, and return `res` directly.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span class="comment">// The HSL palette is identical to that of the series’ main test bench</span>
+<span class="comment">// (DoubleToColor: loH=0, upH=270, Revers=true)</span>
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span class="keyword">double</span> HueToRGB (<span class="keyword">double</span> v1, <span class="keyword">double</span> v2, <span class="keyword">double</span> vH)
+{
+&nbsp;&nbsp;<span class="keyword">if</span> (vH &lt; <span class="number">0</span>) vH += <span class="number">1</span>;
+&nbsp;&nbsp;<span class="keyword">if</span> (vH &gt; <span class="number">1</span>) vH -= <span class="number">1</span>;
+&nbsp;&nbsp;<span class="keyword">if</span> ((<span class="number">6</span>*vH) &lt; <span class="number">1</span>) <span class="keyword">return</span> v1 + (v2-v1)*<span class="number">6</span>*vH;
+&nbsp;&nbsp;<span class="keyword">if</span> ((<span class="number">2</span>*vH) &lt; <span class="number">1</span>) <span class="keyword">return</span> v2;
+&nbsp;&nbsp;<span class="keyword">if</span> ((<span class="number">3</span>*vH) &lt; <span class="number">2</span>) <span class="keyword">return</span> v1 + (v2-v1)*(<span class="number">2.0</span>/<span class="number">3</span>-vH)*<span class="number">6</span>;
+&nbsp;&nbsp;<span class="keyword">return</span> v1;
+}
+
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="comment">//|                                                                  |</span>
+<span class="comment">//+------------------------------------------------------------------+</span>
+<span class="keyword">color</span> HSLtoRGB (<span class="keyword">int</span> h, <span class="keyword">double</span> s, <span class="keyword">double</span> l)
+{
+&nbsp;&nbsp;<span class="keyword">if</span> (s == <span class="number">0.0</span>)
+&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">int</span> c = (<span class="keyword">int</span>)(l*<span class="number">255</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="functions">StringToColor</span> ((<span class="keyword">string</span>)c+<span class="string">","</span>+(<span class="keyword">string</span>)c+<span class="string">","</span>+(<span class="keyword">string</span>)c);
+&nbsp;&nbsp;}
+&nbsp;&nbsp;<span class="keyword">double</span> v2&nbsp;&nbsp;= (l &lt; <span class="number">0.5</span>) ? (l*(<span class="number">1.0</span>+s)) : ((l+s)-(l*s));
+&nbsp;&nbsp;<span class="keyword">double</span> v1&nbsp;&nbsp;= <span class="number">2.0</span>*l - v2;
+&nbsp;&nbsp;<span class="keyword">double</span> hue = (<span class="keyword">double</span>)h / <span class="number">360.0</span>;
+&nbsp;&nbsp;<span class="keyword">int</span> r = (<span class="keyword">int</span>)(<span class="number">255</span> * HueToRGB (v1, v2, hue + <span class="number">1.0</span>/<span class="number">3.0</span>));
+&nbsp;&nbsp;<span class="keyword">int</span> g = (<span class="keyword">int</span>)(<span class="number">255</span> * HueToRGB (v1, v2, hue));
+&nbsp;&nbsp;<span class="keyword">int</span> b = (<span class="keyword">int</span>)(<span class="number">255</span> * HueToRGB (v1, v2, hue - <span class="number">1.0</span>/<span class="number">3.0</span>));
+&nbsp;&nbsp;<span class="keyword">return</span> <span class="functions">StringToColor</span> ((<span class="keyword">string</span>)r+<span class="string">","</span>+(<span class="keyword">string</span>)g+<span class="string">","</span>+(<span class="keyword">string</span>)b);
+}
+
+<span class="comment">// t ∈ [0,1] → color; Revers=true as in the test bench: max→red (h=0), min→blue (h=270)</span>
+<span class="keyword">uint</span> FuncColor (<span class="keyword">double</span> t)
+{
+&nbsp;&nbsp;t = <span class="functions">MathMax</span> (<span class="number">0.0</span>, <span class="functions">MathMin</span> (<span class="number">1.0</span>, t));
+&nbsp;&nbsp;<span class="keyword">int</span> h = (<span class="keyword">int</span>)((<span class="number">1.0</span> - t) * <span class="number">270.0</span>);
+&nbsp;&nbsp;<span class="keyword">return</span> COLOR2RGB (HSLtoRGB (h, <span class="number">1.0</span>, <span class="number">0.5</span>));
+}
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span class="comment">// Heat map — calls Core() (with Scale), renders [0,1] using HSL</span>
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span class="keyword">void</span> DrawHeatmap (C_Function &amp;fn, CCanvas &amp;cv, <span class="keyword">int</span> sz)
+{
+&nbsp;&nbsp;<span class="keyword">double</span> xMin&nbsp;&nbsp;= fn.GetMinRangeX (), xMax = fn.GetMaxRangeX ();
+&nbsp;&nbsp;<span class="keyword">double</span> yMin&nbsp;&nbsp;= fn.GetMinRangeY (), yMax = fn.GetMaxRangeY ();
+&nbsp;&nbsp;<span class="keyword">double</span> stepX = (xMax - xMin) / (sz - <span class="number">1</span>);
+&nbsp;&nbsp;<span class="keyword">double</span> stepY = (yMax - yMin) / (sz - <span class="number">1</span>);
+
+&nbsp;&nbsp;<span class="keyword">for</span> (<span class="keyword">int</span> px = <span class="number">0</span>; px &lt; sz; px++)
+&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> x = xMin + px * stepX;
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">for</span> (<span class="keyword">int</span> py = <span class="number">0</span>; py &lt; sz; py++)
+&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> y = yMax - py * stepY;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// py=0 → yMax (top), as in the test bench</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> v = fn.Core (x, y);&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="comment">// Core() is already normalized to [0,1]</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cv.PixelSet (px, py, FuncColor (v));
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (px % <span class="number">60</span> == <span class="number">0</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="functions">Comment</span> (fn.GetFuncName (), <span class="string">" rendering&nbsp;&nbsp;"</span>, <span class="functions">DoubleToString</span> (<span class="number">100.0</span>*px/sz, <span class="number">0</span>), <span class="string">"%"</span>);
+&nbsp;&nbsp;}
+
+<span class="comment">// maximum marker — black ring (as in the test bench)</span>
+&nbsp;&nbsp;<span class="keyword">int</span> mxPx = (<span class="keyword">int</span>)<span class="functions">MathRound</span> ((fn.GetMaxFuncX () - xMin) / stepX);
+&nbsp;&nbsp;<span class="keyword">int</span> mxPy = (<span class="keyword">int</span>)<span class="functions">MathRound</span> ((yMax - fn.GetMaxFuncY ()) / stepY);
+&nbsp;&nbsp;<span class="keyword">for</span> (<span class="keyword">int</span> r = <span class="number">10</span>; r &lt;= <span class="number">13</span>; r++)
+&nbsp;&nbsp;&nbsp;&nbsp;cv.Circle (mxPx, mxPy, r, COLOR2RGB (<span class="macro">clrBlack</span>));
+
+<span class="comment">// minimum marker — smaller black ring</span>
+&nbsp;&nbsp;<span class="keyword">int</span> mnPx = (<span class="keyword">int</span>)<span class="functions">MathRound</span> ((fn.GetMinFuncX () - xMin) / stepX);
+&nbsp;&nbsp;<span class="keyword">int</span> mnPy = (<span class="keyword">int</span>)<span class="functions">MathRound</span> ((yMax - fn.GetMinFuncY ()) / stepY);
+&nbsp;&nbsp;<span class="keyword">for</span> (<span class="keyword">int</span> r = <span class="number">10</span>; r &lt;= <span class="number">11</span>; r++)
+&nbsp;&nbsp;&nbsp;&nbsp;cv.Circle (mnPx, mnPy, r, COLOR2RGB (<span class="macro">clrBlack</span>));
+
+&nbsp;&nbsp;<span class="functions">Comment</span> (<span class="string">""</span>);
+}
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span class="comment">// RAW scanning (before Scale())</span>
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span class="keyword">void</span> ScanRaw (EFunc funcType, C_Function &amp;fn, <span class="keyword">int</span> N,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> &amp;rawMax, <span class="keyword">double</span> &amp;xMx, <span class="keyword">double</span> &amp;yMx,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> &amp;rawMin, <span class="keyword">double</span> &amp;xMn, <span class="keyword">double</span> &amp;yMn)
+{
+&nbsp;&nbsp;<span class="keyword">double</span> xMin&nbsp;&nbsp;= fn.GetMinRangeX (), xMax = fn.GetMaxRangeX ();
+&nbsp;&nbsp;<span class="keyword">double</span> yMin&nbsp;&nbsp;= fn.GetMinRangeY (), yMax = fn.GetMaxRangeY ();
+&nbsp;&nbsp;<span class="keyword">double</span> stepX = (xMax - xMin) / N;
+&nbsp;&nbsp;<span class="keyword">double</span> stepY = (yMax - yMin) / N;
+
+&nbsp;&nbsp;rawMax = -<span class="macro">DBL_MAX</span>;
+&nbsp;&nbsp;rawMin = <span class="macro">DBL_MAX</span>;
+&nbsp;&nbsp;xMx = xMin;
+&nbsp;&nbsp;yMx = yMin;
+&nbsp;&nbsp;xMn = xMin;
+&nbsp;&nbsp;yMn = yMin;
+
+&nbsp;&nbsp;<span class="keyword">long</span> total = (<span class="keyword">long</span>)(N+<span class="number">1</span>) * (N+<span class="number">1</span>);
+&nbsp;&nbsp;<span class="functions">PrintFormat</span> (<span class="string">"%s — RAW grid %d×%d = %I64d points&nbsp;&nbsp;stepX=%.10f&nbsp;&nbsp;stepY=%.10f"</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fn.GetFuncName (), N, N, total, stepX, stepY);
+
+&nbsp;&nbsp;<span class="keyword">for</span> (<span class="keyword">int</span> ix = <span class="number">0</span>; ix &lt;= N; ix++)
+&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> x = xMin + ix * stepX;
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">for</span> (<span class="keyword">int</span> iy = <span class="number">0</span>; iy &lt;= N; iy++)
+&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> y = yMin + iy * stepY;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> v = CoreRaw (funcType, x, y);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (v &gt; rawMax)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rawMax = v;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;xMx = x;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yMx = y;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (v &lt; rawMin)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rawMin = v;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;xMn = x;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yMn = y;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (ix % (N/<span class="number">10</span>) == <span class="number">0</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="functions">Comment</span> (fn.GetFuncName (), <span class="string">" scanning RAW&nbsp;&nbsp;"</span>, <span class="functions">DoubleToString</span> (<span class="number">100.0</span>*ix/N, <span class="number">0</span>), <span class="string">"%"</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (<span class="functions">IsStopped</span> ())
+&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="functions">Print</span> (<span class="string">"interrupted"</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span>;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;}
+&nbsp;&nbsp;<span class="functions">Comment</span> (<span class="string">""</span>);
+}
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span class="comment">// Refinement pass: ±10 steps, step/100</span>
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span class="keyword">void</span> RefineRaw (EFunc funcType, <span class="keyword">double</span> xC, <span class="keyword">double</span> yC,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> stepX, <span class="keyword">double</span> stepY,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> &amp;rawMax, <span class="keyword">double</span> &amp;xMx, <span class="keyword">double</span> &amp;yMx,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> &amp;rawMin, <span class="keyword">double</span> &amp;xMn, <span class="keyword">double</span> &amp;yMn)
+{
+&nbsp;&nbsp;<span class="keyword">double</span> sX = stepX*<span class="number">0.01</span>, sY = stepY*<span class="number">0.01</span>;
+&nbsp;&nbsp;<span class="keyword">double</span> rX = stepX*<span class="number">10.0</span>, rY = stepY*<span class="number">10.0</span>;
+&nbsp;&nbsp;<span class="keyword">for</span> (<span class="keyword">double</span> x = xC-rX; x &lt;= xC+rX; x += sX)
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">for</span> (<span class="keyword">double</span> y = yC-rY; y &lt;= yC+rY; y += sY)
+&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> v = CoreRaw (funcType, x, y);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (v &gt; rawMax)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rawMax = v;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;xMx = x;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yMx = y;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> (v &lt; rawMin)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rawMin = v;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;xMn = x;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;yMn = y;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span class="comment">// Outputting results + CalcFunc check</span>
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span class="keyword">void</span> PrintResult (C_Function &amp;fn,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> rawMax, <span class="keyword">double</span> xMx, <span class="keyword">double</span> yMx,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">double</span> rawMin, <span class="keyword">double</span> xMn, <span class="keyword">double</span> yMn)
+{
+&nbsp;&nbsp;<span class="keyword">double</span> xMinR = fn.GetMinRangeX (), xMaxR = fn.GetMaxRangeX ();
+&nbsp;&nbsp;<span class="keyword">double</span> yMinR = fn.GetMinRangeY (), yMaxR = fn.GetMaxRangeY ();
+&nbsp;&nbsp;<span class="keyword">double</span> xNMx&nbsp;&nbsp;= (xMx - xMinR) / (xMaxR - xMinR);
+&nbsp;&nbsp;<span class="keyword">double</span> yNMx&nbsp;&nbsp;= (yMx - yMinR) / (yMaxR - yMinR);
+&nbsp;&nbsp;<span class="keyword">double</span> xNMn&nbsp;&nbsp;= (xMn - xMinR) / (xMaxR - xMinR);
+&nbsp;&nbsp;<span class="keyword">double</span> yNMn&nbsp;&nbsp;= (yMn - yMinR) / (yMaxR - yMinR);
+
+&nbsp;&nbsp;<span class="functions">Print</span>&nbsp;&nbsp; (<span class="string">"══════════════════════════════════════════════════════"</span>);
+&nbsp;&nbsp;<span class="functions">Print</span>&nbsp;&nbsp; (fn.GetFuncName (), <span class="string">" — RAW result"</span>);
+&nbsp;&nbsp;<span class="functions">Print</span>&nbsp;&nbsp; (<span class="string">"──────────────────────────────────────────────────────"</span>);
+&nbsp;&nbsp;<span class="functions">Print</span>&nbsp;&nbsp; (<span class="string">"MAXIMUM (raw, before Scale):"</span>);
+&nbsp;&nbsp;<span class="functions">PrintFormat</span> (<span class="string">"&nbsp;&nbsp;raw value = %.16f"</span>, rawMax);
+&nbsp;&nbsp;<span class="functions">PrintFormat</span> (<span class="string">"&nbsp;&nbsp;x&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = %.16f&nbsp;&nbsp; (x_norm = %.6f)"</span>, xMx, xNMx);
+&nbsp;&nbsp;<span class="functions">PrintFormat</span> (<span class="string">"&nbsp;&nbsp;y&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = %.16f&nbsp;&nbsp; (y_norm = %.6f)"</span>, yMx, yNMx);
+&nbsp;&nbsp;<span class="functions">Print</span>&nbsp;&nbsp; (<span class="string">""</span>);
+&nbsp;&nbsp;<span class="functions">Print</span>&nbsp;&nbsp; (<span class="string">"MINIMUM (raw, before Scale):"</span>);
+&nbsp;&nbsp;<span class="functions">PrintFormat</span> (<span class="string">"&nbsp;&nbsp;raw value = %.16f"</span>, rawMin);
+&nbsp;&nbsp;<span class="functions">PrintFormat</span> (<span class="string">"&nbsp;&nbsp;x&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = %.16f&nbsp;&nbsp; (x_norm = %.6f)"</span>, xMn, xNMn);
+&nbsp;&nbsp;<span class="functions">PrintFormat</span> (<span class="string">"&nbsp;&nbsp;y&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; = %.16f&nbsp;&nbsp; (y_norm = %.6f)"</span>, yMn, yNMn);
+&nbsp;&nbsp;<span class="functions">Print</span>&nbsp;&nbsp; (<span class="string">""</span>);
+&nbsp;&nbsp;<span class="functions">Print</span>&nbsp;&nbsp; (<span class="string">"--- insert into the class constructor ---"</span>);
+&nbsp;&nbsp;<span class="functions">PrintFormat</span> (<span class="string">"&nbsp;&nbsp;globalMaxFunValue = 1.0;&nbsp;&nbsp;// raw: %.16f"</span>, rawMax);
+&nbsp;&nbsp;<span class="functions">PrintFormat</span> (<span class="string">"&nbsp;&nbsp;xGlobalMax&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= %.16f;"</span>, xMx);
+&nbsp;&nbsp;<span class="functions">PrintFormat</span> (<span class="string">"&nbsp;&nbsp;yGlobalMax&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= %.16f;"</span>, yMx);
+&nbsp;&nbsp;<span class="functions">PrintFormat</span> (<span class="string">"&nbsp;&nbsp;globalMinFunValue = 0.0;&nbsp;&nbsp;// raw: %.16f"</span>, rawMin);
+&nbsp;&nbsp;<span class="functions">PrintFormat</span> (<span class="string">"&nbsp;&nbsp;xGlobalMin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= %.16f;"</span>, xMn);
+&nbsp;&nbsp;<span class="functions">PrintFormat</span> (<span class="string">"&nbsp;&nbsp;yGlobalMin&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= %.16f;"</span>, yMn);
+&nbsp;&nbsp;<span class="functions">Print</span>&nbsp;&nbsp; (<span class="string">""</span>);
+&nbsp;&nbsp;<span class="functions">Print</span>&nbsp;&nbsp; (<span class="string">"--- insert into Core() ---"</span>);
+&nbsp;&nbsp;<span class="functions">PrintFormat</span> (<span class="string">"&nbsp;&nbsp;return Scale (res, %.16f, %.16f, 0.0, 1.0);"</span>, rawMin, rawMax);
+&nbsp;&nbsp;<span class="functions">Print</span>&nbsp;&nbsp; (<span class="string">"──────────────────────────────────────────────────────"</span>);
+
+<span class="comment">// CalcFunc check — works only if Scale() has already been updated in the class</span>
+&nbsp;&nbsp;<span class="keyword">double</span> xy [<span class="number">2</span>];
+&nbsp;&nbsp;xy [<span class="number">0</span>] = fn.GetMaxFuncX ();
+&nbsp;&nbsp;xy [<span class="number">1</span>] = fn.GetMaxFuncY ();
+&nbsp;&nbsp;<span class="keyword">double</span> checkMax = fn.CalcFunc (xy);
+&nbsp;&nbsp;xy [<span class="number">0</span>] = fn.GetMinFuncX ();
+&nbsp;&nbsp;xy [<span class="number">1</span>] = fn.GetMinFuncY ();
+&nbsp;&nbsp;<span class="keyword">double</span> checkMin = fn.CalcFunc (xy);
+&nbsp;&nbsp;<span class="functions">Print</span>&nbsp;&nbsp; (<span class="string">"CHECK CalcFunc (relevant after inserting new Scale):"</span>);
+&nbsp;&nbsp;<span class="functions">PrintFormat</span> (<span class="string">"&nbsp;&nbsp;CalcFunc at max = %.8f&nbsp;&nbsp; (should be ~1.0)"</span>, checkMax);
+&nbsp;&nbsp;<span class="functions">PrintFormat</span> (<span class="string">"&nbsp;&nbsp;CalcFunc at min = %.8f&nbsp;&nbsp; (should be ~0.0)"</span>, checkMin);
+&nbsp;&nbsp;<span class="keyword">if</span> (<span class="functions">MathAbs</span> (checkMax - <span class="number">1.0</span>) &gt; <span class="number">0.01</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="functions">Print</span> (<span class="string">"&nbsp;&nbsp;⚠ max far from 1.0 — update Scale() and xGlobalMax/yGlobalMax in the class"</span>);
+&nbsp;&nbsp;<span class="keyword">if</span> (<span class="functions">MathAbs</span> (checkMin - <span class="number">0.0</span>) &gt; <span class="number">0.01</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="functions">Print</span> (<span class="string">"&nbsp;&nbsp;⚠ min far from 0.0 — update Scale() and xGlobalMin/yGlobalMin in the class"</span>);
+&nbsp;&nbsp;<span class="functions">Print</span>&nbsp;&nbsp; (<span class="string">"══════════════════════════════════════════════════════"</span>);
+}
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span class="keyword">void</span> <span class="functions">OnStart</span> ()
+{
+&nbsp;&nbsp;C_Function *fn = SelectFunction (ShowFunction);
+&nbsp;&nbsp;<span class="keyword">if</span> (fn == <span class="macro">NULL</span>)
+&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="functions">Print</span> (<span class="string">"Function not selected"</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span>;
+&nbsp;&nbsp;}
+
+&nbsp;&nbsp;<span class="keyword">int</span> sz = <span class="functions">MathMax</span> (<span class="number">200</span>, CanvasSize);
+&nbsp;&nbsp;<span class="keyword">int</span> N&nbsp;&nbsp;= <span class="functions">MathMax</span> (<span class="number">100</span>, GridN);
+
+&nbsp;&nbsp;<span class="functions">Print</span> (<span class="string">"=== VerifyExtremes: "</span>, fn.GetFuncName (), <span class="string">"&nbsp;&nbsp;RAW grid "</span>, N, <span class="string">"×"</span>, N, <span class="string">" ==="</span>);
+
+<span class="comment">//─── 1. RAW scanning ─────────────────────────────────────</span>
+&nbsp;&nbsp;<span class="keyword">double</span> rMax, xMx, yMx, rMin, xMn, yMn;
+&nbsp;&nbsp;ScanRaw (ShowFunction, *fn, N, rMax, xMx, yMx, rMin, xMn, yMn);
+
+<span class="comment">//─── 2. Refinement ────────────────────────────────────────────</span>
+&nbsp;&nbsp;<span class="keyword">double</span> sX = (fn.GetMaxRangeX () - fn.GetMinRangeX ()) / N;
+&nbsp;&nbsp;<span class="keyword">double</span> sY = (fn.GetMaxRangeY () - fn.GetMinRangeY ()) / N;
+&nbsp;&nbsp;RefineRaw (ShowFunction, xMx, yMx, sX, sY, rMax, xMx, yMx, rMin, xMn, yMn);
+&nbsp;&nbsp;RefineRaw (ShowFunction, xMn, yMn, sX, sY, rMax, xMx, yMx, rMin, xMn, yMn);
+
+<span class="comment">//─── 3. Output + check ─────────────────────────────────────</span>
+&nbsp;&nbsp;PrintResult (*fn, rMax, xMx, yMx, rMin, xMn, yMn);
+
+<span class="comment">//─── 4. Heat map ───────────────────────────────────────</span>
+&nbsp;&nbsp;<span class="keyword">string</span> objName = <span class="string">"__HeatMap_"</span> + fn.GetFuncName () + <span class="string">"__"</span>;
+&nbsp;&nbsp;<span class="keyword">if</span> (<span class="functions">ObjectFind</span> (<span class="number">0</span>, objName) &gt;= <span class="number">0</span>) <span class="functions">ObjectDelete</span> (<span class="number">0</span>, objName);
+
+&nbsp;&nbsp;CCanvas cv;
+&nbsp;&nbsp;<span class="keyword">if</span> (!cv.CreateBitmapLabel (<span class="number">0</span>, <span class="number">0</span>, objName, <span class="number">5</span>, <span class="number">30</span>, sz, sz, <span class="macro">COLOR_FORMAT_ARGB_RAW</span>))
+&nbsp;&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="functions">Print</span> (<span class="string">"Canvas create failed"</span>);
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">delete</span> fn;
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span>;
+&nbsp;&nbsp;}
+
+&nbsp;&nbsp;cv.Erase (<span class="number">0xFF000000</span>);
+&nbsp;&nbsp;DrawHeatmap (*fn, cv, sz);
+&nbsp;&nbsp;cv.Update ();
+
+&nbsp;&nbsp;<span class="keyword">double</span> xNMx = (xMx - fn.GetMinRangeX ()) / (fn.GetMaxRangeX () - fn.GetMinRangeX ());
+&nbsp;&nbsp;<span class="keyword">double</span> yNMx = (yMx - fn.GetMinRangeY ()) / (fn.GetMaxRangeY () - fn.GetMinRangeY ());
+&nbsp;&nbsp;<span class="functions">Comment</span> (fn.GetFuncName (),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="string">"&nbsp;&nbsp; raw_max="</span>, <span class="functions">DoubleToString</span> (rMax, <span class="number">4</span>),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="string">"&nbsp;&nbsp; raw_min="</span>, <span class="functions">DoubleToString</span> (rMin, <span class="number">4</span>),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="string">"&nbsp;&nbsp; max: x_norm="</span>, <span class="functions">DoubleToString</span> (xNMx, <span class="number">3</span>),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="string">"&nbsp;&nbsp;y_norm="</span>, <span class="functions">DoubleToString</span> (yNMx, <span class="number">3</span>),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="string">"&nbsp;&nbsp; [big ring=max&nbsp;&nbsp;small=min]"</span>);
+
+&nbsp;&nbsp;<span class="functions">Print</span> (<span class="string">"=== Done. Copy strings from the TestFunctions.mqh log ==="</span>);
+&nbsp;&nbsp;<span class="keyword">delete</span> fn;
+}
+<span class="comment">//——————————————————————————————————————————————————————————————————————————————</span>
+<span class="comment">//+------------------------------------------------------------------+</span></pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p></p> <p><br></p> <h3>Results on a Modified Test Bench<br></h3> <p>It is time to answer the key question: what will happen to the HHO and DOAm results once the geometric advantage is eliminated?</p> <p>After modifying the Forest and Megacity functions, we ran two algorithms on the updated test bench for which the “cheating” hypothesis had been most explicitly formulated: HHO and DOAm. The testing protocol is standard: 10,000 function evaluations per test, three dimensionality levels (10, 50, and 1,000 variables), and 50 tests (we usually run 10 tests, but due to the high variability of the algorithms being examined, we increased this to 50).</p> <p>So, here are the HHO results on the previous test bench:</p> <div class="atten"> <p>HHO|Harris Hawks Optimization|50.0|1.5|<br>=============================<br>5 Hilly's; Func runs: 10000; result: 0.5845287633538552<br>25 Hilly's; Func runs: 10000; result: 0.4063647569651291<br>500 Hilly's; Func runs: 10000; result: 0.34188339366081033<br>=============================<br>5 Forest's; Func runs: 10000; result: 0.9294946030062039<br>25 Forest's; Func runs: 10000; result: 0.960139366657175<br>500 Forest's; Func runs: 10000; result: 0.9512729220389199<br>=============================<br>5 Megacity's; Func runs: 10000; result: 0.6492307692307692<br>25 Megacity's; Func runs: 10000; result: 0.6255384615384616<br>500 Megacity's; Func runs: 10000; result: 0.7003076923076924<br>=============================<br>All score: 6.14876 (68.32%)</p> </div> <p>HHO results on the new test bench:</p> <div class="atten"> <p>HHO|Harris Hawks Optimization|50.0|1.5|<br>=============================<br>5 Hilly's; Func runs: 10000; result: 0.5818206459092246<br>25 Hilly's; Func runs: 10000; result: 0.40503838036923595<br>500 Hilly's; Func runs: 10000; result: 0.3444513250919525<br>=============================<br>5 Forest's; Func runs: 10000; result: 0.3653235444256101<br>25 Forest's; Func runs: 10000; result: 0.24723176157400148<br>500 Forest's; Func runs: 10000; result: 0.2571406822924982<br>=============================<br>5 Megacity's; Func runs: 10000; result: 0.37786666666666685<br>25 Megacity's; Func runs: 10000; result: 0.2772266666666669<br>500 Megacity's; Func runs: 10000; result: 0.2666586666666662<br>=============================<br>Overall score: 3.12276 (34.70%)</p> </div> <p>This is conclusive confirmation of the hypothesis. Hilly remained unchanged, and the HHO result on it remained virtually the same (with deviations within the margin of statistical error), which proves the reproducibility of the test bench. Forest was shifted away from the diagonal, and the HHO result plummeted from 0.93–0.96 to 0.24–0.36. Megacity showed a similar drop: from 0.63–0.70 to 0.27–0.38. An overall score of 34.70% is no longer good enough for first place; such values do not merit inclusion in the list of the strongest algorithms in the table. This is what the algorithm is worth without structural luck.</p> <p></p> <p></p> <p></p> <p>3D visualization of the HHO algorithm's operation on the updated Forest and Megacity functions.</p> <p style="text-align:center;"><img alt="Forest" height="376" loading="lazy" src="https://c.mql5.com/2/205/Flashback-kwi-6_-2026-18_30_25.gif" style="vertical-align:middle;" title="Forest" width="750"></p> <p style="text-align:center;"><span class="small">HHO on the Forest test function</span></p> <p style="text-align:center;"><img alt="Megacity" height="376" loading="lazy" src="https://c.mql5.com/2/205/Flashback-kwi-6_-2026-18_33_55.gif" style="vertical-align:middle;" title="Megacity" width="750"></p> <p style="text-align:center;"><span class="small">HHO on the Megacity test function</span></p> <p>Now let's look at the previous DOAm results:</p> <div class="atten"> <p>DOAm|Dingo Optimization Algorithm M|50.0|0.5|0.7|<br>=============================<br>5 Hilly's; Func runs: 10000; result: 0.4796838225601811<br>25 Hilly's; Func runs: 10000; result: 0.4536754883347326<br>500 Hilly's; Func runs: 10000; result: 0.4636906699500103<br>=============================<br>5 Forest's; Func runs: 10000; result: 0.9414536230352631<br>25 Forest's; Func runs: 10000; result: 0.8790978288567921<br>500 Forest's; Func runs: 10000; result: 0.9145376343407303<br>=============================<br>5 Megacity's; Func runs: 10000; result: 0.7861538461538461<br>25 Megacity's; Func runs: 10000; result: 0.8606153846153848<br>500 Megacity's; Func runs: 10000; result: 0.8480461538461537<br>=============================<br>Overall score: 6.62695 (73.63%)</p> </div> <p>DOAm results on the new test bench:</p> <div class="atten"> <p>DOAm|Dingo Optimization Algorithm M|50.0|0.5|0.7|<br>=============================<br>5 Hilly's; Func runs: 10000; result: 0.5654328879290267<br>25 Hilly's; Func runs: 10000; result: 0.4734061199899962<br>500 Hilly's; Func runs: 10000; result: 0.451127860778784<br>=============================<br>5 Forest's; Func runs: 10000; result: 0.34359830880262116<br>25 Forest's; Func runs: 10000; result: 0.3813698981511174<br>500 Forest's; Func runs: 10000; result: 0.3757424907841298<br>=============================<br>5 Megacity's; Func runs: 10000; result: 0.45680000000000015<br>25 Megacity's; Func runs: 10000; result: 0.5345066666666668<br>500 Megacity's; Func runs: 10000; result: 0.6124213333333345<br>=============================<br>Overall score: 4.19441 (46.60%)</p> </div> <p>The picture is similar to HHO. Hilly remained unchanged — the result remained stable, which confirms the reproducibility of the test bench. Forest plummeted from 0.88–0.94 to 0.34–0.38. Megacity also dropped from 0.79–0.86 to 0.46–0.61. The final result was 46.60% instead of 73.63%.</p> <p>One detail stands out: although the final results for both algorithms on the new test bench dropped dramatically, the results remain close across both high and low dimensionalities (for DOAm on Megacity, the picture is truly striking: 0.61 for 1,000 variables versus 0.45 for 10 and 0.53 for 50 variables). The reason for this effect will be discussed further below.<br><br>It is worth noting an important detail: on the new test bench, the final results for both algorithms dropped sharply, but the closeness of the values between low and high dimensionalities remained. DOAm on the Megacity set is particularly striking: 0.61 with 1,000 variables, compared to 0.45 with 10 and 0.53 with 50 variables. How is that even possible? There is a simple explanation for this “trick” — and, of course, there is no magic involved in these kinds of “cheating” algorithms. In the next article, we will examine this effect and present a control test for all new algorithms. Algorithms that do not pass this test will not be included in the ranking table.</p> <p>3D visualization of the DOAm algorithm in action on the updated Forest and Megacity functions.</p> <p style="text-align:center;"><img alt="Forest" height="376" loading="lazy" src="https://c.mql5.com/2/205/Flashback-kwi-6_-2026-19_40_22.gif" style="vertical-align:middle;" title="Forest" width="750"></p> <p style="text-align:center;"><span class="small">DOAm on the Forest test function</span></p> <p style="text-align:center;"><img alt="Megacity" height="376" loading="lazy" src="https://c.mql5.com/2/205/Flashback-kwi-6_-2026-20_11_06.gif" style="vertical-align:middle;" title="Megacity" width="750"></p> <p style="text-align:center;"><span class="small">DOAm on the Megacity test function</span></p> <p style="text-align:left;"><br></p> <h3 id="vivodi">Conclusions<br></h3> <p>We have gone from observing that “first place looks too good” to a formalized method for combating structural luck. Key findings and practical recommendations:</p> <ul> <li>Diagnosing a false leader: a sharp asymmetry in results — an outstanding score on one function and a failure on another — serves as a reliable marker of a structural match.</li> <li>New benchmark criterion: the global extremum should not lie close to the main diagonals of the normalized space; a practical guideline is |x<i>norm − y</i>norm| ≥ 0.3 (the effect is already noticeable at Δ ≈ 0.29). This criterion complements the previously established requirements “not on the boundary” and “not in the center”; together, they form a complete defense against the three main classes of unintentional “cheating.”</li> <li>Practical tools: modifications to the Forest and Megacity functions, the procedure for finding and refining raw<i>min/raw</i>max, the VerifyExtremes.mq5 script for visual and numerical verification, and instructions for calibrating Scale().</li> <li>Recommendation for the practicing trader/developer: do not rely solely on the final rating. Before applying the “winner” to a real-world problem, check the symmetry of the results across functions and the positions of the extrema in normalized coordinates; if you suspect anything, rerun the test on modified functions. <span>On the landscape of your Expert Advisor (EA), which knows nothing about the diagonals of the normalized space, such a coincidence may not occur again.</span></li> </ul> <p>The next step — running all 45 algorithms on the updated test bench and recalculating the rating — will allow us to definitively filter out algorithms whose results were inflated by the test geometry and identify truly robust optimizers. All code and modified tests are included; the procedures described are reproducible and ready to use.</p> <h3><br></h3> <p>An archive containing the latest versions of the algorithm source code is attached to the article. The author of this article does not guarantee absolute accuracy in the descriptions of the canonical algorithms; many of them have been modified to improve their search capabilities. The conclusions and judgments presented in the articles are based on the results of the experiments conducted.</p> <ul> <li>GitHub: <a href="https://github.com/JQSakaJoo/Population-optimization-algorithms-MQL5" rel="noreferrer noopener nofollow" target="_blank" title="https://github.com/JQSakaJoo/Population-optimization-algorithms-MQL5">https://github.com/JQSakaJoo/Population-optimization-algorithms-MQL5</a></li> </ul> <h4 id="para7"><br>Files used in the article</h4> <table cellpadding="3" cellspacing="0" class="standart" width="100%"> <thead> <tr> <th>#</th> <th>Name</th> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td>1</td> <td>#C_AO.mqh<br></td> <td>Include file<br></td> <td>Parent class for population-based optimization algorithms<br></td> </tr> <tr> <td>2</td> <td>#C_AO_enum.mqh<br></td> <td>Include file<br></td> <td>Enumeration of population-based optimization algorithms<br></td> </tr> <tr> <td>3</td> <td>TestFunctions.mqh<br></td> <td>Include file<br></td> <td>Test function library<br></td> </tr> <tr> <td>4<br></td> <td>TestStandFunctions.mqh<br></td> <td>Include file<br></td> <td>Test bench function library<br></td> </tr> <tr> <td>5</td> <td>TestStand3D.mqh</td> <td>Include file</td> <td>3D visualization panel for the test bench</td> </tr> <tr> <td>6</td> <td>Utilities.mqh<br></td> <td>Include file<br></td> <td>Utility functions library<br></td> </tr> <tr> <td>7</td> <td>CalculationTestResults.mqh<br></td> <td>Include file<br></td> <td>Script for calculating results for the comparison table</td> </tr> <tr> <td>8</td> <td>Testing AOs.mq5<br></td> <td>Script</td> <td>Unified test bench for all population-based optimization algorithms<br></td> </tr> <tr> <td>9</td> <td>Simple use of population optimization algorithms.mq5<br></td> <td>Script<br></td> <td>Simple example of using population-based optimization algorithms without visualization<br></td> </tr> <tr> <td>10</td> <td>Test_HHO.mq5<br></td> <td>Script</td> <td>HHO test bench</td> </tr> <tr> <td>11</td> <td>Test_DOAm.mq5</td> <td>Script<br></td> <td>DOAm test bench</td> </tr> <tr> <td>12</td> <td>VerifyExtremes.mq5</td> <td>Script<br></td> <td>RAW extrema search + 2D function heat map</td> </tr> </tbody> </table> <p><br></p>
+      </div>
+          <p style="text-align: right;">
+            <small>
+              Translated from Russian by MetaQuotes Ltd. <br>Original article: <a href="/ru/articles/21972" target="_blank">https://www.mql5.com/ru/articles/21972</a>
+            </small>
+          </p>
+<div id="cb_21972" class="attachBlock">
+  <strong>Attached files</strong> |
+  <div class="grouped-attachments-help">
+    <a title="Download all attachments in the single ZIP archive" href="/en/articles/download/21972.zip">
+      <i class="attach-icon attach-icon_zip"></i>Download ZIP
+    </a>
+  </div>
+    <div class="attachItem">
+      <a title="Download FalseLeaders.zip" href="/en/articles/download/21972/FalseLeaders.zip"><i class="attach-icon attach-icon_zip"></i>FalseLeaders.zip</a>
+      <span class="attachSize">(353.32 KB)</span>
+    </div>
+</div>
+    </div>
+
+  <div class="copyright">
+    <p><strong>Warning:</strong> All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.</p>
+      <p>This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.</p>
+  </div>
+
+
+
+    <div class="article__author-with-articles">
+      
+
+
+<div class="article-footer__author">
+  <div class="article-footer__author-avatar">
+    <img id="avatar" src="https://c.mql5.com/avatar/2024/8/66be0662-3c24_big.png" title="Andrey Dik" alt="Andrey Dik" loading="lazy" width="164" height="164">
+  </div>
+  <div class="article-footer__author-content">
+    <div class="article-footer__author-name">
+      <a href="/en/users/joo" title="Andrey Dik">Andrey Dik</a>
+    </div>
+    <div class="article-footer__author-info">
+      <ul>
+          <li>
+            <i title="Lives" class="icons-profile icons-profile_geo"></i>
+            <a target="_blank" rel="noreferrer noopener nofollow" title="Lives" href="https://maps.google.com/?z=4&amp;q=Russia">Russia</a>
+          </li>
+        <li>
+          <i title="Rating" class="icons-profile icons-profile_statistics"></i>
+          <a title="Rating" href="/en/users/joo/achievements">76740</a>
+        </li>
+      </ul>
+    </div>
+    <div class="article-footer__author-contacts">
+      
+    </div>
+    <div class="article-footer__author-bio">I WILL CONSIDER PROPOSALS FOR THE PUBLICATION OF A BOOK (TEXTBOOK) ON OPTIMIZATION ALGORITHMS.
+<br>A group for communication on optimization and free product testing://t.me/+vazsAAcney4zYmZi
+<br>Attention! My Telegram doppelgangers have appeared, my real nickname is @JQS_aka_Joo
+<br>My github with optimization algorithms: <a href="https://github.com/JQSakaJoo/Population-optimization-algorithms-MQL5" title="https://github.com/JQSakaJoo/Population-optimization-algorithms-MQL5" target="_blank">https://github.com/JQSakaJoo/Population-optimization-algorithms-MQL5</a>
+<br>All my publications: <a href="https://www.mql5.com/en/users/joo/publications" title="https://www.mql5.com/en/users/joo/publications" target="_blank">https://www.mql5.com/en/users/joo/publications</a>
+<br>I have been developing systems based on machine learning technologies since 2007 and in the field of artificial
+<br>intelligence, optimization and forecasting.
+</div>
+  </div>
+</div>
+
+      <div class="other-author-articles ui">
+        <h4 class="other-author-articles__title">Other articles by this author</h4>
+        <ul class="other-author-articles__list">
+          <li><a href="/en/articles/23232" data-fz-event="MQL5+Article+From+Author+Article">Bacterial Evolutionary Algorithm (BEA)</a></li>
+          <li><a href="/en/articles/23132" data-fz-event="MQL5+Article+From+Author+Article">The Chimp Optimization Algorithm: From ChOA to BChimp</a></li>
+          <li><a href="/en/articles/23053" data-fz-event="MQL5+Article+From+Author+Article">Coyote Optimization Algorithm (COA)</a></li>
+          <li><a href="/en/articles/22887" data-fz-event="MQL5+Article+From+Author+Article">Corona Virus Optimization (CVO) Algorithm</a></li>
+          <li><a href="/en/articles/22686" data-fz-event="MQL5+Article+From+Author+Article">Beluga Whale Optimization (BWO) Algorithm</a></li>
+          <li><a href="/en/articles/22648" data-fz-event="MQL5+Article+From+Author+Article">Archimedes Optimization Algorithm (AOA)</a></li>
+          <li><a href="/en/articles/22525" data-fz-event="MQL5+Article+From+Author+Article">Andean Condor Algorithm (ACA)</a></li>
+        </ul>
+      </div>
+    </div>
+
+</article>
+
+
+  <div class="article__last-comments" id="articleAdditional">
+    
+<div class="comments-preview">
+    <div class="title">
+      <span></span><b>
+ <a href="/en/forum/518795">Go to discussion</a>
+      </b>
+    </div>
+    <div>
+        
+    </div>
+</div>
+
+  </div>
+
+
+    <div class="articles-bottom-list">
+        <div class="articles-bottom-list__row">
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Population-Based Optimization Algorithms: Building a Defense Against Cheaters" src="https://c.mql5.com/2/208/22075-populyacionnie-algoritmi-optimizacii-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/22075" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Population-Based Optimization Algorithms: Building a Defense Against Cheaters</a>
+                <div class="articles-bottom-list__desc">The algorithms were rerun on the updated functions, and a method was proposed for quickly verifying their "honesty". The composite test combines five different landscapes and eliminates the possibility of gaining an advantage based on the geometry of individual problems, allowing for a quick assessment of the algorithm's actual search capability. A script is provided for preliminary validation of algorithms before they are applied to the optimization of trading strategies.</div>
+              </div>
+          </div>
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Hyperdimensional Computing: Learning in One Integer Add, and the Nulls That Judge It" src="https://c.mql5.com/2/248/24284-hyperdimensional-computing-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/24284" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Hyperdimensional Computing: Learning in One Integer Add, and the Nulls That Judge It</a>
+                <div class="articles-bottom-list__desc">A complete Hyperdimensional Computing library for MQL5 implements bind, bundle and permute over 4096‑bit hypervectors, graded level ladders for quantities, an encoder for bars and sequences, and a classifier trained by integer addition. It includes a purged, ordered validation split, online updates without refitting, a market scan with two nulls, and a Python reference that reproduces the MQL5 model bit for bit, so you can validate results and deploy a reproducible indicator and test suite.</div>
+              </div>
+          </div>
+        </div>
+        <div class="articles-bottom-list__row">
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Machine Learning Under Constraint (Part 4): The Stop-Loss Ceiling Meets the Optimal Trading Rule Search" src="https://c.mql5.com/2/273/24520-machine-learning-under-constraint-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/24520" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Machine Learning Under Constraint (Part 4): The Stop-Loss Ceiling Meets the Optimal Trading Rule Search</a>
+                <div class="articles-bottom-list__desc">The article constrains the optimal trading rule by a prop-firm stop-loss ceiling and corrects OU fitting by pooling within-trade pairs per AFML eq. 13.6. We apply the ceiling as a feasibility mask on a shared PT–SL mesh, ensuring the constrained set is a subset of the baseline. Practical guidance covers when the ceiling binds, the Sharpe cost, and how exposure and live budget state affect the bound.</div>
+              </div>
+          </div>
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Diebold-Mariano Testing in MQL5: Validating Predictive Edge Across Instruments and Models" src="https://c.mql5.com/2/273/24060-diebold-mariano-testing-in-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/24060" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Diebold-Mariano Testing in MQL5: Validating Predictive Edge Across Instruments and Models</a>
+                <div class="articles-bottom-list__desc">The article shows how to compare two trading forecasters in MQL5 using the Diebold–Mariano test with HAC‑corrected variance and the Harvey–Leybourne–Newbold adjustment. It explains implementation details, including loss choices, horizon‑dependent lag windows, rolling computation, verdict handling, and a manifest‑driven configuration, plus a Student‑t implementation without external libraries. An EA and an indicator provide a live dashboard and significance bands for practical, defensible model selection.</div>
+              </div>
+          </div>
+        </div>
+    </div>
+
+<div class="clear-fix"></div>
+
+<div id="wdausxxqrpvhekbwjrjlhqjghyhesrqqau" class="rx45ft5jkbtq9r7i2 rx45ft5jkbtq9r7i2_articles-view ghky8ic0v"><iframe width="800" height="80" frameborder="0" style="vertical-align: top; max-width: 100% !important; display: block;" scrolling="no" src="https://www.mql5.com/ff/sh/a83xrgctr82w45z9z2/index.html?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fforum%2F455636%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay%26utm_content%3Dfollow.channel%26utm_campaign%3DAAA380.mql5.socials&amp;a=pwgdbvtemvkwsfltqonysypfvtrtufji&amp;s=e99a66a1660cd810b1edbac65597df695e2c2220d1e937834f402f9aeabd4289&amp;v=1&amp;w=800&amp;h=80&amp;r=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F21972&amp;host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&amp;id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&amp;fz_uniq=5059129965033832960&amp;custom="></iframe></div>
+    
+
+<div class="hidden" id="popupRegisterLogin">
+  <div class="register-login-popup">
+    <div class="register-login-popup__header">
+      <img src="https://c.mql5.com/i/registerlandings/logo-2.png" srcset="https://c.mql5.com/i/registerlandings/logo-2_2x.png 2x" alt="MQL5 - Language of trade strategies built-in the MetaTrader 5 client terminal" loading="lazy" width="74" height="24">
+    </div>
+    <div class="register-login-popup__content">
+      <div class="register-login-popup__desc">
+        <div class="register-login-popup__title">You are missing trading opportunities:</div>
+        <ul>
+<li>Free trading apps</li>
+<li>Over 8,000 signals for copying</li>
+<li>Economic news for exploring financial markets</li>
+</ul>
+      </div>
+      <div class="register-login-popup__forms ui">
+        <div class="register-login-popup__tabs" id="registerLoginPopupTabs">
+          <span data-id="register" id="registerLoginPopupTab_register" class="register-login-popup__tab register-login-popup__tab_active">Registration</span>
+          <span data-id="login" id="registerLoginPopupTab_login" class="register-login-popup__tab">Log in</span>
+        </div>
+        <div id="registerLoginPopupTabContent_register">
+          <div class="ui auth-form__content">
+    
+  <script type="text/javascript">/*<![CDATA[*/ if (!window.V) var V = []; /*]]>*/</script>
+<script>/*<![CDATA[*/ if(! window.V) var V=[]; /*]]>*/</script>
+<form method="POST" action="/en/auth_register_short" id="PopupRegisterquickRegisterForm" onsubmit="PopupRegisterquickRegistration.OnSubmit(this,'en');if(Validate(this)) Ajax.form(this,{onready:PopupRegisterquickRegistration.OnSuccessPopup,onerror:PopupRegisterquickRegistration.OnError,onbeginrequest:PopupRegisterquickRegistration.DisableInputs,onendrequest:PopupRegisterquickRegistration.EnableInputs});return(false);" enctype="multipart/form-data"><input type="hidden" name="__signature" value="7cd529f6c2f0419dd3ef52f6349895cc">
+    <div class="auth-form__inputs">
+      <input type="hidden" value="0" name="IsValidate" id="PopupRegisterIsValidate">
+
+      <!--[if lt IE 10]><div class="note">Login:</div><![endif]-->
+      <div class="auth-form__box-input">
+        <input type="text" id="PopupRegisterusername" name="username" class="input" maxlength="32" onchange="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.CheckUserName();}" onkeyup="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.ValidateUserName(this, 'Enter a valid login');}" placeholder="Login" title="May contain Latin letters, digits, dots, dashes,underscore characters. Cannot start or end with a dot. The allowed length is 3 to 32 characters." onfocus="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnFocus(this,'');}" onblur="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnBlur(this);}">
+        <script id="validate_PopupRegisterusername">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['PopupRegisterusername',10,'You may use Latin characters, numbers, underscores and periods.',validate_username]);}); /*]]>*/</script>
+
+        <label class="label" for="PopupRegisterusername">latin characters without spaces</label>
+      </div>
+      <!--[if lt IE 10]><div class="note">Your email:</div><![endif]-->
+      <div class="auth-form__box-input">
+        <input class="input" type="email" id="PopupRegisteremail" name="email" placeholder="Your email" title="Please enter the email (it may not exceed 256 characters). For example: john@example.com" onchange="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnChange(this);}" onfocus="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnFocus(this,'');}" onblur="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnBlur(this);}">
+        <script id="validate_PopupRegisteremail">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['PopupRegisteremail',10,'Enter a valid email address',validate_email]);}); /*]]>*/</script>
+
+        <label class="label" for="PopupRegisteremail">a password will be sent to this email</label>
+      </div>
+      <input name="PrefixId" type="hidden" value="Popup+Register">
+    </div>
+    <span id="PopupRegisterquickRegisterSubmit">
+      <input type="submit" value="Register" id="PopupRegisterquickRegisterButton" title="Sign up and receive an email with your password" class="button button_yellow">
+    </span>
+    <span id="PopupRegisterquickRegisterErrorMessage" class="quick-register-error-message field-validation-error" style="text-align: center; margin-top: 16px; display: none;">
+      An error occurred
+    </span>
+</form>
+    
+</div>
+<div class="auth-social">
+  <ul class="auth-social-list" id="PopupRegistersocialList">
+    <li><a onclick="window.fpush({name: 'MQL5+Popup+Register+Google', unit: 'section', value: 'Articles'}); " href="https://www.mql5.com/en/auth_oauth2?provider=Google&amp;amp;return=popup&amp;amp;reg=1" class="auth-soc-button qa-google-button auth-soc-button_google" rel="nofollow">Log in With Google</a></li>
+  </ul>
+</div>
+<div class="auth-block-agree">
+  <p>
+    You agree to <a target="_blank" href="/en/about/privacy">website policy</a> and <a target="_blank" href="/en/about/terms">terms of use</a>
+  </p>
+</div>
+
+
+        </div>
+        <div id="registerLoginPopupTabContent_login" class="hidden">
+            <div id="loginRegistrationHint" class="auth-form__text">
+    If you do not have an account, please <a href="https://www.mql5.com/en/auth_register" rel="nofollow" style="vertical-align: top">register</a>
+  </div>
+<div class="ui auth-form__content auth-form__content_login" id="loginFormWrapper">
+    
+  <div id="needCookies" class="need-cookies hidden">
+    <div class="danger-box">
+      <p>Allow the use of cookies to log in to the MQL5.com website.</p>
+<p>Please enable the necessary setting in your browser, otherwise you will not be able to log in.</p>
+    </div>
+  </div>
+<script>/*<![CDATA[*/ if(! window.V) var V=[]; /*]]>*/</script>
+<form method="POST" action="/en/auth_login" id="loginForm" onsubmit="if(window.quickLogin){return window.quickLogin.onSubmit(this);}var result = Validate(this); if(result) { preventDoubleSubmit(this); } return result;"><input id="RedirectAfterLoginUrl" name="RedirectAfterLoginUrl" type="hidden" value=""><input id="RegistrationUrl" name="RegistrationUrl" type="hidden" value=""><input data-val="true" data-val-required="The ShowOpenId field is required." id="ShowOpenId" name="ShowOpenId" type="hidden" value="True"><input id="TrackingSection" name="TrackingSection" type="hidden" value="Articles">    <input name="ViewType" type="hidden" value="5">
+      <input name="PrefixId" type="hidden" value="Popup+Login">
+    <div id="loginCredentials">
+    <!--[if lt IE 10]><div class="note">Your login:</div><![endif]-->
+    <div class="auth-form__box-input">
+      <input aria-label="Your login" class="input qa-login" id="Login" name="Login" onchange="if(window.quickLogin){window.quickLogin.onChange(this);}" placeholder="Login" title="Your login" type="text" value="">
+      <script id="validate_Login">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['Login',1,'Enter login specified when signing up']);});mqGlobal.AddOnReady(function() {V.push(['Login',10,'Email cannot be used. Enter your login please',validateLogin]);}); /*]]>*/</script>
+    </div>
+    <!--[if lt IE 10]><div class="note">Password:</div><![endif]-->
+    <div class="auth-form__box-input">
+      <div class="input-with-show">
+        <input aria-label="Password" autocomplete="off" class="input qa-password" id="Password" name="Password" onchange="if(window.quickLogin){window.quickLogin.onChange(this);}" placeholder="Password" title="Enter the password please" type="password">
+        <button type="button" class="input-with-show__icon" title="Show password" aria-label="Show password" aria-pressed="false" onclick="if(window.quickLogin){window.quickLogin.showPass(this, 'Show password', 'Hide password');}"></button>
+      </div>
+      <script id="validate_Password">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['Password',1,'Please enter the password']);}); /*]]>*/</script>
+    </div>
+    </div>
+    <script type="text/javascript">
+    function validateLogin(input) {
+      return !/^\w+([-+.'']{1,2}\w+)* @\w+([-.]\w+)*\.\w+([-.]\w+)*$/i.test(input.value);
+    }
+    </script>
+    <div id="loginTwoFactor" style="display: none;" data-url="/en/auth_two_factor" data-signature="da321e66bb59090f49d8d20cd554a68f" data-error="Error occurred. Please try again later." data-confirm="Confirm" data-code-prompt="Enter the six-digit code from your authenticator app." data-recovery-prompt="Enter recovery code number {0} from the list you saved during setup.">
+      <p id="loginTwoFactorPrompt">Enter the six-digit code from your authenticator app.</p>
+      <div class="auth-form__box-input">
+        <input class="input input_two-factor" type="text" id="loginTwoFactorCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" dir="ltr" placeholder="000000" aria-label="Authorization code verification" aria-describedby="loginTwoFactorPrompt" disabled="">
+      </div>
+    </div>
+    <p id="loginInlineError" class="field-validation-error" role="alert" style="display: none;"></p>
+    <p id="loginPasswordResetError" class="field-validation-error" role="alert" style="display: none;">Please use <a href="/en/auth_forgotten">Password recovery</a></p>
+    <div class="forgot" id="loginForgotBlock"><a id="loginForgotLink" href="https://www.mql5.com/en/auth_forgotten?return=popup">Forgot your login/password?</a></div>
+    <div class="forgot" id="loginTwoFactorRecoveryBlock" style="display: none;">
+      <a id="loginTwoFactorRecovery" class="link">Lost your authenticator?</a>
+    </div>
+    <input type="submit" class="button button_yellow qa-submit" id="loginSubmit" value="Log in" title="Enter">
+</form>  <div id="loginTwoFactorRecovered" style="display: none;">
+    <p>You are signed in. Two-factor authentication has been disabled. Set it up again and scan a new QR code, or continue with two-factor authentication disabled.</p>
+    <a id="loginTwoFactorSettings" class="button button_yellow">Enable two-factor authentication</a>
+    <a id="loginTwoFactorContinue" class="button" style="margin-top: 12px;">Continue</a>
+  </div>
+</div>
+
+  <div class="auth-social" id="authSocialBlock">
+    <ul class="auth-social-list" id="PopupLoginsocialList">
+      <li><a onclick="window.fpush({name: 'MQL5+Popup+Login+Google', unit: 'section', value: 'Articles'}); " href="https://www.mql5.com/en/auth_oauth2?provider=Google&amp;amp;return=popup" class="auth-soc-button qa-google-button auth-soc-button_google" rel="nofollow">Log in With Google</a></li>
+    </ul>
+  </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script id="popupSection" type="application/json">{"section": "Articles"}</script>
+<script id="popupTranslate" data-type="translate" type="application/json">
+{
+  "popup":
+  {
+  "EmailTitle" : "The password has been sent to {0}",
+  "EmailDescription" : "Log in using the obtained password and the login specified during the registration",
+  "SubmitButtonText" : "Activate account",
+  "RegistrationTip" : "If you have not received the password email, check the spam folder or &lt;a href={0}&gt;repeat the registration&lt;/a&gt;"
+  }
+}
+</script>
+
+    
+
+    
+
+
+            </div>
+          </div>
+    </div>
+  </main>
+
+
+<footer class="footer desktop" id="footer">
+  <ul class="links links_desktop">
+      <li id="navFooterCommunity">
+        <nav aria-label="Website: Sections">
+          <ul>
+            <li><a href="https://web.metatrader.app/terminal?mode=demo&amp;lang=en" target="_blank" rel="nofollow noopener" data-fz-event="MQL5+Footer+Trading">Online trading / WebTerminal</a></li>
+            <li><a href="/en/code" data-fz-event="MQL5+Footer+CodeBase">Free technical indicators and robots</a></li>
+            <li><a href="/en/articles" data-fz-event="MQL5+Footer+Articles">Articles about programming and trading</a></li>
+            <li><a href="/en/job" data-fz-event="MQL5+Footer+Job">Order trading robots on the Freelance</a></li>
+            <li><a href="/en/market" data-fz-event="MQL5+Footer+Market">Market of Expert Advisors and applications	</a></li>
+            <li><a href="/en/signals" data-fz-event="MQL5+Footer+Signals">Follow forex signals</a></li>
+            <li><a href="/en/vps" data-fz-event="MQL5+Footer+VPS">Low latency forex VPS</a></li>
+            <li><a href="/en/forum" data-fz-event="MQL5+Footer+Forum">Traders forum</a></li>
+            <li><a href="/en/blogs" data-fz-event="MQL5+Footer+Blogs">Trading blogs</a></li>
+            <li><a rel="nofollow" href="/en/charts" data-fz-event="MQL5+Footer+Charts">Charts</a></li>
+            <li><a href="/en/widgets" data-fz-event="MQL5+Footer+Widgets">Free widgets</a></li>
+          </ul>
+        </nav>
+      </li>
+      <li id="navFooterMt5">
+        <nav aria-label="MetaTrader 5 Trade Platform">
+          <ul>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com" data-fz-event="MQL5+Footer+MetaTrader+5"><span class="nobr">MetaTrader 5</span> Trading Platform</a></li>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/releasenotes" data-fz-event="MQL5+Footer+MetaTrader+5"><span class="nobr">MetaTrader 5</span> latest updates</a></li>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/news" data-fz-event="MQL5+Footer+MetaTrader+5">News, implementations and technology</a></li>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/terminal/help" data-fz-event="MQL5+Footer+MetaTrader+5"><span class="nobr">MetaTrader 5</span> User Manual</a></li>
+            <li><a href="/en/docs" data-fz-event="MQL5+Footer+Docs">MQL5 language of trading strategies</a></li>
+            <li><a rel="nofollow noopener" href="https://cloud.mql5.com" data-fz-event="MQL5+Footer+Cloud">MQL5 Cloud Network</a></li>
+            <li><a rel="noopener" href="https://forge.mql5.io/?lang=en" data-fz-event="MQL5+Footer+Forge" target="_blank">MQL5 Algo Forge</a></li>
+              <li><a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/mt5setup.exe?utm_source=www.mql5.com&amp;utm_campaign=download" data-fz-event="MetaTrader+5+Desktop+Download+Footer">Download <span class="nobr">MetaTrader 5</span></a></li>
+              <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/terminal/help/start_advanced/installation" data-fz-event="MQL5+Footer+MetaTrader+5">Install Platform</a></li>
+              <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/terminal/help/start_advanced/deinstallation" data-fz-event="MQL5+Footer+MetaTrader+5">Uninstall Platform</a></li>
+          </ul>
+        </nav>
+
+      </li>
+    <li id="navFooterWebsite">
+        <nav aria-label="Website">
+          <ul>
+            <li><a rel="nofollow" href="/en/about" data-fz-event="MQL5+Footer+About">About</a></li>
+              <li><a href="/en/wall" data-fz-event="MQL5+Footer+Wall">Timeline</a></li>
+            <li><a rel="nofollow" href="/en/about/terms" data-fz-event="MQL5+Footer+About">Terms and Conditions</a></li>
+            <li><a rel="nofollow" href="/en/about/autopayments" data-fz-event="MQL5+Footer+About">Recurring Payment Agreement</a></li>
+            <li><a rel="nofollow" href="/en/about/agencyagreement" data-fz-event="MQL5+Footer+About">Agency Agreement – Offer</a></li>
+            <li><a rel="nofollow" href="/en/about/privacy" data-fz-event="MQL5+Footer+About">Privacy and Data Protection Policy</a></li>
+            <li><a href="/en/data-sources" data-fz-event="MQL5+Footer+DataSources">Data Sources</a></li>
+            <li><a rel="nofollow" href="/en/about/cookies" data-fz-event="MQL5+Footer+About">Cookies Policy</a></li>
+            <li>
+                <a rel="nofollow" href="/en/contact" data-fz-event="MQL5+Footer+Contacts">Contacts and requests</a>
+            </li>
+          </ul>
+        </nav>
+    </li>
+
+      <li>
+        <div class="footer__products">
+          <div class="footer__product">
+            <a target="_blank" rel="nofollow noopener" href="https://www.metatrader5.com" class="footer__product-name">MetaTrader 5</a>
+            <div class="footer__product-links">
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/mt5setup.exe?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon windows" data-fz-event="MetaTrader+5+Desktop+Download+Footer"><div class="footer__product-link-hint footer__product-link-hint-short">Download MetaTrader 5 for Windows</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/MetaTrader5.pkg.zip?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon macos" data-fz-event="MetaTrader+5+Desktop+Download+Footer"><div class="footer__product-link-hint footer__product-link-hint-short">Download MetaTrader 5 for MacOS</div></a>
+            <a rel="nofollow noopener" href="https://www.mql5.com/en/articles/625?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon linux" data-fz-event="MetaTrader+5+Desktop+Download+Footer"><div class="footer__product-link-hint footer__product-link-hint-short">Download MetaTrader 5 for Linux</div></a>
+            <a rel="nofollow noopener" href="https://web.metatrader.app/terminal?mode=demo&amp;lang=en" class="icon web"><div class="footer__product-link-hint footer__product-link-hint-short">Open MetaTrader 5 WebTerminal</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mt5/ios?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes&amp;hl=en" class="icon ios" data-fz-event="MetaTrader+5+iOS+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/c1c4cd9cbd49e9f1.png)">Scan to install from App Store</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mt5/android?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes&amp;hl=en" class="icon android" data-fz-event="MetaTrader+5+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/afc2bab603ef62e7.png)">Scan to install from Google Play</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mt5/android/app-gallery?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes" class="icon huawei" data-fz-event="MetaTrader+5+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/bd10f45a3d61c404.png)">Scan to install from Huawei AppGallery</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.software.corp/mt5/metatrader5.apk?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes" class="icon ark" data-fz-event="MetaTrader+5+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/253081c4da455e66.png)">Scan to get Android APK file</div></a>
+            </div>
+          </div>
+          <div>
+            <div class="footer__product">
+              <a target="_blank" rel="nofollow noopener" href="https://www.metatrader5.com/en/news/2270" class="footer__product-name">MQL5 Channels</a>
+              <div class="footer__product-links">
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mql5.channels/ios?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon ios" data-fz-event="MQL5+Channels+iOS+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/1b697989dc2445d5.png)">Scan to install from App Store</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mql5.channels/android?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon android" data-fz-event="MQL5+Channels+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/aa3876298bf4b95b.png)">Scan to install from Google Play</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mql5.channels/android/app-gallery?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon huawei" data-fz-event="MQL5+Channels+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/0843a8a2e12f9b78.png)">Scan to install from Huawei AppGallery</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.software.corp/mql5channels/mql5channels.apk?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon ark" data-fz-event="MQL5+Channels+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/21805012f0baa519.png)">Scan to get Android APK file</div></a>
+              </div>
+            </div>
+            <div class="footer__product">
+              <a target="_blank" rel="nofollow noopener" href="https://www.tradays.com/en/download?utm_source=www.mql5.com&amp;utm_campaign=download" data-fz-event="MQL5+Footer+Download+Tradays" class="footer__product-name">Economic Calendar</a>
+              <div class="footer__product-links">
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/tradays/ios?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon ios" data-fz-event="Tradays+iOS+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/93dbd287c43b0f0e.png)">Scan to install from App Store</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/tradays/android?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon android" data-fz-event="Tradays+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/009272874cc05ac8.png)">Scan to install from Google Play</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/tradays/android/app-gallery?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon huawei" data-fz-event="Tradays+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/df384f0c0ea46413.png)">Scan to install from Huawei AppGallery</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.software.corp/tradays/tradays.apk?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon ark" data-fz-event="Tradays+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/fe67645e20910571.png)">Scan to get Android APK file</div></a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer__networks">
+          <a href="https://www.facebook.com/mql5.community/" target="_blank" rel="nofollow" title="Facebook"><i class="icons-networks icons-networks_fb"></i></a>
+          <a href="https://t.me/mql5dev" target="_blank" rel="nofollow" title="Telegram"><i class="icons-networks icons-networks_tg"></i></a>
+          <a href="https://x.com/mql5com" target="_blank" rel="nofollow" title="X (Twitter)"><i class="icons-networks icons-networks_tw"></i></a>
+          <a href="https://www.youtube.com/@MetaQuotesOfficial" target="_blank" rel="nofollow" title="YouTube"><i class="icons-networks icons-networks_yt"></i></a>
+          <a href="https://www.linkedin.com/company/mql5" target="_blank" rel="nofollow" title="LinkedIn"><i class="icons-networks icons-networks_linkedin"></i></a>
+          <span>Subscribe to algotrading news</span>
+        </div>
+  
+        <div class="footer__other">
+          <div class="footer__not-a-broker">Not a broker, no real trading accounts</div>
+          <div class="copyright">35 Dodekanisou str, Germasogeia, 4043,&nbsp;Limassol,&nbsp;Cyprus</div>
+          <div class="copyright">Copyright 2000-2026, <span class="nobr">MetaQuotes Ltd</span></div>
+        </div>
+      </li>
+  </ul>
+</footer>
+
+
+  <div class="shadow-layer" id="layer"></div>
+      
+  
+  <script>
+    mqGlobal.AddOnReady(function () { Mql5Cookie.init('mql5.com','5059129965033832960'); });
+    mqGlobal.AddOnReady(function(){if(!window.Pocket){window.Pocket=new PocketManager();}});mqGlobal.AddOnReady(function(){if(!window.translateManager){window.translateManager=new Translate(undefined,'Error: failed to translate. Please try again later.');}if(document.querySelectorAll){var translateElements=document.querySelectorAll(".translateMenu");if(translateElements){var i=0,count=translateElements.length;for(i;i<count;i++){(function(i){var contentid=dataset(translateElements[i],"contentid"),sourcelang=dataset(translateElements[i],"sourcelang"),targetlang=dataset(translateElements[i],"targetlang"),moduleid=parseInt(dataset(translateElements[i],"moduleid")),typeid=parseInt(dataset(translateElements[i],"typeid")),entityid=parseInt(dataset(translateElements[i],"entityid"));Core.AddHandler(translateElements[i],"mouseover",function(){return translateManager.SetMenu(this,contentid,sourcelang,targetlang,moduleid,typeid,entityid);});})(i);}}}});window.fz("show","wdausxxqrpvhekbwjrjlhqjghyhesrqqau");window.mqGlobal.AddOnLoad(function(){window.fpush('MQL5+Article+Open');Articles.CheckOnScrollDown();});mqGlobal.AddOnReady(function(){window.PopupRegisterquickRegistration=new QuickRegistration('PopupRegister','Popup+Register','Articles');});function validate_username(input){var reg=/^([a-z0-9]){1}([\-._a-z0-9]){1,30}([\-_a-z0-9]){1}$/i,value=input.value,result=true;if(reg.test(value)){result=true;}else{result=false;window.fpush({name:'MQL5+Popup+Register+Invalid+Login',unit:'section',value:'Articles'});}return result;}function validate_email(input){var reg=/^\w+([-+.'']{1,2}\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/i,value=input.value,result=true,length_value=value.length;if(reg.test(value)&&length_value>=1&&length_value<=40){result=true;}else{result=false;window.fpush({name:'MQL5+Popup+Register+Invalid+Email',unit:'section',value:'Articles'});}return result;};mqGlobal.AddOnReady(function(){var username=$('PopupRegisterusername'),email=$('PopupRegisteremail');if(username)username.value='';if(email)email.value='';});mqGlobal.AddOnReady(function(){window.quickLogin=new QuickLogin('Popup+Login','Articles');});mqGlobal.AddOnLoad(function(){window.showLoginRegisterPopupAtEnd();});mqGlobal.AddOnLoad(function(){window.tooltipUserInfo.init();});window.fz("show","bfogggabsofabcpxuzmgaibarmaxasdrj");window.fz("show","vgckrufggwxdtfscpyalmenexmvhljduja");mqGlobal.AddOnReady(function(){window.floatVerticalPanelNode=FloatVerticalPanel('This website uses cookies. Learn more about our <a href="/en/about/cookies">Cookies Policy</a>.','cookie_accept');});mqGlobal.AddOnReady(function(){window.initAddCopyButtonsToCodes('Copy to Clipboard');});
+    if (typeof Attach !== "undefined")
+      Attach.setAcceptFilter(".mq4,.jpeg,.webp,.gif,.mqproj,.txt,.log,.set,.mqh,.sqlite,.ex5,.mp4,.onnx,.webm,.png,.mq5,.ipynb,.mt5,.ex4,.jpg,.py,.csv,.ini,.zip,.tpl,.md,.cl");
+  </script>
+  <div class="b-fixed-mt" id="bFixedMt" style="display: none;">
+    
+  </div>
+  <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "url": "https://www.mql5.com",
+        "logo": "https://c.mql5.com/i/community/logo_mql5-2.png",
+        "sameAs": [
+          "https://www.facebook.com/mql5.community",
+          "https://www.x.com/mql5com",
+          "https://www.youtube.com/user/MetaQuotesOfficial"
+        ]
+      }
+       , 
+{"@context":"https://schema.org","@type":"ItemList","itemListElement":[{"@type":"SiteNavigationElement","position":1,"name":"Forum","description":"Discussions of trading strategies and algorithmic trading. MQL5.community  the largest forex forum","url":"https://www.mql5.com/en/forum","children":[]},{"@type":"SiteNavigationElement","position":2,"name":"Market","description":"MetaTrader Market - a Market of trading robots, indicators, trading books and magazines","url":"https://www.mql5.com/en/market","children":[]},{"@type":"SiteNavigationElement","position":3,"name":"Signals","description":"Social trading, copy trading and account monitoring with MetaTrader - Trading Signals on MQL5.com","url":"https://www.mql5.com/en/signals","children":[]},{"@type":"SiteNavigationElement","position":4,"name":"Freelance","description":"Order trading robots, technical indicators and algorithmic trading applications. Forex jobs. Freelance on MQL5.com. Hire MetaTrader experts and specialists","url":"https://www.mql5.com/en/job","children":[]},{"@type":"SiteNavigationElement","position":5,"name":"Quotes","description":"","url":"https://www.mql5.com/en/quotes/overview","children":[]},{"@type":"SiteNavigationElement","position":6,"name":"MetaTrader","description":"","url":"https://www.metatrader.com","children":[]},{"@type":"SiteNavigationElement","position":7,"name":"WebTerminal","description":"WebTerminal for the MetaTrader trading platform. Online forex trading.","url":"https://web.metatrader.app/terminal?mode=demo","children":[]},{"@type":"SiteNavigationElement","position":8,"name":"Calendar","description":"","url":"https://www.mql5.com/en/economic-calendar","children":[]},{"@type":"SiteNavigationElement","position":9,"name":"VPS","description":"","url":"https://www.mql5.com/en/vps","children":[]},{"@type":"SiteNavigationElement","position":10,"name":"Articles","description":"","url":"https://www.mql5.com/en/articles","children":[]},{"@type":"SiteNavigationElement","position":11,"name":"CodeBase","description":"Download trading robots, technical indicators and scripts with source code - MQL5 Code Base for MetaTrader 5","url":"https://www.mql5.com/en/code","children":[]},{"@type":"SiteNavigationElement","position":12,"name":"Algo Forge","description":"","url":"https://forge.mql5.io","children":[]},{"@type":"SiteNavigationElement","position":13,"name":"Documentation","description":"MetaQuotes Language 5 (MQL5) Reference - Documentation on MQL5.com","url":"https://www.mql5.com/en/docs","children":[]}]}    
+,
+{"@context":"https://schema.org","@type":"TechArticle","mainEntityOfPage":{"@type":"WebPage","@id":"https://www.mql5.com/en/articles/21972"},"headline":"Benchmark Champions vs. Real-World Optimization Problems","image":["https://c.mql5.com/2/205/Forest.png","https://c.mql5.com/2/205/Mega.png","https://c.mql5.com/2/205/Flashback-kwi-6_-2026-18_30_25.gif","https://c.mql5.com/2/205/Flashback-kwi-6_-2026-18_33_55.gif","https://c.mql5.com/2/205/Flashback-kwi-6_-2026-19_40_22.gif","https://c.mql5.com/2/205/Flashback-kwi-6_-2026-20_11_06.gif"],"datePublished":"2026-10-20T14:44:55+00:00Z","dateModified":"2026-10-20T14:42:18+00:00Z","author":{"@type":"Person","name":"Andrey Dik","url":"https://www.mql5.com/en/users/joo"},"editor":{"@type":"Organization","name":"MetaQuotes","url":"https://www.mql5.com/en/users/metaquotes","address":{"@type":"PostalAddress","addressCountry":"CY"}},"publisher":{"@type":"Organization","name":"MQL5 Community","url":"https://www.mql5.com","logo":{"@type":"ImageObject","url":"https://c.mql5.com/i/community/logo_mql5-2.png"}},"description":"We analyze why ratings may be inflated due to the alignment of algorithm trajectories with benchmark diagonals, and we supplement the testing methodology with a requirement to keep the global extremum away from the diagonals. We update Forest and Megacity, and perform RAW verification and calibration using VerifyExtremes.mq5. A drop in HHO and DOAm performance serves as a practical indicator of false leaders."}
+,
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"item":"https://www.mql5.com/en/articles","name":"Articles"},{"@type":"ListItem","position":2,"item":"https://www.mql5.com/en/articles/mt5","name":"MetaTrader 5"},{"@type":"ListItem","position":3,"item":"https://www.mql5.com/en/articles/mt5/trading","name":"Trading"}]}
+
+    ]
+  </script>
+
+
+<div class="float-vertical-panel">This website uses cookies. Learn more about our <a href="/en/about/cookies">Cookies Policy</a>.<span class="float-vertical-panel__cross"></span></div></body></html>
