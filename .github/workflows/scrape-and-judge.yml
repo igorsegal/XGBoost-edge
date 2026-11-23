@@ -1,4 +1,4 @@
-﻿name: Scrape & Judge — Alibaba Cloud
+name: Scrape & Judge — Alibaba Cloud
 on:
   schedule:
     - cron: '0 0,6,12 * * *'
@@ -36,7 +36,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add data/*.json* data/*.txt rules/
-          git diff --cached --quiet || (git commit -m "chore(data): update scraped results and MQL5 rules [skip ci]" && git push)
+          git diff --cached --quiet || (git commit -m "chore(data): update scraped results and MQL5 rules [skip ci]" && git pull --rebase && git push)
       - name: Upload artifacts (fallback)
         if: always()
         uses: actions/upload-artifact@v4
