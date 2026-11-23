@@ -1,0 +1,1275 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="x-dns-prefetch-control" content="on">
+  <link rel="dns-prefetch" href="https://c.mql5.com">
+  <meta name="robots" content="max-snippet:250,max-image-preview:large">
+  <meta name="description" content="The article explores the practical application of the L1 Trend Filter for noise reduction and the construction of structural features suitable for live trading. The full workflow is presented: H1 data for 29 instruments from MetaTrader 5, causal filtering, CatBoost with a horizon of three L1 bars, rigorous walk-forward testing, and VaR-based allocation of lots. The reader is provided with a reproducible code pipeline and a portfolio evaluation methodology.">
+  <meta property="og:url" content="https://www.mql5.com/en/articles/22674">
+  <meta property="og:title" content="How to Build a 29-Pair Portfolio with an L1 Filter and VaR-based Allocation of Lots">
+  <meta property="og:description" content="The article explores the practical application of the L1 Trend Filter for noise reduction and the construction of structural features suitable for live trading. The full workflow is presented: H1 data for 29 instruments from MetaTrader 5, causal filtering, CatBoost with a horizon of three L1 bars, rigorous walk-forward testing, and VaR-based allocation of lots. The reader is provided with a reproducible code pipeline and a portfolio evaluation methodology.">
+  <meta property="og:image" content="https://c.mql5.com/2/217/22674-29-parnaya-portfelnaya-torgovlya-s-mashinnim-obucheniem_1200x628.jpg">
+  <meta property="og:image:secure_url" content="https://c.mql5.com/2/217/22674-29-parnaya-portfelnaya-torgovlya-s-mashinnim-obucheniem_1200x628.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:type" content="article">
+  <meta property="article:published_time" content="2026-11-05T13:15:34.0000000Z">
+  <meta property="article:author" content="https://www.mql5.com/en/users/koshtenko">
+  <meta property="article:section" content="MetaTrader 5">
+  <meta property="article:tag" content="Trading systems">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@mql5com">
+  <meta name="twitter:image" content="https://c.mql5.com/2/217/22674-29-parnaya-portfelnaya-torgovlya-s-mashinnim-obucheniem_1200x628.jpg">
+  <meta name="theme-color" content="#4a76b8">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="https://www.mql5.com/manifest.json">
+  <link rel="apple-touch-icon" sizes="57x57" href="https://www.mql5.com/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://www.mql5.com/apple-touch-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="https://www.mql5.com/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="https://www.mql5.com/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="https://www.mql5.com/apple-touch-icon-167x167.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://www.mql5.com/apple-touch-icon-180x180.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="https://www.mql5.com/apple-touch-icon-192x192.png">
+  <link rel="icon" sizes="192x192" href="https://www.mql5.com/android-touch-icon-192x192.png">
+  <link rel="icon" sizes="128x128" href="https://www.mql5.com/android-touch-icon-128x128.png">
+  <link rel="shortcut icon" href="https://c.mql5.com/i/favicon4.ico">
+  <link rel="describedby" href="https://www.mql5.com/llms.txt" type="text/markdown">
+  <meta name="msapplication-config" content="none">
+  <meta name="referrer" content="no-referrer-when-downgrade">
+  <meta property="qc:admins" content="36367170677651456375">
+  <meta property="wb:webmaster" content="073d7690269bcd81">
+  <link href="https://c.mql5.com/styles/core.345c7c7ce59d9ecd43c300b67d5bf9de.css" type="text/css" rel="stylesheet" media="all">
+  <link href="https://c.mql5.com/styles/all.5d418287c8c7c74437b8395a93cbf8b4.css" type="text/css" rel="stylesheet" media="all">
+  <link href="https://c.mql5.com/styles/articles.aa7cb07010062a9d4f26dbad7eb36197.css" type="text/css" rel="stylesheet" media="all">
+  <link href="/en/articles/rss" rel="alternate" type="application/rss+xml" title="Articles on the development and application of MetaTrader 5 trading robots and technical indicators">
+  <link rel="canonical" href="https://www.mql5.com/en/articles/22674">
+  <link rel="alternate" hreflang="en" href="https://www.mql5.com/en/articles/22674">
+  <link rel="alternate" hreflang="ru" href="https://www.mql5.com/ru/articles/22674">
+  <title>How to Build a 29-Pair Portfolio with an L1 Filter and VaR-based Allocation of Lots - MQL5 Articles</title>
+  <script async="" src="https://www.mql5.com/ff/rq?tz_offset=0&amp;ids=wdausxxqrpvhekbwjrjlhqjghyhesrqqau%2Cbfogggabsofabcpxuzmgaibarmaxasdrj%2Cvgckrufggwxdtfscpyalmenexmvhljduja&amp;ssn=1795429702380455317&amp;ssn_dr=20&amp;ssn_sr=0&amp;fv_date=1795429702&amp;ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22674&amp;title=How%20to%20Build%20a%2029-Pair%20Portfolio%20with%20an%20L1%20Filter%20and%20VaR-based%20Allocation%20of%20Lots%20-%20MQL5%20Articles&amp;scr_res=1366x768&amp;ac=179542972258877753&amp;fz_uniq=5167976101445582711&amp;sv=2552"></script><script async="" defer="" src="/ff/core.js"></script><script>
+    (function(a,e,f,g,b,c,d){a[b]||(a.FintezaCoreObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=!0,c.defer=!0,c.src=g,d&&d.parentNode&&d.parentNode.insertBefore(c,d))})
+      (window, document, "script", "/ff/core.js", "fz");
+    window.fz("register", "website", {id: "sqjxkxkswybhifrohpyooonwgbvsfzmayq",trackLinks: true,sendEventsByBeacon: true,});
+  </script>
+  <script>
+    !function(){window.mqGlobal={};var t=!1,n=!1,e=[],o=[],i=[];function d(t){var n;for(n=0;n<t.length;n+=1)t[n]()}function c(){t||(t=!0,d(e),d(o),o=[],e=[])}function a(){c(),n||(n=!0,d(i),i=[])}if(mqGlobal.AddOnReady=function(n,i){t?n(document):i?e.push(n):o.push(n)},mqGlobal.AddOnLoad=function(t){n?t(document):i.push(t)},mqGlobal.AddOnActiveWindowChange=function(t){this._onvisibility||(this._onvisibility=[]),this._onvisibility[this._onvisibility.length]=t},document.addEventListener)document.addEventListener("DOMContentLoaded",c,!1),window.addEventListener("load",a,!1);else if(document.attachEvent&&(document.attachEvent("onreadystatechange",(function(){switch(document.readyState){case"interactive":c();break;case"complete":a()}})),window.attachEvent("onload",a),document.documentElement.doScroll&&window==window.top)){!function n(){if(!t&&document.body)try{document.documentElement.doScroll("left"),c()}catch(t){setTimeout(n,0)}}()}}();
+    mqGlobal.CookieDomain = ".mql5.com";
+    mqGlobal.Language = 'en';
+    mqGlobal.IsMobile = false;
+    mqGlobal.ClearRteStorage = function (e) { if (window.GStorage || (window.GStorage = globalStorage()), window.GStorage.supported) try { var o = e; window.GStorage.getItem("rte_autosave_uid", function (e, t) { t == o && (window.GStorage.removeItem("rte_autosave_text"), window.GStorage.removeItem("rte_autosave_date"), window.GStorage.removeItem("rte_autosave_uid")) }) } catch (e) { } };
+  </script>
+  
+  <script src="https://c.mql5.com/js/all.9a7642e9ad31a1b4d5efe8025c5a5860.js" defer="defer"></script>
+  <script src="https://c.mql5.com/js/vendor.255ec4ae38267278c2823d8c90fea431.js" defer="defer"></script>
+  <script src="https://c.mql5.com/js/articles.c443d16c59e317d536ae7477d0c6f7e6.js" defer="defer"></script>
+<style id="c-nvz9zt">.s-suggestions.c-nvz9zt {position:absolute;left:0;right:0;top:100%;z-index:100;background:#fff;box-shadow:0 2px 6px rgba(0, 0, 0, 0.1);border-top:1px solid #dadada;}</style><style id="c-b8amxo">.copy-code-btn.c-b8amxo {background:#fbf9f5;padding:0;border:0;position:absolute;right:8px;top:8px;}
+@media (hover: hover) and (pointer: fine) {.copy-code-btn.c-b8amxo:hover {cursor:pointer;}.copy-code-btn.c-b8amxo:hover svg path {stroke:#707070;}
+}</style></head>
+<body class="cover" id="cover">
+    <header class="head">
+      <a href="https://www.mql5.com" class="head__logo" title="MQL5 - Language of trade strategies built-in the MetaTrader 5 client terminal" aria-label="MQL5 - Language of trade strategies built-in the MetaTrader 5 client terminal"></a>
+        <div class="head__content">
+<nav class="main-menu" id="mainmenu" aria-label="Sections">
+  <ul class="main-menu__top-level" id="menuTopLevel">
+      <li><a href="/en/forum" data-fz-event="MQL5+Menu+Forum">Forum</a></li>
+      <li><a href="/en/market" data-fz-event="MQL5+Menu+Market">Market</a></li>
+      <li><a href="/en/signals" data-fz-event="MQL5+Menu+Signals">Signals</a></li>
+      <li><a href="/en/job" data-fz-event="MQL5+Menu+Job">Freelance</a></li>
+      <li><a href="/en/vps" data-fz-event="MQL5+Menu+VPS">VPS</a></li>
+      <li><a href="/en/quotes/overview" data-fz-event="MQL5+Menu+Overview">Quotes</a></li>
+      <li><a href="https://www.metatrader.com" target="_blank" rel="noopener" data-fz-event="MQL5+Menu+MetaTrader">MetaTrader</a></li>
+        </ul>
+        <ul class="main-menu__second-level" id="menuSecondLevel">
+      <li class="main-menu__selected"><a href="/en/articles" data-fz-event="MQL5+Menu+Articles"> <img src="https://c.mql5.com/i/menu/icon-articles4.svg" alt="" width="16" height="16"> Articles</a></li>
+      <li><a href="/en/code" data-fz-event="MQL5+Menu+CodeBase"> <img src="https://c.mql5.com/i/menu/icon-code4.svg" alt="" width="16" height="16"> CodeBase</a></li>
+      <li><a href="https://forge.mql5.io/?lang=en" target="_blank" rel="noopener" data-fz-event="MQL5+Menu+AlgoForge"> <img src="https://c.mql5.com/i/menu/icon-algoforge4.svg" alt="" width="16" height="16"> Algo Forge</a></li>
+      <li><a href="/en/docs" data-fz-event="MQL5+Menu+Docs"> <img src="https://c.mql5.com/i/menu/icon-docs4.svg" alt="" width="16" height="16"> Documentation</a></li>
+      <li><a href="/en/book" data-fz-event="MQL5+Menu+Book"> <img src="https://c.mql5.com/i/menu/icon-book4.svg" alt="" width="16" height="16"> AlgoBook</a></li>
+      <li><a href="/en/neurobook" data-fz-event="MQL5+Menu+Neurobook"> <img src="https://c.mql5.com/i/menu/icon-neurobook4.svg" alt="" width="16" height="16"> NeuroBook</a></li>
+      <li><a href="/en/economic-calendar" data-fz-event="MQL5+Menu+Economic+Calendar"> <img src="https://c.mql5.com/i/menu/icon-economic-calendar4.svg" alt="" width="16" height="16"> Calendar</a></li>
+      <li><a href="https://web.metatrader.app/terminal?mode=demo&amp;lang=en" target="_blank" rel="nofollow noopener" data-fz-event="MQL5+Menu+Trading"> <img src="https://c.mql5.com/i/menu/icon-trading4.svg" alt="" width="16" height="16"> WebTerminal</a></li>
+      <li><a href="/en/tools" data-fz-event="MQL5+Menu+Tools"> <img src="https://c.mql5.com/i/menu/icon-tools4.svg" alt="" width="16" height="16"> Tools</a></li>
+
+
+    <li class="main-menu__mobile"><a href="/en/about">About</a></li>
+
+          <li class="main-menu__second-tools"><a rel="noopener" target="_blank" href="https://t.me/mql5dev" title="Follow us on socials for top articles and CodeBase updates" class="button-mt" data-vars-fz="Algo+Trading+Channel+Submenu"><img width="18" height="18" src="https://c.mql5.com/i/sidebar/tg.svg" alt="" loading="lazy">Algo Trading Channel</a></li>
+  </ul>
+</nav>
+<div class="main-menu__active">
+  <a id="mainMenuSelected" href="#">
+    <span class="main-menu__primary">Articles</span><span class="main-menu__secondary">Sections</span>
+  </a>
+</div>
+  <form action="https://www.mql5.com/en/search" onsubmit="return false;" autocomplete="off" id="headerSearchForm" class="header-search" method="post">
+    <button type="button" id="headerSearchButton" title="Search" aria-label="Search" class="header-search__button"></button>
+    <div class="header-search__input">
+      <input name="keyword" type="text" enterkeyhint="search" title="Enter search text" placeholder="Search" id="headerSearchKeyword" autocomplete="off">
+      <label for="headerSearchKeyword" class="header-search__placeholder">Type <span>/</span> to search:  @user, $symbol, ...</label>
+      <button type="submit" id="headerSearchSubmit" aria-label="Search" class="header-search__submit"></button>
+    <!----></div>
+    <button type="button" id="headerSearchClean" title="Close" aria-label="Close" class="header-search__clean"></button>
+  </form>
+  <script>mqGlobal.AddOnReady(function(){window.initHeaderSearch('', 'https://www.mql5.com/en/search');});</script>
+  <script>mqGlobal.AddOnReady(function(){window.initSuggestions("headerSearchKeyword","en","https://search.mql5.com/api/query","https://www.mql5.com/en/users_search/suggestion");});</script>
+          <input class="blurHandler" id="mainMenuBlurHandler" type="checkbox">
+        </div>
+        <div class="head__toolbar" id="headerToolbar">
+<div class="container loginRegister">
+  <nav aria-label="Account">
+    <ul id="loginRegisterButtons">
+      <li><a class="login" title="Please sign in. OpenID supported" href="/en/auth_login" rel="nofollow" data-fz-event="MQL5+Menu+Siginin">Log in</a></li>
+      <li><a class="registration en" title="Please register" href="/en/auth_register" rel="nofollow" data-fz-event="MQL5+Menu+Register" onclick="window.fpush('MQL5+Button+Click');">Create an account</a></li>
+    </ul>
+  </nav>
+</div>
+          <div class="container">
+            <div class="toggle-button" id="sidebarToggleButton">
+              <i></i>
+            </div>
+          </div>
+
+          <div class="group-menu" id="groupMenu">
+            <div class="container lang-menu-container">
+              <div id="langMenuContainer" class="lang-menu">
+                <input class="blurHandler" id="langmenuBlurHandler" type="checkbox">
+                <nav aria-label="Language">
+                  <ul class="lang-menu__list" id="langmenu">
+  <li class="lang-menu__list-item lang-menu__list-item_selected"><a href="/en/articles" aria-label="English (English)"><i class="icons-languages icons-languages_en"></i><span>English</span></a></li>
+  <li class="lang-menu__list-item"><a href="/ru/articles" aria-label="Русский (Russian)"><i class="icons-languages icons-languages_ru"></i><span>Русский</span></a></li>
+  <li class="lang-menu__list-item"><a href="/zh/articles" aria-label="中文 (Chinese)"><i class="icons-languages icons-languages_zh"></i><span>中文</span></a></li>
+  <li class="lang-menu__list-item"><a href="/es/articles" aria-label="Español (Spanish)"><i class="icons-languages icons-languages_es"></i><span>Español</span></a></li>
+  <li class="lang-menu__list-item"><a href="/pt/articles" aria-label="Português (Portuguese)"><i class="icons-languages icons-languages_pt"></i><span>Português</span></a></li>
+  <li class="lang-menu__list-item"><a href="/ja/articles" aria-label="日本語 (Japanese)"><i class="icons-languages icons-languages_ja"></i><span>日本語</span></a></li>
+  <li class="lang-menu__list-item"><a href="/de/articles" aria-label="Deutsch (German)"><i class="icons-languages icons-languages_de"></i><span>Deutsch</span></a></li>
+  <li class="lang-menu__list-item"><a href="/ko/articles" aria-label="한국어 (Korean)"><i class="icons-languages icons-languages_ko"></i><span>한국어</span></a></li>
+  <li class="lang-menu__list-item"><a href="/fr/articles" aria-label="Français (French)"><i class="icons-languages icons-languages_fr"></i><span>Français</span></a></li>
+  <li class="lang-menu__list-item"><a href="/it/articles" aria-label="Italiano (Italian)"><i class="icons-languages icons-languages_it"></i><span>Italiano</span></a></li>
+  <li class="lang-menu__list-item"><a href="/tr/articles" aria-label="Türkçe (Turkish)"><i class="icons-languages icons-languages_tr"></i><span>Türkçe</span></a></li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
+    </header>
+  <main class="site-main">
+<div id="bfogggabsofabcpxuzmgaibarmaxasdrj" class="r17q2yjg1mslsdb8i gb5gkepwz"><a target="_blank" href="https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22768&amp;a=asavypypfjiefdywsbundfnovsqdqrlg&amp;s=822a63e372eca09eaaa973cc0f82be5093d6c353237035cd7209bf509f0bbb1e&amp;v=1&amp;host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&amp;id=bfogggabsofabcpxuzmgaibarmaxasdrj&amp;uid=hrijsjjteqkoxgywaoinesglpbfeinsj&amp;ssn=1795429702380455317&amp;ssn_dr=20&amp;ssn_sr=0&amp;fv_date=1795429702&amp;ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22674&amp;title=How%20to%20Build%20a%2029-Pair%20Portfolio%20with%20an%20L1%20Filter%20and%20VaR-based%20Allocation%20of%20Lots%20-%20MQL5%20Articles&amp;scr_res=1366x768&amp;ac=1795429722604608&amp;fz_uniq=5167976101445582711&amp;sv=2552"><img src="https://www.mql5.com/ff/si/tz6htja8wbzb2u6kp2.gif" width="800" style="width: 800px; overflow: hidden; vertical-align: top; height: auto; border: 0px;" height="80"></a></div>    <div class="body" id="bodyContent">
+
+  <div id="left-sidebar-selector" class="left-sidebar__selector left-sidebar__selector_padding">
+    <div class="left-sidebar__title">
+MetaTrader 5 /     Trading systems
+    </div>
+    <i class="icons-ux icons-ux_arrow-down-black"></i>
+  </div>
+          <div class="articles-container block-with-sidebar">
+            <aside class="left-sidebar left-sidebar_270" id="left-sidebar">
+              
+
+    <ul class="tree-menu-ul">
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/examples">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/examples.svg" alt="" loading="lazy">
+            Examples
+          </a>
+            <ul class="tree-menu__list tree-menu__list_nested">
+                <li class="tree-menu__item">
+                  <a class="tree-menu__link" href="/en/articles/examples_indicators">
+                      <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/examples_indicators.svg" alt="" loading="lazy">
+                    Indicators
+                  </a>
+                </li>
+                <li class="tree-menu__item">
+                  <a class="tree-menu__link" href="/en/articles/examples_experts">
+                      <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/examples_experts.svg" alt="" loading="lazy">
+                    Experts
+                  </a>
+                </li>
+            </ul>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/strategy_tester">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/strategy_tester.svg" alt="" loading="lazy">
+            Tester
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/trading">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/trading.svg" alt="" loading="lazy">
+            Trading
+          </a>
+        </li>
+        <li class="tree-menu__item tree-menu__item_selected">
+          <a class="tree-menu__link" href="/en/articles/trading_systems">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/trading_systems.svg" alt="" loading="lazy">
+            Trading systems
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/integration">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/integration.svg" alt="" loading="lazy">
+            Integration
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/indicators">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/indicator.svg" alt="" loading="lazy">
+            Indicators
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/expert_advisors">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/expert.svg" alt="" loading="lazy">
+            Expert Advisors
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/statistics">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/statistics.svg" alt="" loading="lazy">
+            Statistics and analysis
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/machine_learning">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/machine_learning.svg" alt="" loading="lazy">
+            Machine learning
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/interviews">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/interviews.svg" alt="" loading="lazy">
+            Interviews
+          </a>
+        </li>
+    </ul>
+  
+
+    <div class="hints-panel">
+      <div class="hints-panel__item">
+        <i class="icons-hints icons-hints_like"></i>
+        <div class="hints-panel__content">
+          Do you like the article?<br>
+          Share it with others —<br>post a <a href="https://www.mql5.com/en/articles/22674" target="_blank">link</a> to it!
+        </div>
+      </div>
+
+      <div class="hints-panel__item">
+        <i class="icons-hints icons-hints_fb-square icons-hints_24px"></i><div class="hints-panel__content">
+Find us on <a href="https://www.facebook.com/mql5.community/" target="_blank" rel="nofollow">Facebook</a>!<br> Join our fan page</div>
+      </div>
+
+      <div class="hints-panel__item">
+        <i class="icons-hints icons-hints_mt-5"></i>
+        <div class="hints-panel__content">
+          Use new possibilities of <a href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/mt5setup.exe?utm_source=www.mql5.com&amp;utm_campaign=download" data-fz-event="MetaTrader+5+Desktop+Download+Article" rel="nofollow sponsored noopener noreferrer">MetaTrader 5</a>
+        </div>
+      </div>
+    </div>
+<div id="vgckrufggwxdtfscpyalmenexmvhljduja" class="rw9r1g5rvuz63l1n4 gb5gkepwz"><a target="_blank" href="https://www.mql5.com/ff/go?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F994%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay.left.margin%26utm_term%3Dhow.use.vps%26utm_content%3Drent.vps%26utm_campaign%3D0622.MQL5.com.Internal&amp;a=wrzwucedskbznwkxwtixovazacwrgenn&amp;s=8e0655198547b88cfac9ea2b2dcc0ceedfec055e68dc2ed42328352bbd876d6a&amp;v=1&amp;host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&amp;id=vgckrufggwxdtfscpyalmenexmvhljduja&amp;uid=zlnxulwmcniwydmyenmhbrikbwcvhrlv&amp;ssn=1795429702380455317&amp;ssn_dr=20&amp;ssn_sr=0&amp;fv_date=1795429702&amp;ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22674&amp;title=How%20to%20Build%20a%2029-Pair%20Portfolio%20with%20an%20L1%20Filter%20and%20VaR-based%20Allocation%20of%20Lots%20-%20MQL5%20Articles&amp;scr_res=1366x768&amp;ac=179542972260536429&amp;fz_uniq=5167976101445582711&amp;sv=2552"><img src="https://www.mql5.com/ff/si/8qu95j9rvdxs4qpn82.png" height="400" width="220" style="width: 220px; overflow: hidden; vertical-align: top; height: auto; border: 0px;"></a></div>      <div class="similar-author-articles ui">
+        <h4 class="similar-author-articles__title">Similar articles</h4>
+        <ul class="similar-author-articles__list">
+            <li>
+              <a href="/en/articles/21142" data-fz-event="MQL5+Article+Similar+Article">Applying L1 Trend Filtering in MetaTrader 5</a>
+            </li>
+            <li>
+              <a href="/en/articles/15779" data-fz-event="MQL5+Article+Similar+Article">Quantitative approach to risk management: Applying VaR model to optimize multi-currency portfolio using Python and MetaTrader 5</a>
+            </li>
+            <li>
+              <a href="/en/articles/22040" data-fz-event="MQL5+Article+Similar+Article">MetaTrader 5 Machine Learning Blueprint (Part 16): Nested CV for Unbiased Evaluation</a>
+            </li>
+            <li>
+              <a href="/en/articles/16604" data-fz-event="MQL5+Article+Similar+Article">Portfolio optimization in Forex: Synthesis of VaR and Markowitz theory</a>
+            </li>
+            <li>
+              <a href="/en/articles/22907" data-fz-event="MQL5+Article+Similar+Article">CSV Data Analysis (Part 3): Engineering a Python Analytics Pipeline for MetaTrader 5 CSV Exports</a>
+            </li>
+        </ul>
+      </div>
+    <div class="freelance-hint">
+      <img src="https://c.mql5.com/i/articles/icon_freelance.svg" width="24" height="24" alt="" loading="lazy">
+      <div class="freelance-hint__text">
+        Use the ideas from this article<br>to order your own robot<br>on Freelance
+      </div>
+        <a target="_blank" class="button button_blue-gray-border" title="Go to Freelance" href="/en/job/new" data-fz-event="MQL5+Article+New+Job">Go to Freelance</a>
+    </div>
+
+            </aside>
+            <div class="content-with-sidebar articles-content splashed">
+              
+
+
+<article>
+  <header class="article-header article-header_light">
+    <section class="article-tools-panel">
+        <div class="article-tools-panel__item">
+          <span class="popup framed client flags">
+            <a class="dropdown" href="javascript:void(false);" aria-label="Language">
+              <span class="icons-languages icons-languages_en"></span><i></i>
+            </a>
+            <span class="popup">
+              <span class="tip">
+                <span></span>
+              </span>
+              <span class="items">
+                    <a href="/ru/articles/22674">Русский</a>
+              </span>
+            </span>
+          </span>
+        </div>
+        
+      <div class="article-tools-panel__item">
+        <a href="#pocket" title="Pocket allows you to insert a complete content description to the appropriate comment" aria-label="to pocket" onclick="return Pocket.Add(this,'en',2,1,22674);" class="article-tools-panel__rounded">
+          <i class="article-pocket-icon"></i>
+        </a>
+      </div>
+      <div class="article-tools-panel__item">
+        <a href="/en/articles/22674?print=" target="_blank" class="article-tools-panel__rounded" rel="nofollow" title="Printer friendly version" aria-label="Printer friendly version">
+          <i class="article-print-icon"></i>
+        </a>
+      </div>
+
+    </section>
+    <section class="article-header__image-box" style="background-color: rgb(17,34,48)">
+        <img class="article-header__image-preview" loading="lazy" width="32" height="16" alt="preview" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAsICAoIBwsKCQoNDAsNERwSEQ8PESIZGhQcKSQrKigkJyctMkA3LTA9MCcnOEw5PUNFSElIKzZPVU5GVEBHSEX/2wBDAQwNDREPESESEiFFLicuRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUX/wAARCAAQACADASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAAAwQBBQf/xAAdEAACAgIDAQAAAAAAAAAAAAABAgARAzEEISKR/8QAFQEBAQAAAAAAAAAAAAAAAAAAAQP/xAAWEQEBAQAAAAAAAAAAAAAAAAAAAUH/2gAMAwEAAhEDEQA/AM2xUmhHMdMO5XJkIh15NDQl8Q004WtRR19dGpLcmxpfkE2SzoQpj//Z">
+      <div class="article-header__gradient" style="background: linear-gradient(90deg, rgba(17,34,48, 1) 0%, rgba(17,34,48, 0.72) 8.31%, rgba(17,34,48, 0) 17.1%), linear-gradient(270deg, rgba(17,34,48, 1) 0%, rgba(17,34,48, 0.72) 8.06%, rgba(17,34,48, 0) 16.59%), linear-gradient(0deg, rgba(17,34,48, 1) 8.26%, rgba(17,34,48, 0.8) 65%, rgba(17,34,48, 0) 100%);"></div>
+        <picture>
+          <source srcset="https://c.mql5.com/2/217/22674-29-parnaya-portfelnaya-torgovlya-s-mashinnim-obucheniem_600x314.jpg, https://c.mql5.com/2/217/22674-29-parnaya-portfelnaya-torgovlya-s-mashinnim-obucheniem_1200x628.jpg 2x" media="(min-width:700px)">
+          <img class="article-header__image" loading="lazy" width="600" height="314" srcset="https://c.mql5.com/2/217/22674-29-parnaya-portfelnaya-torgovlya-s-mashinnim-obucheniem_300x157.jpg, https://c.mql5.com/2/217/22674-29-parnaya-portfelnaya-torgovlya-s-mashinnim-obucheniem_600x314.jpg 2x" src="https://c.mql5.com/2/217/22674-29-parnaya-portfelnaya-torgovlya-s-mashinnim-obucheniem_600x314.jpg" alt="How to Build a 29-Pair Portfolio with an L1 Filter and VaR-based Allocation of Lots" onerror="this.style.display='none';">
+        </picture>
+    </section>
+    <section class="article-header__content">
+      <h1>How to Build a 29-Pair Portfolio with an L1 Filter and VaR-based Allocation of Lots</h1>
+      <div class="article-header__info">
+        <a href="/en/articles/mt5">MetaTrader 5</a>
+          —
+          <a href="/en/articles/mt5/trading_systems">Trading systems</a>
+        | <time datetime="2026-11-05T13:15Z" title="2026.11.05 13:15" datetime-type="datetime">5 November 2026 at 13:15</time>
+      </div>
+      <div class="article-header__indicators">
+        <span title="Views">
+          <img src="https://c.mql5.com/i/icons.svg#views-white-usage" width="20" height="20" alt="">
+          982
+        </span>
+        
+          <a title="Comments" href="/en/forum/520031">
+            <img src="https://c.mql5.com/i/icons.svg#comments-white-usage" width="20" height="20" alt="">
+            6
+          </a>
+      </div>
+      <div class="article-header__author">
+          <div class="article-header__avatar">
+            <img src="https://c.mql5.com/avatar/2025/3/67e0f73d-60b1.jpg" srcset="https://c.mql5.com/avatar/2025/3/67e0f73d-60b1_big.jpg 2x" data-user-login="Koshtenko" title="Yevgeniy Koshtenko" alt="Yevgeniy Koshtenko" loading="lazy" width="60" height="60">
+          </div>
+<a class="author" href="/en/users/koshtenko" data-user-login="Koshtenko">Yevgeniy Koshtenko</a>      </div>
+    </section>
+  </header>
+
+    <div class="content">
+      <div class="inner formatted-content">
+        <p>Sooner or later, every trading system developer faces the same disappointment: a model that performed brilliantly on historical data begins to generate false signals as soon as the market shifts into a different regime. There is almost always just one reason — noise. High-frequency price fluctuations, which provide no predictive information about the direction of the trend, end up in the training sample alongside meaningful signals and clutter the model with patterns that will never recur.</p> <p>But there is a second problem that is less often discussed: trading a single currency pair makes the system dependent on that specific instrument. EURUSD, while trading sideways, may fail to generate profits for months, while GBPJPY shows a clear trend. Traders come to this article with two pain points: features built directly from raw prices feed too much noise into the model, and reliance on a single currency pair makes returns unstable.</p> <p>The solution is based on three ideas. Individually, they are useful; together, they take quality to a whole new level. The first is the L1 Trend Filter, a mathematically rigorous method of nonlinear smoothing based on convex optimization that extracts a clean piecewise-linear trend from a price time series without lag. The second is diversification across 29 instruments: 28 major and cross currency pairs, plus gold (XAUUSD). The third is parametric VaR-based allocation of lots, in which each instrument receives a share of the total budget inversely proportional to its volatility, automatically reducing the weight of high-risk instruments and increasing that of stable ones.</p> <p>After reading this article, you will have a complete Python pipeline. It includes:</p> <ul> <li>downloading 45,000 H1 bars for 29 instruments from MetaTrader 5;</li> <li>causal L1 filtering via ADMM with a sliding window;</li> <li>constructing features based on the geometry of the smoothed trend;</li> <li>CatBoost walk-forward evaluation with a horizon of 3 L1 bars;</li> <li>calculation of VaR-based lot sizes using a 95% confidence interval;</li> <li>rerunning the backtest with the allocated lot sizes;</li> <li>a visualization of the portfolio equity curve showing the contribution of each instrument.</li> </ul> <p></p> <h3><br></h3> <h3>L1 Trend Filter: The Math Behind the Scenes</h3> <p>Before we get to the code, it is important to understand exactly what the L1 Trend Filter does and why it differs fundamentally from a moving average or a Kalman filter. The problem is formulated as a convex optimization problem:</p> <div class="code-box"><pre class="code" data-enhanced="true">min_x&nbsp;&nbsp;<span class="number">0.5</span> * ||y - x||^<span class="number">2</span>&nbsp;&nbsp;+&nbsp;&nbsp;lam * ||D2 x||_1</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>Here, y is the original price time series, x is the desired smoothed trend, D2 is the second-difference operator, and lam is the regularization parameter that controls the trade-off between closeness to the data and the smoothness of the result. The L1 norm in the penalty term makes the problem fundamentally different from classical smoothing: it yields solutions in which the second differences are concentrated at a few knots, while the trend between them is strictly linear. In other words, the L1 Trend Filter automatically identifies trend change points and generates a piecewise linear approximation of price movement without making any assumptions about their number or location.</p> <p>The paper by Kim et al., 2009 (“ℓ1 Trend Filtering,” *SIAM Review*) laid the theoretical foundation for this approach. In practice, for a time series with 45,000 points, it is convenient to use ADMM (Boyd et al., 2011). It replaces the original problem with iterations involving two subproblems: solving a linear system with a pentadiagonal matrix and applying soft thresholding. The pentadiagonal structure of the matrix allows the use of a banded solver with a computational complexity of O(N) per iteration, making the algorithm practical for large time series.</p> <p>A key improvement over the baseline implementation is an adaptive rho parameter using residual balancing (Boyd 2011, §3.4.1). If the norm of the primal residuals exceeds the norm of the dual residuals by more than a factor of 10, rho is doubled, and the dual variables are rescaled inversely. The opposite condition results in halving rho. This mechanism is critically important for convergence on real exchange rate data, where the scales of the time series and its second differences can differ by orders of magnitude. A classic error in basic implementations has also been fixed:&nbsp; r_dual is computed before z_old is overwritten, rather than after — this is essential for a correct convergence estimate.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="keyword">def</span> l1_trend_filter(y: np.ndarray,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lam: <span class="built_in">float</span> = <span class="number">150.0</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;max_iter: <span class="built_in">int</span> = <span class="number">1000</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tol: <span class="built_in">float</span> = <span class="number">1e-5</span>) -&gt; np.ndarray:
+&nbsp;&nbsp;&nbsp;&nbsp;n = <span class="built_in">len</span>(y)
+&nbsp;&nbsp;&nbsp;&nbsp;data_scale = np.std(np.diff(y, <span class="number">2</span>)) <span class="keyword">if</span> n &gt; <span class="number">2</span> <span class="keyword">else</span> <span class="number">1.0</span>
+&nbsp;&nbsp;&nbsp;&nbsp;rho = <span class="built_in">max</span>(lam * data_scale / <span class="number">50.0</span>, <span class="number">1e-3</span>)
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span> D2(x):
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> x[:-<span class="number">2</span>] - <span class="number">2.0</span> * x[<span class="number">1</span>:-<span class="number">1</span>] + x[<span class="number">2</span>:]
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span> D2T(z, size):
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;out = np.zeros(size)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;out[:-<span class="number">2</span>] += z;&nbsp;&nbsp;out[<span class="number">1</span>:-<span class="number">1</span>] -= <span class="number">2.0</span> * z;&nbsp;&nbsp;out[<span class="number">2</span>:] += z
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> out
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span> build_ab(size, r):
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ab = np.zeros((<span class="number">5</span>, size))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d0 = np.full(size, <span class="number">1.0</span> + <span class="number">6.0</span> * r)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d0[<span class="number">0</span>] = <span class="number">1.0</span> + r;&nbsp;&nbsp;&nbsp;&nbsp;d0[<span class="number">1</span>]&nbsp;&nbsp;= <span class="number">1.0</span> + <span class="number">5.0</span> * r
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d0[-<span class="number">2</span>] = <span class="number">1.0</span> + <span class="number">5.0</span> * r; d0[-<span class="number">1</span>] = <span class="number">1.0</span> + r
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d1 = np.full(size - <span class="number">1</span>, -<span class="number">4.0</span> * r)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d1[<span class="number">0</span>] = -<span class="number">2.0</span> * r;&nbsp;&nbsp; d1[-<span class="number">1</span>] = -<span class="number">2.0</span> * r
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;d2 = np.full(size - <span class="number">2</span>, r)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ab[<span class="number">2</span>] = d0
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ab[<span class="number">1</span>, <span class="number">1</span>:] = d1;&nbsp;&nbsp;ab[<span class="number">0</span>, <span class="number">2</span>:] = d2
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ab[<span class="number">3</span>, :-<span class="number">1</span>] = d1; ab[<span class="number">4</span>, :-<span class="number">2</span>] = d2
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> ab
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">def</span> soft(v, k):
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> np.sign(v) * np.maximum(np.<span class="built_in">abs</span>(v) - k, <span class="number">0.0</span>)
+
+&nbsp;&nbsp;&nbsp;&nbsp;m = n - <span class="number">2</span>;&nbsp;&nbsp;x = y.copy();&nbsp;&nbsp;z = D2(x);&nbsp;&nbsp;u = np.zeros(m)
+&nbsp;&nbsp;&nbsp;&nbsp;ab = build_ab(n, rho)
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">for</span> it <span class="keyword">in</span> <span class="built_in">range</span>(max_iter):
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x&nbsp;&nbsp;&nbsp;&nbsp; = solve_banded((<span class="number">2</span>, <span class="number">2</span>), ab, y + rho * D2T(z - u, n),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;check_finite=<span class="literal">False</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Dx&nbsp;&nbsp;&nbsp;&nbsp;= D2(x)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;z_old = z.copy()
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;z&nbsp;&nbsp;&nbsp;&nbsp; = soft(Dx + u, lam / rho)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;u&nbsp;&nbsp;&nbsp;&nbsp; = u + Dx - z
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;r_prim = np.linalg.norm(Dx - z)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;r_dual = rho * np.linalg.norm(D2T(z - z_old, n))&nbsp;&nbsp; <span class="comment"># before z_old is overwritten</span>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;eps_p = tol * np.sqrt(m) * <span class="built_in">max</span>(np.linalg.norm(Dx), np.linalg.norm(z), <span class="number">1.0</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;eps_d = tol * np.sqrt(n) * np.linalg.norm(rho * D2T(u, n))
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> r_prim &gt; <span class="number">10.0</span> * r_dual <span class="keyword">and</span> rho &lt; <span class="number">1e6</span>:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rho *= <span class="number">2.0</span>; u /= <span class="number">2.0</span>; ab = build_ab(n, rho)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">elif</span> r_dual &gt; <span class="number">10.0</span> * r_prim <span class="keyword">and</span> rho &gt; <span class="number">1e-6</span>:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rho /= <span class="number">2.0</span>; u *= <span class="number">2.0</span>; ab = build_ab(n, rho)
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> r_prim &lt; eps_p <span class="keyword">and</span> r_dual &lt; eps_d:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">break</span>
+
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> x</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>The lam parameter determines the degree of smoothing: at low values, the trend follows every significant fluctuation; at high values, only the overall structure remains. For a multi-pair system on the H1 timeframe, lam = 150 proves to be nearly universal: the filter clearly identifies weekly and daily trends for EURUSD, GBPUSD, and USDJPY while retaining adequate detail for cross-currency pairs and gold.</p> <h3><br></h3> <h3>Causal filtering: a sliding window for real-time applications</h3> <p>The classic L1 Trend Filter uses the entire time series, which makes it unsuitable for live trading: each new price value changes the entire trend retroactively. The causal version solves this problem by applying the filter locally within a sliding window of fixed width.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="keyword">def</span> causal_l1_trend_filter(prices: np.ndarray,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;lam: <span class="built_in">float</span> = <span class="number">150.0</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;window: <span class="built_in">int</span> = <span class="number">200</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;stride: <span class="built_in">int</span> = <span class="number">5</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;max_iter: <span class="built_in">int</span> = <span class="number">120</span>) -&gt; np.ndarray:
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"""Apply L1 filter causally via sliding window."""</span>
+&nbsp;&nbsp;&nbsp;&nbsp;n = <span class="built_in">len</span>(prices)
+&nbsp;&nbsp;&nbsp;&nbsp;out = prices.copy()
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(window, n, stride):
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;chunk = prices[i - window : i]
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;filt&nbsp;&nbsp;= l1_trend_filter(chunk, lam=lam, max_iter=max_iter)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;out[i - <span class="number">1</span>] = filt[-<span class="number">1</span>]&nbsp;&nbsp;<span class="comment"># only the last value</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> out</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>The function processes data using a 200-bar window (window=200) with a step size of stride=5. At each step, the filter considers only the preceding 200 candles and returns a single value — the trend estimate at the right edge of the window. This reflects real-world trading conditions: at the moment a decision is made, the system has access only to historical data, and the future is unknown. The max_iter parameter is reduced to 120 compared with the full version to speed up computations across 29 instruments without sacrificing convergence accuracy.</p> <h3><br></h3> <h3>Loading data from MetaTrader 5: 29 instruments</h3> <p>The pipeline begins by loading 45,000 H1 bars for each of 29 instruments in parallel: EURUSD, GBPUSD, USDJPY, USDCHF, AUDUSD, USDCAD, NZDUSD, EURGBP, EURJPY, EURAUD, EURCAD, EURCHF, EURNZD, GBPJPY, GBPAUD, GBPCAD, GBPCHF, GBPNZD, AUDJPY, CADJPY, CHFJPY, NZDJPY, AUDCAD, AUDCHF, AUDNZD, NZDCAD, NZDCHF, CADCHF, XAUUSD. This is the full set of major and cross-currency pairs available from most Forex brokers, plus gold as a safe-haven asset.</p> <div class="code-box"><pre class="code" data-enhanced="true">SYMBOLS: List[<span class="built_in">str</span>] = [
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># Majors</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"EURUSD"</span>, <span class="string">"GBPUSD"</span>, <span class="string">"USDJPY"</span>, <span class="string">"USDCHF"</span>, <span class="string">"AUDUSD"</span>, <span class="string">"USDCAD"</span>, <span class="string">"NZDUSD"</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># EUR crosses</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"EURGBP"</span>, <span class="string">"EURJPY"</span>, <span class="string">"EURAUD"</span>, <span class="string">"EURCAD"</span>, <span class="string">"EURCHF"</span>, <span class="string">"EURNZD"</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># GBP crosses</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"GBPJPY"</span>, <span class="string">"GBPAUD"</span>, <span class="string">"GBPCAD"</span>, <span class="string">"GBPCHF"</span>, <span class="string">"GBPNZD"</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># JPY crosses</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"AUDJPY"</span>, <span class="string">"CADJPY"</span>, <span class="string">"CHFJPY"</span>, <span class="string">"NZDJPY"</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># AUD/NZD/CAD crosses</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"AUDCAD"</span>, <span class="string">"AUDCHF"</span>, <span class="string">"AUDNZD"</span>, <span class="string">"NZDCAD"</span>, <span class="string">"NZDCHF"</span>, <span class="string">"CADCHF"</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># Gold</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"XAUUSD"</span>,
+]</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>The 45,000 H1 bars span approximately 187 trading days — about 9 months on a trading-day basis. This is sufficient data for training the model using a 70% in-sample window and 10 walk-forward folds, each with a step size of 1,350 bars. The larger sample size compared to the single-pair version is critical for reliable VaR estimation: the more data available, the more accurate the parametric estimate of volatility.</p> <p style="text-align:center;"><br></p> <h3>Feature Engineering: L1 Bars and Trend Geometry</h3> <p>The key concept of the pipeline is the L1 bar. Unlike a fixed timeframe, an L1 bar is defined by the natural structure of the trend: it is the segment between two consecutive points at which the slope of the L1 trend changes sign. In other words, a single L1 bar represents a single linear phase of movement: a pure upward or downward impulse with no internal knots.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="keyword">def</span> detect_l1_breakpoints(l1: np.ndarray) -&gt; np.ndarray:
+&nbsp;&nbsp;&nbsp;&nbsp;slope = np.diff(l1, prepend=l1[<span class="number">0</span>])
+&nbsp;&nbsp;&nbsp;&nbsp;sign&nbsp;&nbsp;= np.sign(slope)
+&nbsp;&nbsp;&nbsp;&nbsp;bps&nbsp;&nbsp; = []
+&nbsp;&nbsp;&nbsp;&nbsp;prev&nbsp;&nbsp;= sign[<span class="number">0</span>]
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, <span class="built_in">len</span>(sign)):
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> sign[i] != <span class="number">0</span> <span class="keyword">and</span> sign[i] != prev:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bps.append(i)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;prev = sign[i]
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> np.array(bps, dtype=<span class="built_in">int</span>)</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>The forecast horizon horizon=3 means the following: for each input bar, we look for the third breakpoint ahead and use the closing price of that specific bar as the target. The target is binary: whether the price has risen relative to the price at the current bar. This is fundamentally different from forecasting N minutes ahead: we forecast over a structural horizon — three shifts in trend momentum — rather than a fixed time horizon. Across different instruments, three L1 bars correspond to different time spans: 8–12 hours for EURUSD, potentially 20–30 hours for GBPJPY, and up to a day and a half for AUDNZD. This is a natural adjustment to the volatility of each instrument.</p> <p>The denoised L1 trend enables fundamentally different features from those built on raw price data. Instead of noisy lags, we get the pure geometry of the trend: its slope, acceleration, knots, and the deviation of the current price from the trend line.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="comment"># Raw return lags on both close and L1</span>
+<span class="keyword">for</span> lag <span class="keyword">in</span> [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">5</span>, <span class="number">10</span>, <span class="number">20</span>]:
+&nbsp;&nbsp;&nbsp;&nbsp;df[<span class="string">f"ret_<span class="subst">{lag}</span>"</span>]&nbsp;&nbsp;&nbsp;&nbsp;= df[<span class="string">"close"</span>].pct_change(lag)
+&nbsp;&nbsp;&nbsp;&nbsp;df[<span class="string">f"l1_ret_<span class="subst">{lag}</span>"</span>] = df[<span class="string">"l1"</span>].pct_change(lag)
+
+<span class="comment"># L1 geometry: slope, curvature, acceleration</span>
+df[<span class="string">"l1_slope"</span>]&nbsp;&nbsp;= df[<span class="string">"l1"</span>].diff(<span class="number">1</span>)
+df[<span class="string">"l1_slope2"</span>] = df[<span class="string">"l1"</span>].diff(<span class="number">2</span>)
+df[<span class="string">"l1_accel"</span>]&nbsp;&nbsp;= df[<span class="string">"l1_slope"</span>].diff(<span class="number">1</span>)
+
+<span class="comment"># Price-vs-trend relationship</span>
+df[<span class="string">"deviation"</span>] = df[<span class="string">"close"</span>] - df[<span class="string">"l1"</span>]
+df[<span class="string">"dev_pct"</span>]&nbsp;&nbsp; = df[<span class="string">"deviation"</span>] / (df[<span class="string">"l1"</span>] + <span class="number">1e-10</span>)
+
+<span class="comment"># Rolling volatility at two timescales</span>
+<span class="keyword">for</span> w <span class="keyword">in</span> [<span class="number">5</span>, <span class="number">10</span>, <span class="number">20</span>]:
+&nbsp;&nbsp;&nbsp;&nbsp;df[<span class="string">f"vol_<span class="subst">{w}</span>"</span>]&nbsp;&nbsp;&nbsp;&nbsp;= df[<span class="string">"ret_1"</span>].rolling(w).std()
+&nbsp;&nbsp;&nbsp;&nbsp;df[<span class="string">f"l1_vol_<span class="subst">{w}</span>"</span>] = df[<span class="string">"l1_ret_1"</span>].rolling(w).std()
+
+<span class="comment"># RSI on the L1 trend and on the raw close</span>
+df[<span class="string">"rsi_l1_14"</span>]&nbsp;&nbsp;&nbsp;&nbsp;= rsi(df[<span class="string">"l1"</span>], <span class="number">14</span>)
+df[<span class="string">"rsi_close_14"</span>] = rsi(df[<span class="string">"close"</span>], <span class="number">14</span>)
+
+<span class="comment"># Market regime flag and change detector</span>
+df[<span class="string">"l1_trend_up"</span>]&nbsp;&nbsp;= (df[<span class="string">"l1_slope"</span>] &gt; <span class="number">0</span>).astype(<span class="built_in">int</span>)
+df[<span class="string">"l1_trend_chg"</span>] = (df[<span class="string">"l1_trend_up"</span>] != df[<span class="string">"l1_trend_up"</span>].shift(<span class="number">1</span>)).astype(<span class="built_in">int</span>)
+
+<span class="comment"># Bollinger Band position relative to L1</span>
+<span class="keyword">for</span> w <span class="keyword">in</span> [<span class="number">10</span>, <span class="number">20</span>]:
+&nbsp;&nbsp;&nbsp;&nbsp;mu = df[<span class="string">"l1"</span>].rolling(w).mean()
+&nbsp;&nbsp;&nbsp;&nbsp;sd = df[<span class="string">"l1"</span>].rolling(w).std()
+&nbsp;&nbsp;&nbsp;&nbsp;df[<span class="string">f"bb_pos_<span class="subst">{w}</span>"</span>] = (df[<span class="string">"close"</span>] - mu) / (sd + <span class="number">1e-10</span>)</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>The final feature space comprises 29 features, identical across all instruments. Note this key detail: The RSI and Bollinger Bands are based on the L1 trend, not on the raw price. The RSI on a piecewise-linear time series has a fundamentally different interpretation — it reflects the rate of change of the trend itself, which is significantly more informative for the task of predicting a structural reversal three L1 bars ahead. The l1_trend_chg feature captures the moment a market regime changes — a potential breakpoint — that is directly linked to the target variable.</p> <h3><br></h3> <h3>VaR-Based Lot Allocation: Inverse Proportionality to Risk</h3> <p>After training the models on each of the 29 instruments, the key question in capital management arises: how should a fixed budget be allocated among the instruments? A naive approach — allocating an equal share to each — leads to a skewed portfolio: highly volatile instruments such as GBPJPY or XAUUSD will generate massive drawdowns, while stable instruments like EURCHF will remain underweight. The solution is parametric VaR-based allocation.</p> <p>Value-at-Risk (95%) estimates the maximum loss that will not be exceeded with 95% probability over a given time horizon. Formula for each instrument:</p> <div class="code-box"><pre class="code" data-enhanced="true">VaR_i = z * sigma_i * sqrt(T) * price_i * pip_val_i * lot_unit</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>Here, z = 1.645 for a 95% confidence interval, sigma_i is the standard deviation of daily returns, T is the forecast horizon in L1 bars (in this case, T = 3), price_i is the current price of the instrument, pip_val_i is the value of one pip in USD, and lot_unit is the size of one standard lot (100,000 for FX). After calculating the VaR for all instruments, each is assigned a weight that is inversely proportional to its risk:</p> <div class="code-box"><pre class="code" data-enhanced="true">w_i = (<span class="number">1</span> / VaR_i) / sum(<span class="number">1</span> / VaR_j)</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>The final lot size for instrument i is calculated by multiplying its weight by the total budget TOTAL_LOTS:</p> <div class="code-box"><pre class="code" data-enhanced="true">lot_i = w_i * TOTAL_LOTS</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>This approach automatically reduces exposure to risky instruments and increases exposure to stable ones, thereby equalizing each instrument's contribution to the portfolio's overall risk.</p> <h3><br></h3> <h3>Walk-Forward Evaluation: An Unbiased Metric on an Actual Out-of-Sample Test Period</h3> <p>A simple train/test split is not acceptable for time series — any leakage of future information into the training sample distorts the evaluation. For financial time series, a walk-forward method with an expanding window is typically used. Using real H1 data for 28 pairs from December 2025 to May 2026, the system achieved the following aggregate result: an average accuracy across all pairs of 0.683 ± 0.043. The small spread of ±4.3% across pairs is a sign of robustness: the model does not overfit to a specific instrument.</p> <p>An important technical point: early_stopping_rounds=40 is applied within each fold on its own validation set (15% of the fold's training set). This prevents information from leaking from the out-of-sample test period into the model's regularization — a classic error in naive walk-forward implementations.</p> <h3><br></h3> <h3>Backtest: Three Phases from ML to Portfolio</h3> <p>A complete pipeline consists of three phases, each of which is critical for a proper evaluation of the system.</p> <p><u>Phase 1: Per-symbol ML with placeholder lot sizes</u>. For each of the 29 instruments, data is loaded, a causal L1 filter is applied, features are constructed, walk-forward validation is performed, and a preliminary backtest is conducted with a minimum fixed lot size of lot=0.01. The purpose of this phase is to obtain historical prices and volatility estimates for calculating VaR. Results are cached to disk in pickle files to speed up subsequent runs.</p> <p><u>Phase 2: VaR-based allocation</u>. VaR estimates are calculated from the collected price time series for all instruments, and the final lot sizes are allocated. This phase works with the data as a whole — there is no train/test split, since VaR is estimated based on the entire historical data set for each instrument. Result: a dictionary {symbol: allocated_lot}.</p> <p><u>Phase 3: Final backtest using VaR-based lot sizes</u>. For each instrument, the backtest is rerun using the lot sizes already calculated in Phase 2. This produces an accurate equity curve for the portfolio, where each instrument is weighted according to its volatility. Aggregate equity is the sum of the contributions from all instruments.</p> <h3><br></h3> <h3>Combating Overfitting: Five-Level Protection</h3> <p>Overfitting is the main enemy of any ML trading system. A model that has perfectly learned the historical data becomes useless in the out-of-sample test period. The pipeline implements five independent protection mechanisms, each of which tackles the problem from a different angle.</p> <p><u>Level 1: Causal L1 filtering</u>. A classic L1 filter uses the entire time series — the trend value at point i depends on prices both before and after that point. This introduces future information leakage into the features: the model is trained on data containing information about future prices. The causal version with a sliding window eliminates this problem: at time step i, the filter sees only y[i-199:i+1] and returns a single value. Future information is inaccessible, so leakage is impossible. This is the first and most fundamental barrier against overfitting — it is built into the process of feature generation itself.</p> <p><u>Level 2: Purge + Embargo in walk-forward</u>. A standard walk-forward approach divides the data into training and test sets sequentially, but does not account for label overlap. If a model is trained to predict the price 3 L1 bars ahead, the label of the last training example may overlap with the first test bar — this causes data leakage. Purge removes purge_bars=5 rows to the right of the training boundary. Embargo goes further: it removes a number of rows equal to embargo_pct=5% of the training set size to the left of the test boundary, so that the next fold does not peek into the previous test set. As a result, a buffer zone approximately 750 bars wide separates the training and test sets in each fold.</p> <div class="code-box"><pre class="code" data-enhanced="true">embargo = <span class="built_in">max</span>(<span class="built_in">int</span>((t1 - t0) * embargo_pct), purge_bars)
+purge_start = t1 - purge_bars
+purge_end   = t1 + embargo
+
+train_mask = (idx &gt;= t0) &amp; (idx &lt; purge_start)
+test_mask  = (idx &gt;= purge_end) &amp; (idx &lt; t2)</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>This is the López de Prado purging method, adapted for the L1-bar horizon. Without this mechanism, the model has access to future information through label overlap, resulting in inflated validation metrics.</p> <p><u>Level 3: 10-fold walk-forward with an expanding window</u>. The model for each instrument is trained 10 times, each time on an expanding in-sample window, and tested on the next out-of-sample segment. This simulates real trading: today, the model is retrained using all available historical data, and it trades tomorrow. If the model is overfit, the variance in accuracy across folds will be high — an overfit model is unstable. The results show a mean_accuracy of 0.683 ± 0.043 — the small spread of 4.3 percentage points indicates that the model generalizes rather than memorizes.</p> <p><u>Level 4: Early stopping on the internal validation split</u>. Inside each fold, train is split 85/15 between train_inner and valid_inner. CatBoost trains on train_inner with&nbsp; valid_inner used for monitoring, and stops after early_stopping_rounds=40 iterations without improvement. This is regularization through early stopping: the model is not trained to fit the training data perfectly, but is stopped at the point where the validation error is lowest. Critically important: valid_inner is taken strictly from the train part of the fold; the out-of-sample test period is not involved in either training or validation within the fold.</p> <div class="code-box"><pre class="code" data-enhanced="true">val_cut = <span class="built_in">int</span>(<span class="built_in">len</span>(X_tr) * <span class="number">0.85</span>)
+model = CatBoostClassifier(..., early_stopping_rounds=<span class="number">40</span>)
+model.fit(
+&nbsp;&nbsp;&nbsp;&nbsp;Pool(X_tr.iloc[:val_cut], y_tr.iloc[:val_cut]),
+&nbsp;&nbsp;&nbsp;&nbsp;eval_set=Pool(X_tr.iloc[val_cut:], y_tr.iloc[val_cut:]),
+)</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p><u>Level 5: Independent training on each instrument</u>. The EURUSD model has no access to GBPUSD data, and the model for USDJPY is built from scratch. There is no transfer of weights and no shared classifier across all instruments. This prevents cross-contamination: if the model for one instrument is overfit, it does not affect the others. Each of the 28 models is an independent experiment. If the system used a single global model for all instruments, overfitting on GBPJPY would compromise the predictions for EURUSD.</p> <p><u>Empirical test for overfitting</u>. After implementing the five safeguards, we verify the result empirically. If the model is overfit, we will see:</p> <ul> <li>High variability in accuracy across folds (&gt;10%) — not observed; σ = 4.3%</li> <li>A decline in win rate from early to late folds — not observed; WR remains stable</li> <li>A large gap between training accuracy and out-of-sample test accuracy — data are unavailable, but a Sharpe ratio of 12.80 during the out-of-sample test period speaks for itself</li> <li>Several instruments with catastrophic losses — not observed; 26 out of 28 are profitable</li> </ul> <p>Portfolio P&amp;L of +USD 412,467 over the out-of-sample test period, based on 10,047 trades, gives an average profit per trade of +USD 41. This is not overfitting — an overfit system generates a few large wins on the training set and many small losses on the test set. The distribution here is even: 64.9% of trades are profitable, and the profit factor of 2.74 remains consistent across instruments. The system is working.</p> <h3><br></h3> <h3>Portfolio Backtest Results</h3> <p>The aggregated results for the 28 pairs in the out-of-sample test period are as follows. The final portfolio PnL was +USD 412,467, with an initial balance of USD 10,000 per instrument (for a total of&nbsp; USD 280,000 in initial capital across all active instruments). The average return per instrument was +USD 14,731; the median was +USD 18,222. A total of 10,047 trades were executed, with an average win rate of 64.9% and an average profit factor of 2.74. The portfolio's average Sharpe ratio was 12.80 — an extremely high figure that reflects a combination of stable returns and low volatility achieved through VaR diversification.</p> <p style="text-align:center;"><img alt="" height="500" loading="lazy" src="https://c.mql5.com/2/215/01_equity_drawdown.png" style="vertical-align:middle;" width="750"></p> <p>Top 5 instruments by contribution to total PnL: NZDUSD (+USD 29,269), AUDUSD (+USD 25,407), USDCHF (+USD 24,706), NZDCHF (+USD 24,696), EURUSD (+USD 21,816). The top four received high VaR-based allocations (0.27–0.52 lots) due to their stability, while NZDUSD and AUDUSD posted win rates of 70.0% and 70.5%, respectively — the best results in the portfolio. EURUSD, with a lot size of 0.24, posted a win rate of 67.0% and a profit factor of 3.02, confirming its status as a reliable anchor for the portfolio.</p> <p>JPY crosses showed mixed results: CHFJPY (+USD 441, WR 66.7%, lot size 0.01) and GBPJPY (+USD 447, WR 65.7%, lot size 0.01) remained profitable despite minimal allocation, while AUDJPY and NZDJPY did not generate a single trade due to a lack of breakpoints in the out-of-sample test period. USDJPY posted a modest result (+USD 133, WR 54.1%), which led to its minimum allocation of 0.01 lot.</p> <p>The most important metric of robustness is that all 26 active instruments out of 28 ended the out-of-sample test period in profit. There were no significant losses: USDJPY's lowest profit (+USD 133), at the minimum allocation, had no impact on the portfolio. The average maximum drawdown per instrument was USD 733, which, with an average profit of USD 14,731, results in a profit-to-drawdown ratio of approximately 20:1. This is a direct consequence of VaR-based allocation: each instrument is traded with a lot size proportional to its stability, which balances risks and maximizes capital efficiency.</p> <h3><br></h3> <h3>Portfolio Equity and Four Visualization Charts</h3> <p>After Phase 3 is complete, the system generates four charts, each 750 pixels wide:</p> <ul> <li>portfolio equity and drawdown;</li> <li>VaR-based allocation pie chart;</li> <li>return curves for financial instruments;</li> <li>Bar chart showing the contribution to PnL.</li> </ul> <p></p> <p>The first is a portfolio equity curve showing drawdown: the sum of the balances of all 28 active instruments on each bar of the out-of-sample test period. The curve is drawn in solid green with a line width of 2.0px and no trade markers — this makes it easier to visualize the overall trajectory of the portfolio. Drawdown is shown as a red shaded area below the main chart.</p> <p>The second is the VaR pie chart, which shows the percentage allocation of lots across instruments, with only shares of ≥2.5% displayed for readability. The third chart shows the return curves for all 28 instruments simultaneously, expressed as a percentage of the initial balance, with a 10-column legend. The fourth is a bar chart showing each instrument’s contribution to the total PnL, with color coding (green bars for profitable instruments, red for unprofitable ones) and VaR lot annotations in amber above each bar.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="keyword">def</span> save_fig_750px(fig: plt.Figure, path: <span class="built_in">str</span>, height_in: <span class="built_in">float</span>) -&gt; <span class="literal">None</span>:
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="string">"""Guarantee exactly 750px width regardless of tight_layout adjustments."""</span>
+&nbsp;&nbsp;&nbsp;&nbsp;W_IN = <span class="number">7.50</span>  <span class="comment"># 7.50 * 100 DPI = 750px</span>
+&nbsp;&nbsp;&nbsp;&nbsp;DPI  = <span class="number">100</span>
+&nbsp;&nbsp;&nbsp;&nbsp;fig.tight_layout(pad=<span class="number">0.8</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;fig.set_size_inches(W_IN, height_in)
+&nbsp;&nbsp;&nbsp;&nbsp;fig.savefig(path, dpi=DPI, facecolor=<span class="string">"#0d1117"</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;plt.close(fig)
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="built_in">print</span>(<span class="string">f"   [SAVED] <span class="subst">{os.path.basename(path)}</span> | <span class="subst">{W_IN*DPI:.0f}</span>x<span class="subst">{height_in*DPI:.0f}</span>px"</span>)</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>Key technical detail: Calling fig.set_size_inches(W_IN, height_in) after tight_layout forces the width back to 7.5 inches, regardless of how much tight_layout has adjusted the margins. The bbox_inches="tight" argument in savefig is intentionally not used — it changes the actual canvas size and breaks the pixel-width guarantee. Verification: PIL.Image.open(path).size[0] == 750 returns True for all four files. The save_fig_750px() function is declared inside plot_all() as a nested function, which gives it access to the imported plt without duplicating code.</p> <p>The VaR-based allocation shows a clear pattern: CHF/NZD/CAD cross pairs dominate the allocation (the top 7 received over 50% of the budget), while JPY cross pairs received the minimum allocation of 0.01 lot each. Gold (XAUUSD) did not pass the breakpoint filter and remained outside the portfolio. This is an automated selection based on volatility, with no manual adjustments — the system itself determined which instruments deserve greater weight.</p> <p style="text-align:center;"><img alt="" height="600" loading="lazy" src="https://c.mql5.com/2/215/02_var_allocation.png" style="vertical-align:middle;" width="750"></p> <p>Return curves show that most instruments move in tandem during the first half of the out-of-sample test period and diverge in the second — a classic pattern for a diversified portfolio. The absence of downward spikes confirms that there were no catastrophic losses on individual instruments.</p> <p style="text-align:center;"><img alt="" height="450" loading="lazy" src="https://c.mql5.com/2/215/03_symbol_returns.png" style="vertical-align:middle;" width="750"></p> <h3><br></h3> <h3>Three Operating Modes of the System</h3> <p>The system supports three operating modes, which can be selected via an interactive menu at startup or through command-line arguments. Operating mode 1 — the classic backtest described above. Operating mode 2 — an endless loop of live trading, with positions closed upon reaching the profit target and models retrained every hour. Operating mode 3 — live trading with positions closed only on an opposite signal and models retrained every hour.</p> <p><u>Operating mode 1: Backtest (default)</u>. Full three-phase pipeline: loading 45,000 bars of H1 data across 29 instruments, L1 filtering, feature engineering, walk-forward with 10 folds, VaR-based allocation of lots, restarting the backtest with the final lots, and plotting four charts. The results are saved in checkpoints_29pairs/ to speed up subsequent runs — if the data for a given instrument has already been processed, the system loads the cache instead of recalculating it. This operating mode is designed to validate a strategy and evaluate historical performance before moving on to live trading.</p> <p><u>Operating mode 2: Profit-based live loop</u>. An infinite loop with three phases in each iteration.</p> <p>Phase 1: Loading the latest 45,000 bars for all instruments, L1 filtering, feature engineering, model training, and signal generation.</p> <p>Phase 2: Calculating VaR-based lot sizes using current volatility and opening positions based on signals via the MetaTrader 5 API.</p> <p>Phase 3: Monitoring open positions every minute. If the total floating profit of all positions with magic=290000+hash("L1_MODE2") reaches profit_threshold=50.0 USD, the system immediately closes all positions via mt5.positions_close(), locks in the profit, and returns to Phase 1 for retraining. Between profit checks, the system sleeps for 60 seconds. Models are retrained every hour (relearn_hours=1), regardless of the state of the positions.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="keyword">def</span> check_and_close_by_total_profit(mt5, magic, target_profit=<span class="number">50.0</span>):
+&nbsp;&nbsp;&nbsp;&nbsp;positions = mt5.positions_get(magic=magic)
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> <span class="keyword">not</span> positions: <span class="keyword">return</span> <span class="literal">False</span>
+&nbsp;&nbsp;&nbsp;&nbsp;total_profit = <span class="built_in">sum</span>(pos.profit <span class="keyword">for</span> pos <span class="keyword">in</span> positions)
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> total_profit &gt;= target_profit:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">for</span> pos <span class="keyword">in</span> positions:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;close_position(mt5, pos, magic)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="literal">True</span>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="literal">False</span></pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>This operating mode is designed for aggressive profit-taking: the system does not wait for an opposite signal or a structural exit after 3 L1 bars, but instead locks in profits as soon as the portfolio reaches the target level. The profit_threshold parameter is configured using the --profit-threshold option at startup. This operating mode is suitable for traders who work with fixed daily targets.</p> <p><u>Operating mode 3: Signal-based live loop</u>. It is similar to operating mode 2, with a key difference in the exit logic. The system does not track profits — positions are closed only when an opposite signal appears. Every hour on the hour (at 00 minutes), the system refreshes the data, recalculates the signals for all instruments, and compares them with open positions. If a BUY position is open on EURUSD and a new SELL signal is generated, the position is immediately closed using close_opposite_positions(). A new position in the opposite direction is opened immediately after the old one is closed. Between signal checks, the system displays the portfolio's current PnL every minute for monitoring purposes.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="keyword">if</span> current_minute == <span class="number">0</span> <span class="keyword">and</span> current_time - last_signal_check &gt; <span class="number">50</span>:
+&nbsp;&nbsp;&nbsp;&nbsp;new_signals = reload_signals_for_all_symbols()
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">for</span> pos <span class="keyword">in</span> mt5.positions_get(magic=magic):
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;current_dir = <span class="string">"BUY"</span> <span class="keyword">if</span> pos.<span class="built_in">type</span> == <span class="number">0</span> <span class="keyword">else</span> <span class="string">"SELL"</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;new_dir = new_signals.get(pos.symbol, {}).get(<span class="string">"direction"</span>, <span class="string">"HOLD"</span>)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">if</span> new_dir != <span class="string">"HOLD"</span> <span class="keyword">and</span> new_dir != current_dir:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;close_opposite_positions(mt5, pos.symbol, new_dir, magic)</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>This operating mode implements the classic "ride the trend until it reverses" strategy. Positions are held for longer periods, which reduces the number of trades and transaction costs but increases exposure to individual instruments. This operating mode is suitable for traders who prefer exits based on market structure to mechanical profit targets.</p> <p><u>Selecting an operating mode at startup</u>. When launched without any flags, the system displays a menu:</p> <div class="code-box"><pre class="code" data-enhanced="true">L1 PIPELINE <span class="number">29</span> PAIRS — MODE SELECTION
+
+Select mode:
+&nbsp;&nbsp;<span class="number">1</span>) Backtest (default)
+&nbsp;&nbsp;<span class="number">2</span>) Infinite live loop — close on profit target, relearn hourly
+&nbsp;&nbsp;<span class="number">3</span>) Infinite live loop — close on reverse signal, relearn hourly
+
+Enter choice (<span class="number">1</span>-<span class="number">3</span>): </pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p>Alternatively, run the command python l1_pipeline_29pairs.py --live-trade to launch the legacy operating mode, or select operating modes 2 and 3 from the menu. The parameters are configured using --bars, --timeframe, --horizon, --total-lots, --long-thr, and --short-thr. For operating mode 2, the --profit-threshold option is also available. All three operating modes use the same models, features, and VaR-based allocation — the only difference is in the exit logic.</p> <h3><br></h3> <h3>Conclusion<br></h3> <p>A trader came across this article with a twofold problem: noise in the data reduces the accuracy of the ML model during the out-of-sample test period, and reliance on a single currency pair makes returns volatile. They now have a full set of tools at his disposal to tackle both tasks.</p> <p>The L1 Trend Filter, implemented via ADMM with adaptive rho and residual balancing, provides a mathematically rigorous piecewise-linear approximation of the trend without lag. The causal version with a sliding window makes the filter applicable to real-time trading without leakage of future information. Diversification across 29 instruments reduces dependence on the market regime of any single instrument. Parametric VaR-based allocation automatically allocates capital in inverse proportion to the risk of each instrument, equalizing contributions to portfolio drawdown.</p> <p>Five layers of protection against overfitting — causal filtering, purging and embargo, 10-fold walk-forward validation, early stopping, and independent training on each instrument — have been empirically validated: mean accuracy is 0.683 ± 0.043, the win rate is 64.9%, and 26 out of 28 instruments are profitable in the out-of-sample test period. A three-phase backtest with VaR-based lot sizing completed the chain from theory to trading results: +USD 412,467 in portfolio P&amp;L with an average Sharpe ratio of 12.80. The entire pipeline is implemented in a single Python file and is ready for immediate use — the only external requirement is a MetaTrader 5 terminal that is running and logged in. The system supports both classic backtesting and two live trading modes, with automatic retraining every hour and a choice between profit-based and signal-based exit logic.</p> <p>The project <a href="https://forge.mql5.io/koshtenko/Article-22674-L1-Trend-Filter-Multi-Asset-VaR-Portfolio.git" rel="noreferrer noopener nofollow" target="_blank" title="https://forge.mql5.io/koshtenko/Article-22674-L1-Trend-Filter-Multi-Asset-VaR-Portfolio.git">is maintained on AlgoForge</a>.</p>
+      </div>
+          <p style="text-align: right;">
+            <small>
+              Translated from Russian by MetaQuotes Ltd. <br>Original article: <a href="/ru/articles/22674" target="_blank">https://www.mql5.com/ru/articles/22674</a>
+            </small>
+          </p>
+<div id="cb_22674" class="attachBlock">
+  <strong>Attached files</strong> |
+  <div class="grouped-attachments-help">
+    <a title="Download all attachments in the single ZIP archive" href="/en/articles/download/22674.zip">
+      <i class="attach-icon attach-icon_zip"></i>Download ZIP
+    </a>
+  </div>
+    <div class="attachItem">
+      <a title="Download l1_pipeline_29pairs.py" href="/en/articles/download/22674/l1_pipeline_29pairs.py"><i class="attach-icon attach-icon_py"></i>l1_pipeline_29pairs.py</a>
+      <span class="attachSize">(71.54 KB)</span>
+    </div>
+</div>
+    </div>
+
+  <div class="copyright">
+    <p><strong>Warning:</strong> All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.</p>
+      <p>This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.</p>
+  </div>
+
+
+
+    <div class="article__author-with-articles">
+      
+
+
+<div class="article-footer__author">
+  <div class="article-footer__author-avatar">
+    <img id="avatar" src="https://c.mql5.com/avatar/2025/3/67e0f73d-60b1_big.jpg" title="Yevgeniy Koshtenko" alt="Yevgeniy Koshtenko" loading="lazy" width="164" height="164">
+  </div>
+  <div class="article-footer__author-content">
+    <div class="article-footer__author-name">
+      <a href="/en/users/koshtenko" title="Yevgeniy Koshtenko">Yevgeniy Koshtenko</a>
+    </div>
+    <div class="article-footer__author-info">
+      <ul>
+          <li>
+            <i title="Lives" class="icons-profile icons-profile_geo"></i>
+            <a target="_blank" rel="noreferrer noopener nofollow" title="Lives" href="https://maps.google.com/?z=4&amp;q=Kazakhstan">Kazakhstan</a>
+          </li>
+        <li>
+          <i title="Rating" class="icons-profile icons-profile_statistics"></i>
+          <a title="Rating" href="/en/users/koshtenko/achievements">37359</a>
+        </li>
+      </ul>
+    </div>
+    <div class="article-footer__author-contacts">
+      
+    </div>
+    <div class="article-footer__author-bio">Professional and qualified investor and trader operating in Kazakhstan and the Russian Federation.
+<br>Active in financial markets since 2016, algorithmic trading since 2019, and machine learning and software development since 2021.
+<br>I develop Expert Advisors, algorithmic trading systems, technical indicators, smart contracts, token and cryptocurrency infrastructure, business automation solutions, and turnkey AI models.
+<br>I am currently developing an institutional-grade trading ecosystem for my own hedge fund, alongside a proprietary AI-powered blockchain infrastructure.
+</div>
+  </div>
+</div>
+
+      <div class="other-author-articles ui">
+        <h4 class="other-author-articles__title">Other articles by this author</h4>
+        <ul class="other-author-articles__list">
+          <li><a href="/en/articles/23324" data-fz-event="MQL5+Article+From+Author+Article">Association Rules and Probability Theory in Forex: A Signal Filter Without Neural Networks or Magic</a></li>
+          <li><a href="/en/articles/23135" data-fz-event="MQL5+Article+From+Author+Article">A Grid Expert Advisor Based on a Cellular Automaton with Online Learning in MQL5 (Part III): A Living Feature Graph</a></li>
+          <li><a href="/en/articles/23134" data-fz-event="MQL5+Article+From+Author+Article">A Grid Expert Advisor Based on a Cellular Automaton with Online Learning in MQL5 (Part II): A New Level of Online Adaptation</a></li>
+          <li><a href="/en/articles/22970" data-fz-event="MQL5+Article+From+Author+Article">Creating Three-Dimensional Bars in MQL5</a></li>
+          <li><a href="/en/articles/22816" data-fz-event="MQL5+Article+From+Author+Article">TradeMux as a Quant Backbone: Connecting Institutional Python Pipelines to Different Terminals and Brokers</a></li>
+          <li><a href="/en/articles/22444" data-fz-event="MQL5+Article+From+Author+Article">How to Replace a WebSocket EA with TradeMux REST in MetaTrader 5</a></li>
+        </ul>
+      </div>
+    </div>
+
+</article>
+
+
+  <div class="article__last-comments" id="articleAdditional">
+    
+<div class="comments-preview">
+    <div class="title">
+      <span></span><b>
+         Last comments |
+ <a href="/en/forum/520031">Go to discussion</a>
+      </b>
+        (6)
+    </div>
+    <div>
+        
+        <div class="comment">
+            <div class="user">
+    <div class="frame"><div class="bg">
+        <img src="https://c.mql5.com/avatar/2023/9/65093d70-6f65.jpg" srcset="https://c.mql5.com/avatar/2023/9/65093d70-6f65_big.jpg 2x" alt="Aliaksandr Kazunka" title="Aliaksandr Kazunka" data-user-login="sportoman" loading="lazy" width="60" height="60">
+    </div></div>
+  </div>
+
+          <div class="text">
+            <div>
+              <b><a class="author" href="/en/users/sportoman" data-user-login="sportoman">Aliaksandr Kazunka</a></b>
+              |
+              <span class="comment__date">31 May 2026 at 13:16</span>
+              <a id="comment_60665055"></a>
+            </div>
+            <div class="content" id="content60665055">
+              <div> <div><span>"EURJPY"</span><span>: </span><span> 1.0</span><span> / </span><span>157.0</span><span>,</span> </div> <div><span> </span><span>"GBPJPY"</span><span>: </span><span> 1.0</span><span> / </span><span>157.0</span><span>,</span> </div> <div><span> </span><span>"AUDJPY"</span><span>: </span><span> 1.0</span><span> / </span><span>157.0</span><span>,</span> </div> <div><span> </span><span>"CADJPY"</span><span>: </span><span> 1.0</span><span> / </span><span>157.0</span><span>,</span> </div> <div><span> </span><span>"CHFJPY"</span><span>: </span><span> 1.0</span><span> / </span><span>157.0</span><span>,</span> </div> <div><span> </span><span>"NZDJPY"</span><span>: </span><span> 1.0</span><span> / </span><span>157.0</span><span>, etc...</span> </div> </div> <p>But what if the exchange rate has changed?</p> <p><br></p> <p>The L1 filter draws perfectly straight lines on an established trend, ignoring noise. But the causal version (which does not look into the future) has an inevitable cost for smoothing: <b>inertia</b>.</p> <p>The current live cycle operates on a timer — it recalculates signals once an hour or checks conditions every 10–60 seconds. On volatile instruments such as XAUUSD or GBPJPY, the most dramatic reversals occur within an hour. If the price reverses sharply, forming a strong pattern, waiting for the H1 bar to close or for the one-minute timer to trigger will result in a massive drawdown on <a href="https://www.metatrader5.com/en/terminal/help/trading/performing_deals#position_manage" target="_blank" title="MetaTrader 5 Guide: Opening and closing positions in the MetaTrader 5 trading terminal" class="linkator"><span class="mark">the open position</span></a>.</p>
+            </div>
+          </div>
+        </div>
+        <div class="comment">
+            <div class="user">
+    <div class="frame"><div class="bg">
+        <img src="https://c.mql5.com/avatar/avatar_na2.png" srcset="https://c.mql5.com/avatar/avatar_na2_big.png 2x" alt="sindicato" title="sindicato" data-user-login="sindicato" loading="lazy" width="60" height="60">
+    </div></div>
+  </div>
+
+          <div class="text">
+            <div>
+              <b><a class="author" href="/en/users/sindicato" data-user-login="sindicato">sindicato</a></b>
+              |
+              <span class="comment__date">2 Jun 2026 at 07:06</span>
+              <a id="comment_60665056"></a>
+            </div>
+            <div class="content" id="content60665056">
+              <p>Good morning. When I launch the programme, I get the error “❌ <a href="/en/quotes/currencies/eurusd" target="_blank" title="EUR/USD chart: technical analysis" class="linkator"><span class="mark">EURUSD</span></a>: unable to retrieve a tick”. This error occurs with all symbols. Are there any solutions? In backtesting mode using historical data, everything works perfectly, and the charts are generated successfully. However, in ‘Infinite real-time cycle’ mode, I get the error mentioned above.</p> <p><i>&lt;moderator’s note: machine translation into Russian&gt;</i></p>
+            </div>
+          </div>
+        </div>
+        <div class="comment">
+            <div class="user">
+    <div class="frame"><div class="bg">
+        <img src="https://c.mql5.com/avatar/avatar_na2.png" srcset="https://c.mql5.com/avatar/avatar_na2_big.png 2x" alt="saeedsoleimani1371" title="saeedsoleimani1371" data-user-login="saeedsoleimani1371" loading="lazy" width="60" height="60">
+    </div></div>
+  </div>
+
+          <div class="text">
+            <div>
+              <b><a class="author" href="/en/users/saeedsoleimani1371" data-user-login="saeedsoleimani1371">saeedsoleimani1371</a></b>
+              |
+              <span class="comment__date">26 Jun 2026 at 06:30</span>
+              <a id="comment_60665057"></a>
+            </div>
+            <div class="content" id="content60665057">
+              Dear <a href="/en/users/koshtenko" title="Evgeniy Koshtenko"> Evgeniy, </a> I really enjoyed your article – it’s well written and based on sound theory. Well done, mate. I ran a couple of tests... Here’s my suggestion:<br> 1 – change the total lot from a static value of 6 to the output of a function that calculates it based on a multiplier of the free margin<span>(e.g. 0.2)</span>... then the maximum per symbol would be a multiple of totLots (e.g. 0.1)<br> 2- In many cases, after the code has been retrained, it loses contact with MT5; you might benefit from adding this to the `send_market_order` function:<br> <div> if mt5.terminal_info() is None: </div> <div> print("MT5 disconnected. Reconnecting...") </div> <div> <p>mt5, terminal = mt5_connect_expected()</p> </div>
+            </div>
+          </div>
+        </div>
+        <div class="comment">
+            <div class="user">
+    <div class="frame"><div class="bg">
+        <img src="https://c.mql5.com/avatar/avatar_na2.png" srcset="https://c.mql5.com/avatar/avatar_na2_big.png 2x" alt="saeedsoleimani1371" title="saeedsoleimani1371" data-user-login="saeedsoleimani1371" loading="lazy" width="60" height="60">
+    </div></div>
+  </div>
+
+          <div class="text">
+            <div>
+              <b><a class="author" href="/en/users/saeedsoleimani1371" data-user-login="saeedsoleimani1371">saeedsoleimani1371</a></b>
+              |
+              <span class="comment__date">26 Jun 2026 at 06:31</span>
+              <a id="comment_60665058"></a>
+            </div>
+            <div class="content" id="content60665058">
+              <div class="fquote"> <strong><span style="color:#42639C;"> syndicato EURUSD : Unable to get tick.” This error occurs with all symbols. Are there any solutions? In historical data testing mode, everything works perfectly, and charts are generated. However, in “Real-time infinite loop” mode, I get the error mentioned above. <a href="/en/quotes/currencies/eurusd" target="_blank" title="EURUSD Chart: Technical Analysis" class="linkator"><span class="mark"> </span></a> <p><i> &lt;moderator’s note: machine translation into Russian&gt; </i></p> </span></strong></div> You can resolve this by following the suggestion I made in my comment
+            </div>
+          </div>
+        </div>
+        <div class="comment">
+            <div class="user">
+    <div class="frame"><div class="bg">
+        <img src="https://c.mql5.com/avatar/2013/4/5178FE66-6681.png" srcset="https://c.mql5.com/avatar/2013/4/5178FE66-6681_big.png 2x" alt="AlexL" title="AlexL" data-user-login="qazzaq" loading="lazy" width="60" height="60">
+    </div></div>
+  </div>
+
+          <div class="text">
+            <div>
+              <b><a class="author" href="/en/users/qazzaq" data-user-login="qazzaq">AlexL</a></b>
+              |
+              <span class="comment__date">27 Jul 2026 at 16:39</span>
+              <a id="comment_60665059"></a>
+            </div>
+            <div class="content" id="content60665059">
+              <p><span>for</span> j <span>in</span> range<span>(</span> prev_i <span>+</span> <span>1</span><span>,</span> i<span>)</span>: w <span>=</span> <span>(</span> j <span>-</span> prev_i<span>)</span> <span>/</span> <span>(</span> i <span>-</span> prev_i<span>)</span> out<span>[</span> j<span>]</span> <span>=</span> <span>(</span><span>1</span> <span>-</span> w<span>)</span> <span>*</span> prev_val <span>+</span> w <span>*</span> float<span>(</span> seg_l1<span>[</span><span>-1</span><span>]</span><span>)</span> <span># ← seg_l1[-1] is the value at point i (FUTURE!)</span></p> The algorithm looks <strong>ahead</strong> by <span>a stride of 1 bar </span> when <span>interpolating</span> <span>, which <span>makes it unsuitable for live trading.</span> </span>
+            </div>
+          </div>
+        </div>
+    </div>
+</div>
+
+  </div>
+
+
+    <div class="articles-bottom-list">
+        <div class="articles-bottom-list__row">
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Efficient Volatility Estimation with Garman–Klass: From Theory to a Percentile-Based Trading Tool in MQL5" src="https://c.mql5.com/2/278/24839-efficient-volatility-estimation-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/24839" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Efficient Volatility Estimation with Garman–Klass: From Theory to a Percentile-Based Trading Tool in MQL5</a>
+                <div class="articles-bottom-list__desc">This article implements the Garman–Klass volatility estimator as an MQL5 indicator that uses OHLC data for higher statistical efficiency than close-to-close measures. A percentile-based squeeze/expansion detector produces breakout signals, and a companion Expert Advisor executes them via iCustom. Implementation details include series-aware indexing, recursive squeeze-state handling in indicator buffers, and a baseline-on-attach rule for the EA, giving a ready-to-use toolkit for volatility-regime trading.</div>
+              </div>
+          </div>
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Creating Custom Indicators in MQL5 (Part 13): An Accelerating Trend Stop Confirmed by VWAP" src="https://c.mql5.com/2/278/24692-creating-custom-indicators-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/24692" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Creating Custom Indicators in MQL5 (Part 13): An Accelerating Trend Stop Confirmed by VWAP</a>
+                <div class="articles-bottom-list__desc">We implement an adaptive trend stop indicator in MQL5 that reseeds on every flip, then accelerates toward price, with speed boosted by distance from VWAP and all distances scaled by ATR. The article covers the acceleration engine, the VWAP agreement filter that grades each flip, the anti-aliased stop line with its cloud, and persistent flip levels and arrows. The result highlights where the trend turned and whether VWAP agreed.</div>
+              </div>
+          </div>
+        </div>
+        <div class="articles-bottom-list__row">
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Active Learning: An EA That Only Asks for Human Confirmation on Its Most Uncertain Trades" src="https://c.mql5.com/2/278/24835-active-learning-an-ea-that-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/24835" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Active Learning: An EA That Only Asks for Human Confirmation on Its Most Uncertain Trades</a>
+                <div class="articles-bottom-list__desc">This article builds an uncertainty-based routing layer for an EA: an online logistic regression scores P(up), Shannon entropy measures uncertainty, and a streaming P² quantile enforces a fixed review budget. Signals auto-trade, auto-skip or go to a human checkpoint, replaced by proxy modes in the Strategy Tester. It is judged on a held-out window against a trade-everything baseline, matched-frequency and seeded controls, and an exact profit split. No edge is claimed.</div>
+              </div>
+          </div>
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="MetaTrader 5 Machine Learning Blueprint (Part 25): Live Monitoring" src="https://c.mql5.com/2/278/24470-metatrader-5-machine-learning-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/24470" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">MetaTrader 5 Machine Learning Blueprint (Part 25): Live Monitoring</a>
+                <div class="articles-bottom-list__desc">The article shows why a fixed posterior threshold, checked trade by trade, lacks error control and retires healthy strategies far too often on a real EURUSD case. It introduces WinRateSPRT (with Page's CUSUM for continuous use) and a permutation-tested profit factor trend to cover distinct failure modes. LiveStrategyMonitor integrates both and reports a normalized retirement-progress measure for operational decisions.</div>
+              </div>
+          </div>
+        </div>
+    </div>
+
+<div class="clear-fix"></div>
+
+<div id="wdausxxqrpvhekbwjrjlhqjghyhesrqqau" class="rilqhr8dk3fpupeuk rilqhr8dk3fpupeuk_articles-view gb5gkepwz"><iframe width="800" height="80" frameborder="0" style="vertical-align: top; max-width: 100% !important; display: block;" scrolling="no" src="https://www.mql5.com/ff/sh/jup0jccfs9655z9z2/index.html?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fbook%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay%26utm_term%3Dread.algobook%26utm_content%3Dvisit.page%26utm_campaign%3Dalgobook.promo.04.2024&amp;a=rsxjstxkzbrlgjjrxaglpezpvrjflnvw&amp;s=7224440013c3dbc50ba9cc078cd015fabca36df446b8e75028d6b30234663872&amp;v=1&amp;w=800&amp;h=80&amp;r=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F22674&amp;host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&amp;id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&amp;fz_uniq=5167976101445582711&amp;custom="></iframe></div>
+    
+
+<div class="hidden" id="popupRegisterLogin">
+  <div class="register-login-popup">
+    <div class="register-login-popup__header">
+      <img src="https://c.mql5.com/i/registerlandings/logo-2.png" srcset="https://c.mql5.com/i/registerlandings/logo-2_2x.png 2x" alt="MQL5 - Language of trade strategies built-in the MetaTrader 5 client terminal" loading="lazy" width="74" height="24">
+    </div>
+    <div class="register-login-popup__content">
+      <div class="register-login-popup__desc">
+        <div class="register-login-popup__title">You are missing trading opportunities:</div>
+        <ul>
+<li>Free trading apps</li>
+<li>Over 8,000 signals for copying</li>
+<li>Economic news for exploring financial markets</li>
+</ul>
+      </div>
+      <div class="register-login-popup__forms ui">
+        <div class="register-login-popup__tabs" id="registerLoginPopupTabs">
+          <span data-id="register" id="registerLoginPopupTab_register" class="register-login-popup__tab register-login-popup__tab_active">Registration</span>
+          <span data-id="login" id="registerLoginPopupTab_login" class="register-login-popup__tab">Log in</span>
+        </div>
+        <div id="registerLoginPopupTabContent_register">
+          <div class="ui auth-form__content">
+    
+  <script type="text/javascript">/*<![CDATA[*/ if (!window.V) var V = []; /*]]>*/</script>
+<script>/*<![CDATA[*/ if(! window.V) var V=[]; /*]]>*/</script>
+<form method="POST" action="/en/auth_register_short" id="PopupRegisterquickRegisterForm" onsubmit="PopupRegisterquickRegistration.OnSubmit(this,'en');if(Validate(this)) Ajax.form(this,{onready:PopupRegisterquickRegistration.OnSuccessPopup,onerror:PopupRegisterquickRegistration.OnError,onbeginrequest:PopupRegisterquickRegistration.DisableInputs,onendrequest:PopupRegisterquickRegistration.EnableInputs});return(false);" enctype="multipart/form-data"><input type="hidden" name="__signature" value="af0089d25c3157bd3a8c32f98eac7fce">
+    <div class="auth-form__inputs">
+      <input type="hidden" value="0" name="IsValidate" id="PopupRegisterIsValidate">
+
+      <!--[if lt IE 10]><div class="note">Login:</div><![endif]-->
+      <div class="auth-form__box-input">
+        <input type="text" id="PopupRegisterusername" name="username" class="input" maxlength="32" onchange="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.CheckUserName();}" onkeyup="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.ValidateUserName(this, 'Enter a valid login');}" placeholder="Login" title="May contain Latin letters, digits, dots, dashes,underscore characters. Cannot start or end with a dot. The allowed length is 3 to 32 characters." onfocus="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnFocus(this,'');}" onblur="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnBlur(this);}">
+        <script id="validate_PopupRegisterusername">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['PopupRegisterusername',10,'You may use Latin characters, numbers, underscores and periods.',validate_username]);}); /*]]>*/</script>
+
+        <label class="label" for="PopupRegisterusername">latin characters without spaces</label>
+      </div>
+      <!--[if lt IE 10]><div class="note">Your email:</div><![endif]-->
+      <div class="auth-form__box-input">
+        <input class="input" type="email" id="PopupRegisteremail" name="email" placeholder="Your email" title="Please enter the email (it may not exceed 256 characters). For example: john@example.com" onchange="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnChange(this);}" onfocus="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnFocus(this,'');}" onblur="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnBlur(this);}">
+        <script id="validate_PopupRegisteremail">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['PopupRegisteremail',10,'Enter a valid email address',validate_email]);}); /*]]>*/</script>
+
+        <label class="label" for="PopupRegisteremail">a password will be sent to this email</label>
+      </div>
+      <input name="PrefixId" type="hidden" value="Popup+Register">
+    </div>
+    <span id="PopupRegisterquickRegisterSubmit">
+      <input type="submit" value="Register" id="PopupRegisterquickRegisterButton" title="Sign up and receive an email with your password" class="button button_yellow">
+    </span>
+    <span id="PopupRegisterquickRegisterErrorMessage" class="quick-register-error-message field-validation-error" style="text-align: center; margin-top: 16px; display: none;">
+      An error occurred
+    </span>
+</form>
+    
+</div>
+<div class="auth-social">
+  <ul class="auth-social-list" id="PopupRegistersocialList">
+    <li><a onclick="window.fpush({name: 'MQL5+Popup+Register+Google', unit: 'section', value: 'Articles'}); " href="https://www.mql5.com/en/auth_oauth2?provider=Google&amp;amp;return=popup&amp;amp;reg=1" class="auth-soc-button qa-google-button auth-soc-button_google" rel="nofollow">Log in With Google</a></li>
+  </ul>
+</div>
+<div class="auth-block-agree">
+  <p>
+    You agree to <a target="_blank" href="/en/about/privacy">website policy</a> and <a target="_blank" href="/en/about/terms">terms of use</a>
+  </p>
+</div>
+
+
+        </div>
+        <div id="registerLoginPopupTabContent_login" class="hidden">
+            <div id="loginRegistrationHint" class="auth-form__text">
+    If you do not have an account, please <a href="https://www.mql5.com/en/auth_register" rel="nofollow" style="vertical-align: top">register</a>
+  </div>
+<div class="ui auth-form__content auth-form__content_login" id="loginFormWrapper">
+    
+  <div id="needCookies" class="need-cookies hidden">
+    <div class="danger-box">
+      <p>Allow the use of cookies to log in to the MQL5.com website.</p>
+<p>Please enable the necessary setting in your browser, otherwise you will not be able to log in.</p>
+    </div>
+  </div>
+<script>/*<![CDATA[*/ if(! window.V) var V=[]; /*]]>*/</script>
+<form method="POST" action="/en/auth_login" id="loginForm" onsubmit="if(window.quickLogin){return window.quickLogin.onSubmit(this);}var result = Validate(this); if(result) { preventDoubleSubmit(this); } return result;"><input id="RedirectAfterLoginUrl" name="RedirectAfterLoginUrl" type="hidden" value=""><input id="RegistrationUrl" name="RegistrationUrl" type="hidden" value=""><input data-val="true" data-val-required="The ShowOpenId field is required." id="ShowOpenId" name="ShowOpenId" type="hidden" value="True"><input id="TrackingSection" name="TrackingSection" type="hidden" value="Articles">    <input name="ViewType" type="hidden" value="5">
+      <input name="PrefixId" type="hidden" value="Popup+Login">
+    <div id="loginCredentials">
+    <!--[if lt IE 10]><div class="note">Your login:</div><![endif]-->
+    <div class="auth-form__box-input">
+      <input aria-label="Your login" class="input qa-login" id="Login" name="Login" onchange="if(window.quickLogin){window.quickLogin.onChange(this);}" placeholder="Login" title="Your login" type="text" value="">
+      <script id="validate_Login">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['Login',1,'Enter login specified when signing up']);});mqGlobal.AddOnReady(function() {V.push(['Login',10,'Email cannot be used. Enter your login please',validateLogin]);}); /*]]>*/</script>
+    </div>
+    <!--[if lt IE 10]><div class="note">Password:</div><![endif]-->
+    <div class="auth-form__box-input">
+      <div class="input-with-show">
+        <input aria-label="Password" autocomplete="off" class="input qa-password" id="Password" name="Password" onchange="if(window.quickLogin){window.quickLogin.onChange(this);}" placeholder="Password" title="Enter the password please" type="password">
+        <button type="button" class="input-with-show__icon" title="Show password" aria-label="Show password" aria-pressed="false" onclick="if(window.quickLogin){window.quickLogin.showPass(this, 'Show password', 'Hide password');}"></button>
+      </div>
+      <script id="validate_Password">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['Password',1,'Please enter the password']);}); /*]]>*/</script>
+    </div>
+    </div>
+    <script type="text/javascript">
+    function validateLogin(input) {
+      return !/^\w+([-+.'']{1,2}\w+)* @\w+([-.]\w+)*\.\w+([-.]\w+)*$/i.test(input.value);
+    }
+    </script>
+    <div id="loginTwoFactor" style="display: none;" data-url="/en/auth_two_factor" data-signature="6a7d967b6f1b0a28ee5e585931a5b53d" data-error="Error occurred. Please try again later." data-confirm="Confirm" data-code-prompt="Enter the six-digit code from your authenticator app." data-recovery-prompt="Enter recovery code number {0} from the list you saved during setup.">
+      <p id="loginTwoFactorPrompt">Enter the six-digit code from your authenticator app.</p>
+      <div class="auth-form__box-input">
+        <input class="input input_two-factor" type="text" id="loginTwoFactorCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" dir="ltr" placeholder="000000" aria-label="Authorization code verification" aria-describedby="loginTwoFactorPrompt" disabled="">
+      </div>
+    </div>
+    <p id="loginInlineError" class="field-validation-error" role="alert" style="display: none;"></p>
+    <p id="loginPasswordResetError" class="field-validation-error" role="alert" style="display: none;">Please use <a href="/en/auth_forgotten">Password recovery</a></p>
+    <div class="forgot" id="loginForgotBlock"><a id="loginForgotLink" href="https://www.mql5.com/en/auth_forgotten?return=popup">Forgot your login/password?</a></div>
+    <div class="forgot" id="loginTwoFactorRecoveryBlock" style="display: none;">
+      <a id="loginTwoFactorRecovery" class="link">Lost your authenticator?</a>
+    </div>
+    <input type="submit" class="button button_yellow qa-submit" id="loginSubmit" value="Log in" title="Enter">
+</form>  <div id="loginTwoFactorRecovered" style="display: none;">
+    <p>You are signed in. Two-factor authentication has been disabled. Set it up again and scan a new QR code, or continue with two-factor authentication disabled.</p>
+    <a id="loginTwoFactorSettings" class="button button_yellow">Enable two-factor authentication</a>
+    <a id="loginTwoFactorContinue" class="button" style="margin-top: 12px;">Continue</a>
+  </div>
+</div>
+
+  <div class="auth-social" id="authSocialBlock">
+    <ul class="auth-social-list" id="PopupLoginsocialList">
+      <li><a onclick="window.fpush({name: 'MQL5+Popup+Login+Google', unit: 'section', value: 'Articles'}); " href="https://www.mql5.com/en/auth_oauth2?provider=Google&amp;amp;return=popup" class="auth-soc-button qa-google-button auth-soc-button_google" rel="nofollow">Log in With Google</a></li>
+    </ul>
+  </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script id="popupSection" type="application/json">{"section": "Articles"}</script>
+<script id="popupTranslate" data-type="translate" type="application/json">
+{
+  "popup":
+  {
+  "EmailTitle" : "The password has been sent to {0}",
+  "EmailDescription" : "Log in using the obtained password and the login specified during the registration",
+  "SubmitButtonText" : "Activate account",
+  "RegistrationTip" : "If you have not received the password email, check the spam folder or &lt;a href={0}&gt;repeat the registration&lt;/a&gt;"
+  }
+}
+</script>
+
+    
+
+    
+
+
+            </div>
+          </div>
+    </div>
+  </main>
+
+
+<footer class="footer desktop" id="footer">
+  <ul class="links links_desktop">
+      <li id="navFooterCommunity">
+        <nav aria-label="Website: Sections">
+          <ul>
+            <li><a href="https://web.metatrader.app/terminal?mode=demo&amp;lang=en" target="_blank" rel="nofollow noopener" data-fz-event="MQL5+Footer+Trading">Online trading / WebTerminal</a></li>
+            <li><a href="/en/code" data-fz-event="MQL5+Footer+CodeBase">Free technical indicators and robots</a></li>
+            <li><a href="/en/articles" data-fz-event="MQL5+Footer+Articles">Articles about programming and trading</a></li>
+            <li><a href="/en/job" data-fz-event="MQL5+Footer+Job">Order trading robots on the Freelance</a></li>
+            <li><a href="/en/market" data-fz-event="MQL5+Footer+Market">Market of Expert Advisors and applications	</a></li>
+            <li><a href="/en/signals" data-fz-event="MQL5+Footer+Signals">Follow forex signals</a></li>
+            <li><a href="/en/vps" data-fz-event="MQL5+Footer+VPS">Low latency forex VPS</a></li>
+            <li><a href="/en/forum" data-fz-event="MQL5+Footer+Forum">Traders forum</a></li>
+            <li><a href="/en/blogs" data-fz-event="MQL5+Footer+Blogs">Trading blogs</a></li>
+            <li><a rel="nofollow" href="/en/charts" data-fz-event="MQL5+Footer+Charts">Charts</a></li>
+            <li><a href="/en/widgets" data-fz-event="MQL5+Footer+Widgets">Free widgets</a></li>
+          </ul>
+        </nav>
+      </li>
+      <li id="navFooterMt5">
+        <nav aria-label="MetaTrader 5 Trade Platform">
+          <ul>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com" data-fz-event="MQL5+Footer+MetaTrader+5"><span class="nobr">MetaTrader 5</span> Trading Platform</a></li>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/releasenotes" data-fz-event="MQL5+Footer+MetaTrader+5"><span class="nobr">MetaTrader 5</span> latest updates</a></li>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/news" data-fz-event="MQL5+Footer+MetaTrader+5">News, implementations and technology</a></li>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/terminal/help" data-fz-event="MQL5+Footer+MetaTrader+5"><span class="nobr">MetaTrader 5</span> User Manual</a></li>
+            <li><a href="/en/docs" data-fz-event="MQL5+Footer+Docs">MQL5 language of trading strategies</a></li>
+            <li><a rel="nofollow noopener" href="https://cloud.mql5.com" data-fz-event="MQL5+Footer+Cloud">MQL5 Cloud Network</a></li>
+            <li><a rel="noopener" href="https://forge.mql5.io/?lang=en" data-fz-event="MQL5+Footer+Forge" target="_blank">MQL5 Algo Forge</a></li>
+              <li><a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/mt5setup.exe?utm_source=www.mql5.com&amp;utm_campaign=download" data-fz-event="MetaTrader+5+Desktop+Download+Footer">Download <span class="nobr">MetaTrader 5</span></a></li>
+              <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/terminal/help/start_advanced/installation" data-fz-event="MQL5+Footer+MetaTrader+5">Install Platform</a></li>
+              <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/terminal/help/start_advanced/deinstallation" data-fz-event="MQL5+Footer+MetaTrader+5">Uninstall Platform</a></li>
+          </ul>
+        </nav>
+
+      </li>
+    <li id="navFooterWebsite">
+        <nav aria-label="Website">
+          <ul>
+            <li><a rel="nofollow" href="/en/about" data-fz-event="MQL5+Footer+About">About</a></li>
+              <li><a href="/en/wall" data-fz-event="MQL5+Footer+Wall">Timeline</a></li>
+            <li><a rel="nofollow" href="/en/about/terms" data-fz-event="MQL5+Footer+About">Terms and Conditions</a></li>
+            <li><a rel="nofollow" href="/en/about/autopayments" data-fz-event="MQL5+Footer+About">Recurring Payment Agreement</a></li>
+            <li><a rel="nofollow" href="/en/about/agencyagreement" data-fz-event="MQL5+Footer+About">Agency Agreement – Offer</a></li>
+            <li><a rel="nofollow" href="/en/about/privacy" data-fz-event="MQL5+Footer+About">Privacy and Data Protection Policy</a></li>
+            <li><a href="/en/data-sources" data-fz-event="MQL5+Footer+DataSources">Data Sources</a></li>
+            <li><a rel="nofollow" href="/en/about/cookies" data-fz-event="MQL5+Footer+About">Cookies Policy</a></li>
+            <li>
+                <a rel="nofollow" href="/en/contact" data-fz-event="MQL5+Footer+Contacts">Contacts and requests</a>
+            </li>
+          </ul>
+        </nav>
+    </li>
+
+      <li>
+        <div class="footer__products">
+          <div class="footer__product">
+            <a target="_blank" rel="nofollow noopener" href="https://www.metatrader5.com" class="footer__product-name">MetaTrader 5</a>
+            <div class="footer__product-links">
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/mt5setup.exe?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon windows" data-fz-event="MetaTrader+5+Desktop+Download+Footer"><div class="footer__product-link-hint footer__product-link-hint-short">Download MetaTrader 5 for Windows</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/MetaTrader5.pkg.zip?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon macos" data-fz-event="MetaTrader+5+Desktop+Download+Footer"><div class="footer__product-link-hint footer__product-link-hint-short">Download MetaTrader 5 for MacOS</div></a>
+            <a rel="nofollow noopener" href="https://www.mql5.com/en/articles/625?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon linux" data-fz-event="MetaTrader+5+Desktop+Download+Footer"><div class="footer__product-link-hint footer__product-link-hint-short">Download MetaTrader 5 for Linux</div></a>
+            <a rel="nofollow noopener" href="https://web.metatrader.app/terminal?mode=demo&amp;lang=en" class="icon web"><div class="footer__product-link-hint footer__product-link-hint-short">Open MetaTrader 5 WebTerminal</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mt5/ios?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes&amp;hl=en" class="icon ios" data-fz-event="MetaTrader+5+iOS+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/c1c4cd9cbd49e9f1.png)">Scan to install from App Store</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mt5/android?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes&amp;hl=en" class="icon android" data-fz-event="MetaTrader+5+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/afc2bab603ef62e7.png)">Scan to install from Google Play</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mt5/android/app-gallery?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes" class="icon huawei" data-fz-event="MetaTrader+5+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/bd10f45a3d61c404.png)">Scan to install from Huawei AppGallery</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.software.corp/mt5/metatrader5.apk?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes" class="icon ark" data-fz-event="MetaTrader+5+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/253081c4da455e66.png)">Scan to get Android APK file</div></a>
+            </div>
+          </div>
+          <div>
+            <div class="footer__product">
+              <a target="_blank" rel="nofollow noopener" href="https://www.metatrader5.com/en/news/2270" class="footer__product-name">MQL5 Channels</a>
+              <div class="footer__product-links">
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mql5.channels/ios?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon ios" data-fz-event="MQL5+Channels+iOS+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/1b697989dc2445d5.png)">Scan to install from App Store</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mql5.channels/android?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon android" data-fz-event="MQL5+Channels+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/aa3876298bf4b95b.png)">Scan to install from Google Play</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mql5.channels/android/app-gallery?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon huawei" data-fz-event="MQL5+Channels+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/0843a8a2e12f9b78.png)">Scan to install from Huawei AppGallery</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.software.corp/mql5channels/mql5channels.apk?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon ark" data-fz-event="MQL5+Channels+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/21805012f0baa519.png)">Scan to get Android APK file</div></a>
+              </div>
+            </div>
+            <div class="footer__product">
+              <a target="_blank" rel="nofollow noopener" href="https://www.tradays.com/en/download?utm_source=www.mql5.com&amp;utm_campaign=download" data-fz-event="MQL5+Footer+Download+Tradays" class="footer__product-name">Economic Calendar</a>
+              <div class="footer__product-links">
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/tradays/ios?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon ios" data-fz-event="Tradays+iOS+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/93dbd287c43b0f0e.png)">Scan to install from App Store</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/tradays/android?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon android" data-fz-event="Tradays+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/009272874cc05ac8.png)">Scan to install from Google Play</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/tradays/android/app-gallery?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon huawei" data-fz-event="Tradays+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/df384f0c0ea46413.png)">Scan to install from Huawei AppGallery</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.software.corp/tradays/tradays.apk?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon ark" data-fz-event="Tradays+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/fe67645e20910571.png)">Scan to get Android APK file</div></a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer__networks">
+          <a href="https://www.facebook.com/mql5.community/" target="_blank" rel="nofollow" title="Facebook"><i class="icons-networks icons-networks_fb"></i></a>
+          <a href="https://t.me/mql5dev" target="_blank" rel="nofollow" title="Telegram"><i class="icons-networks icons-networks_tg"></i></a>
+          <a href="https://x.com/mql5com" target="_blank" rel="nofollow" title="X (Twitter)"><i class="icons-networks icons-networks_tw"></i></a>
+          <a href="https://www.youtube.com/@MetaQuotesOfficial" target="_blank" rel="nofollow" title="YouTube"><i class="icons-networks icons-networks_yt"></i></a>
+          <a href="https://www.linkedin.com/company/mql5" target="_blank" rel="nofollow" title="LinkedIn"><i class="icons-networks icons-networks_linkedin"></i></a>
+          <span>Subscribe to algotrading news</span>
+        </div>
+  
+        <div class="footer__other">
+          <div class="footer__not-a-broker">Not a broker, no real trading accounts</div>
+          <div class="copyright">35 Dodekanisou str, Germasogeia, 4043,&nbsp;Limassol,&nbsp;Cyprus</div>
+          <div class="copyright">Copyright 2000-2026, <span class="nobr">MetaQuotes Ltd</span></div>
+        </div>
+      </li>
+  </ul>
+</footer>
+
+
+  <div class="shadow-layer" id="layer"></div>
+      
+  
+  <script>
+    mqGlobal.AddOnReady(function () { Mql5Cookie.init('mql5.com','5167976101445582711'); });
+    mqGlobal.AddOnReady(function(){if(!window.Pocket){window.Pocket=new PocketManager();}});mqGlobal.AddOnReady(function(){if(!window.translateManager){window.translateManager=new Translate(undefined,'Error: failed to translate. Please try again later.');}if(document.querySelectorAll){var translateElements=document.querySelectorAll(".translateMenu");if(translateElements){var i=0,count=translateElements.length;for(i;i<count;i++){(function(i){var contentid=dataset(translateElements[i],"contentid"),sourcelang=dataset(translateElements[i],"sourcelang"),targetlang=dataset(translateElements[i],"targetlang"),moduleid=parseInt(dataset(translateElements[i],"moduleid")),typeid=parseInt(dataset(translateElements[i],"typeid")),entityid=parseInt(dataset(translateElements[i],"entityid"));Core.AddHandler(translateElements[i],"mouseover",function(){return translateManager.SetMenu(this,contentid,sourcelang,targetlang,moduleid,typeid,entityid);});})(i);}}}});window.fz("show","wdausxxqrpvhekbwjrjlhqjghyhesrqqau");window.mqGlobal.AddOnLoad(function(){window.fpush('MQL5+Article+Open');Articles.CheckOnScrollDown();});mqGlobal.AddOnReady(function(){window.PopupRegisterquickRegistration=new QuickRegistration('PopupRegister','Popup+Register','Articles');});function validate_username(input){var reg=/^([a-z0-9]){1}([\-._a-z0-9]){1,30}([\-_a-z0-9]){1}$/i,value=input.value,result=true;if(reg.test(value)){result=true;}else{result=false;window.fpush({name:'MQL5+Popup+Register+Invalid+Login',unit:'section',value:'Articles'});}return result;}function validate_email(input){var reg=/^\w+([-+.'']{1,2}\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/i,value=input.value,result=true,length_value=value.length;if(reg.test(value)&&length_value>=1&&length_value<=40){result=true;}else{result=false;window.fpush({name:'MQL5+Popup+Register+Invalid+Email',unit:'section',value:'Articles'});}return result;};mqGlobal.AddOnReady(function(){var username=$('PopupRegisterusername'),email=$('PopupRegisteremail');if(username)username.value='';if(email)email.value='';});mqGlobal.AddOnReady(function(){window.quickLogin=new QuickLogin('Popup+Login','Articles');});mqGlobal.AddOnLoad(function(){window.showLoginRegisterPopupAtEnd();});mqGlobal.AddOnLoad(function(){window.tooltipUserInfo.init();});window.fz("show","bfogggabsofabcpxuzmgaibarmaxasdrj");window.fz("show","vgckrufggwxdtfscpyalmenexmvhljduja");mqGlobal.AddOnReady(function(){window.floatVerticalPanelNode=FloatVerticalPanel('This website uses cookies. Learn more about our <a href="/en/about/cookies">Cookies Policy</a>.','cookie_accept');});mqGlobal.AddOnReady(function(){window.initAddCopyButtonsToCodes('Copy to Clipboard');});
+    if (typeof Attach !== "undefined")
+      Attach.setAcceptFilter(".mq4,.jpeg,.webp,.gif,.mqproj,.txt,.log,.set,.mqh,.sqlite,.ex5,.mp4,.onnx,.webm,.png,.mq5,.ipynb,.mt5,.ex4,.jpg,.py,.csv,.ini,.zip,.tpl,.md,.cl");
+  </script>
+  <div class="b-fixed-mt" id="bFixedMt" style="display: none;">
+    
+  </div>
+  <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "url": "https://www.mql5.com",
+        "logo": "https://c.mql5.com/i/community/logo_mql5-2.png",
+        "sameAs": [
+          "https://www.facebook.com/mql5.community",
+          "https://www.x.com/mql5com",
+          "https://www.youtube.com/user/MetaQuotesOfficial"
+        ]
+      }
+       , 
+{"@context":"https://schema.org","@type":"ItemList","itemListElement":[{"@type":"SiteNavigationElement","position":1,"name":"Forum","description":"Discussions of trading strategies and algorithmic trading. MQL5.community  the largest forex forum","url":"https://www.mql5.com/en/forum","children":[]},{"@type":"SiteNavigationElement","position":2,"name":"Market","description":"MetaTrader Market - a Market of trading robots, indicators, trading books and magazines","url":"https://www.mql5.com/en/market","children":[]},{"@type":"SiteNavigationElement","position":3,"name":"Signals","description":"Social trading, copy trading and account monitoring with MetaTrader - Trading Signals on MQL5.com","url":"https://www.mql5.com/en/signals","children":[]},{"@type":"SiteNavigationElement","position":4,"name":"Freelance","description":"Order trading robots, technical indicators and algorithmic trading applications. Forex jobs. Freelance on MQL5.com. Hire MetaTrader experts and specialists","url":"https://www.mql5.com/en/job","children":[]},{"@type":"SiteNavigationElement","position":5,"name":"Quotes","description":"","url":"https://www.mql5.com/en/quotes/overview","children":[]},{"@type":"SiteNavigationElement","position":6,"name":"MetaTrader","description":"","url":"https://www.metatrader.com","children":[]},{"@type":"SiteNavigationElement","position":7,"name":"WebTerminal","description":"WebTerminal for the MetaTrader trading platform. Online forex trading.","url":"https://web.metatrader.app/terminal?mode=demo","children":[]},{"@type":"SiteNavigationElement","position":8,"name":"Calendar","description":"","url":"https://www.mql5.com/en/economic-calendar","children":[]},{"@type":"SiteNavigationElement","position":9,"name":"VPS","description":"","url":"https://www.mql5.com/en/vps","children":[]},{"@type":"SiteNavigationElement","position":10,"name":"Articles","description":"","url":"https://www.mql5.com/en/articles","children":[]},{"@type":"SiteNavigationElement","position":11,"name":"CodeBase","description":"Download trading robots, technical indicators and scripts with source code - MQL5 Code Base for MetaTrader 5","url":"https://www.mql5.com/en/code","children":[]},{"@type":"SiteNavigationElement","position":12,"name":"Algo Forge","description":"","url":"https://forge.mql5.io","children":[]},{"@type":"SiteNavigationElement","position":13,"name":"Documentation","description":"MetaQuotes Language 5 (MQL5) Reference - Documentation on MQL5.com","url":"https://www.mql5.com/en/docs","children":[]}]}    
+,
+{"@context":"https://schema.org","@type":"TechArticle","mainEntityOfPage":{"@type":"WebPage","@id":"https://www.mql5.com/en/articles/22674"},"headline":"How to Build a 29-Pair Portfolio with an L1 Filter and VaR-based Allocation of Lots","image":["https://c.mql5.com/2/215/01_equity_drawdown.png","https://c.mql5.com/2/215/02_var_allocation.png","https://c.mql5.com/2/215/03_symbol_returns.png"],"datePublished":"2026-11-05T13:15:34+00:00Z","dateModified":"2026-11-05T13:14:11+00:00Z","author":{"@type":"Person","name":"Yevgeniy Koshtenko","url":"https://www.mql5.com/en/users/koshtenko"},"editor":{"@type":"Organization","name":"MetaQuotes","url":"https://www.mql5.com/en/users/metaquotes","address":{"@type":"PostalAddress","addressCountry":"CY"}},"publisher":{"@type":"Organization","name":"MQL5 Community","url":"https://www.mql5.com","logo":{"@type":"ImageObject","url":"https://c.mql5.com/i/community/logo_mql5-2.png"}},"description":"The article explores the practical application of the L1 Trend Filter for noise reduction and the construction of structural features suitable for live trading. The full workflow is presented: H1 data for 29 instruments from MetaTrader 5, causal filtering, CatBoost with a horizon of three L1 bars, rigorous walk-forward testing, and VaR-based allocation of lots. The reader is provided with a reproducible code pipeline and a portfolio evaluation methodology."}
+,
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"item":"https://www.mql5.com/en/articles","name":"Articles"},{"@type":"ListItem","position":2,"item":"https://www.mql5.com/en/articles/mt5","name":"MetaTrader 5"},{"@type":"ListItem","position":3,"item":"https://www.mql5.com/en/articles/mt5/trading_systems","name":"Trading systems"}]}
+
+    ]
+  </script>
+
+
+<div class="float-vertical-panel">This website uses cookies. Learn more about our <a href="/en/about/cookies">Cookies Policy</a>.<span class="float-vertical-panel__cross"></span></div></body></html>

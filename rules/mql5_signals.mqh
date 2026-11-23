@@ -3,21 +3,6 @@
 #property strict
 
 bool check_edge_signal() {
-   // Signal #1 — RSI + Volume Mean-Reversion Edge (2023)
-   // URL: https://mql5.com/en/articles/12345
-   // Logic: RSI(14) < 30 AND RSI(14) > RSI(14)[1] AND volume > SMA(volume, 20)...
-   // Pairs: [EURUSD, GBPUSD] | TF: [H1, H4]
-   // TODO: Implement actual logic here (e.g., indicator checks)
-   // → This is a template. Replace with real C++/MQL5 code.
-   if (true) {
-   // Signal #2 — ATR-Based Volatility Filter (2022)
-   // URL: https://mql5.com/en/articles/67890
-   // Logic: ATR(14) > 1.5 * ATR(14)[5] AND close > open AND close > SMA(close, 50)...
-   // Pairs: [USDJPY] | TF: [D1]
-   // TODO: Implement actual logic here (e.g., indicator checks)
-   // → This is a template. Replace with real C++/MQL5 code.
-   } else if (true) {
-   } else {
-      return false;
-   }
+   // ⚠️  No valid signals loaded. Always returns false.
+   return false;
 }
