@@ -103,3 +103,7 @@
 2026-11-24 11:41:15 [JURY] REJECT: Active Learning: An EA That Only Asks for Human Confirmation on Its Most Uncertain Trades
 2026-11-24 11:42:16 [JURY] PASS: Hedge (Multiplicative Weights): Blending a Handful of Simple Trading Rules Online
 2026-11-24 11:42:22 [JURY] обработано: 5
+2026-11-24 16:20:56 [JURY] в очереди: 42
+2026-11-24 16:21:13 [JURY] REJECT: Untitled
+2026-11-24 16:21:49 [JURY] REJECT: Neural Networks in Trading: Robust Trading Signals in Any Market Regime (Conclusion)
+2026-11-24 16:21:55 [JURY] обработано: 2
