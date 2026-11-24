@@ -151,3 +151,9 @@
 2026-11-24 17:11:01 [JURY] REJECT: Confident Learning: Finding Mislabeled Trades Before They Poison Your Classifier
 2026-11-24 17:11:31 [JURY] REJECT: Per-Setup Trade Ledger in MQL5: Find Out Which of Your EA's Entries Is Losing Money
 2026-11-24 17:11:37 [JURY] обработано: 40
+2026-11-24 17:36:21 [JURY] убрано повторов в passed_edges.jsonl: 1
+2026-11-24 17:36:22 [JURY] в очереди: 4
+2026-11-24 17:36:48 [JURY] REJECT: Artificial Searching Swarm Algorithm (ASSA)
+2026-11-24 17:37:08 [JURY] REJECT: Random Matrix Theory: Denoising the Correlation Matrix for Multi-Symbol EAs
+2026-11-24 17:37:37 [JURY] REJECT: Building a Neural Loss-Pattern Auditor in MQL5
+2026-11-24 17:37:43 [JURY] обработано: 3

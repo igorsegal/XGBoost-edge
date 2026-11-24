@@ -139,3 +139,6 @@ https://www.mql5.com/en/articles/24449
 https://www.mql5.com/en/articles/24480
 https://www.mql5.com/en/articles/24460
 https://www.mql5.com/en/articles/19494
+https://www.mql5.com/en/articles/21671
+https://www.mql5.com/en/articles/24309
+https://www.mql5.com/en/articles/24243
