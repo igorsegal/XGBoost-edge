@@ -78,3 +78,9 @@ https://www.mql5.com/en/articles/19564	no_test_results	Neural Networks in Tradin
 https://www.mql5.com/en/articles/23821	martingale_grid	Self-Exciting Markets: Building a Hawkes Process from Scratch
 https://www.mql5.com/en/articles/19538	no_test_results	Neural Networks in Trading: A Unified View of Space and Time (Global-Local Attention)
 https://www.mql5.com/en/articles/21727	martingale_grid	Competitive Swarm Optimizer (CSO)
+https://www.mql5.com/en/articles/20584	no_test_results	Neural Networks in Trading: Mesh Approximation of Event Streams as a Tool for Analyzing Price Patterns (EEMFlow)
+https://www.mql5.com/en/articles/25093	no_test_results	Change Point Detection for Financial Time Series in MQL5
+https://www.mql5.com/en/articles/20559	no_test_results	Neural Networks in Trading: Bidirectional Adaptive Temporal Correlation (Conclusion)
+https://www.mql5.com/en/articles/20477	no_test_results	Neural Networks in Trading: A Spatio-Temporal State Model for Financial Data Analysis (Conclusion)	len=3506 edge=8 proof=0 test=1 grid=0
+https://www.mql5.com/en/articles/13942	no_trading_logic	Neural Networks in Practice: A Question of Scale	len=34361 edge=1 proof=0 test=1 grid=0
+https://www.mql5.com/en/articles/23172	title:files	MLP (Multilayer Perceptron) Inside an MQL5 Expert Advisor: Training on Historical Data Without Python or Weight Files	len=28791 edge=105 proof=20 test=7 grid=0

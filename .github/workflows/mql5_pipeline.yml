@@ -1,7 +1,5 @@
-﻿name: AHexaTrader MQL5 Edge Miner
+name: AHexaTrader MQL5 Edge Miner (старый, только вручную)
 on:
-  schedule:
-    - cron: '0 2,10,18 * * *'
   workflow_dispatch:
 permissions:
   contents: write

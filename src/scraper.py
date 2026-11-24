@@ -13,9 +13,10 @@ TARGET_SECTIONS = [
     "https://www.mql5.com/en/articles/mt5/trading_systems",
     "https://www.mql5.com/en/articles",
 ]
-SEEN_URLS_PATH = "data/seen_urls.txt"
-CURSOR_PATH = "data/cursor.json"
-BATCH_LIMIT = 15
+DATA_DIR = os.getenv("XGB_DATA", "data")  # тестовый режим: XGB_DATA=data_test
+SEEN_URLS_PATH = os.path.join(DATA_DIR, "seen_urls.txt")
+CURSOR_PATH = os.path.join(DATA_DIR, "cursor.json")
+BATCH_LIMIT = int(os.getenv("XGB_BATCH", "15"))  # тест: XGB_BATCH=5
 CUTOFF_YEAR = 2018
 def load_seen_urls() -> Set[str]:
     if not os.path.exists(SEEN_URLS_PATH):
@@ -41,24 +42,36 @@ def save_cursor(cursor: Dict) -> None:
     with open(CURSOR_PATH, "w", encoding="utf-8") as f:
         json.dump(cursor, f, indent=2)
 def polite_sleep(step_count: int) -> None:
-    delay = random.uniform(5.0, 11.0)
-    if step_count > 0 and step_count % 8 == 0:
-        delay += 12.0
-    time.sleep(delay)
+    time.sleep(random.uniform(5.0, 15.0))  # случайная пауза 5-15 с между любыми двумя запросами
+
+
+BLOCK_PAUSE_SEC = 12 * 3600  # после блокировки сайта следующий запуск не обращается к сайту 12 часов
+ROBOT_MARKERS = ("Just a moment", "cf-browser-verification", "/cdn-cgi/challenge", "challenge-platform",
+                 "Attention Required! | Cloudflare", "Checking your browser", "Verify you are human")
+
+
+def is_robot_page(html: str) -> bool:
+    """Страница проверки на робота (Cloudflare и подобные): короткая страница с характерными признаками."""
+    return len(html) < 60000 and any(m in html for m in ROBOT_MARKERS)
+
+
 def fetch_html_browser(page, url: str) -> Optional[str]:
+    """Текст страницы; "BLOCKED" при ответе 403/429/503 или странице проверки на робота."""
     try:
         resp = page.goto(url, wait_until="domcontentloaded", timeout=35000)
         if not resp:
             return None
         if resp.status in (403, 429, 503):
-            page.wait_for_timeout(7000)
-            html = page.content()
-            if "Just a moment" in html or resp.status in (403, 429, 503):
-                return "BLOCKED"
+            return "BLOCKED"
         page.wait_for_timeout(1500)
-        return page.content()
+        html = page.content()
+        if is_robot_page(html):
+            return "BLOCKED"
+        return html
     except Exception:
         return None
+
+
 def extract_article_links(list_html: str) -> List[str]:
     soup = BeautifulSoup(list_html, "lxml")
     links: List[str] = []
@@ -126,7 +139,7 @@ def parse_article_page(html: str, url: str) -> Optional[Dict]:
     }
 
 
-DEBUG_DIR = "data/debug"
+DEBUG_DIR = os.path.join(DATA_DIR, "debug")
 
 
 def _debug_dump(link: str, html: str, n: int) -> None:
@@ -144,9 +157,15 @@ def collect_batch() -> Tuple[List[Dict], Dict]:
     seen_urls = load_seen_urls()
     cursor = load_cursor()
     next_cursor = dict(cursor)
+    blocked_at = int(cursor.get("blocked_utc") or 0)
+    if blocked_at and time.time() - blocked_at < BLOCK_PAUSE_SEC:
+        print(f"[BLOCKED] сайт блокировал прошлый запуск ({time.strftime('%Y-%m-%d %H:%M', time.gmtime(blocked_at))} UTC): "
+              "сбор пропущен, суд работает по очереди")
+        return [], next_cursor
+    next_cursor.pop("blocked_utc", None)
     collected: List[Dict] = []
     request_counter = 0
-    consecutive_blocks = 0
+    blocked = False
     dumped = 0
     with sync_playwright() as p:
         executable = "/usr/bin/google-chrome" if os.path.exists("/usr/bin/google-chrome") else None
@@ -170,7 +189,7 @@ def collect_batch() -> Tuple[List[Dict], Dict]:
             while (
                 len(collected) < BATCH_LIMIT
                 and not next_cursor.get("backfill_completed", False)
-                and consecutive_blocks < 3
+                and not blocked
             ):
                 sec_idx = next_cursor["section_idx"]
                 if sec_idx >= len(TARGET_SECTIONS):
@@ -184,8 +203,8 @@ def collect_batch() -> Tuple[List[Dict], Dict]:
                 page_html = fetch_html_browser(page, page_url)
                 request_counter += 1
                 if page_html == "BLOCKED":
-                    consecutive_blocks += 1
-                    print(f"[BLOCKED] {page_url}")
+                    blocked = True
+                    print(f"[BLOCKED] {page_url}: остановка сбора")
                     break
                 if not page_html:
                     next_cursor["section_idx"] = sec_idx + 1
@@ -198,7 +217,7 @@ def collect_batch() -> Tuple[List[Dict], Dict]:
                     continue
                 reached_cutoff = False
                 for link in links:
-                    if len(collected) >= BATCH_LIMIT or consecutive_blocks >= 3:
+                    if len(collected) >= BATCH_LIMIT or blocked:
                         break
                     if link in seen_urls:
                         continue
@@ -206,12 +225,11 @@ def collect_batch() -> Tuple[List[Dict], Dict]:
                     article_html = fetch_html_browser(page, link)
                     request_counter += 1
                     if article_html == "BLOCKED":
-                        consecutive_blocks += 1
-                        time.sleep(15)
-                        continue
+                        blocked = True
+                        print(f"[BLOCKED] {link}: остановка сбора")
+                        break
                     if not article_html:
                         continue
-                    consecutive_blocks = 0
                     _debug_dump(link, article_html, dumped)
                     dumped += 1
                     parsed = parse_article_page(article_html, link)
@@ -227,8 +245,10 @@ def collect_batch() -> Tuple[List[Dict], Dict]:
                 if reached_cutoff:
                     next_cursor["section_idx"] = sec_idx + 1
                     next_cursor["backfill_page"] = 1
-                elif len(collected) < BATCH_LIMIT and consecutive_blocks < 3:
+                elif len(collected) < BATCH_LIMIT and not blocked:
                     next_cursor["backfill_page"] = page_num + 1
         finally:
             browser.close()
+    if blocked:
+        next_cursor["blocked_utc"] = int(time.time())
     return collected, next_cursor
