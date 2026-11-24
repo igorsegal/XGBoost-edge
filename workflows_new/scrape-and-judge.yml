@@ -52,7 +52,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A -- data ':!data/cache' ':!data/debug'
+          git add -A -- data ':!data/cache'
           if git diff --cached --quiet; then echo "нечего сохранять"; exit 0; fi
           git commit -m "chore(data): scan update [skip ci]"
           for i in 1 2 3; do git pull --rebase && git push && exit 0; sleep 10; done
