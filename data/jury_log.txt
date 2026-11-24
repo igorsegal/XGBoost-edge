@@ -107,3 +107,47 @@
 2026-11-24 16:21:13 [JURY] REJECT: Untitled
 2026-11-24 16:21:49 [JURY] REJECT: Neural Networks in Trading: Robust Trading Signals in Any Market Regime (Conclusion)
 2026-11-24 16:21:55 [JURY] обработано: 2
+2026-11-24 16:45:53 [JURY] в очереди: 41
+2026-11-24 16:46:17 [JURY] REJECT: Neural Networks in Trading: A Unified View of Space and Time (Extralonger)
+2026-11-24 16:46:58 [JURY] REJECT: Neural Networks in Trading: Training Deep Spiking Models (Conclusion)
+2026-11-24 16:47:38 [JURY] REJECT: Neural Networks in Trading: A Spike-Semantic Approach to Spatiotemporal Identification (Conclusion)
+2026-11-24 16:48:11 [JURY] REJECT: Neural Networks in Trading: Iterative Forecast Refinement Models (Conclusion)
+2026-11-24 16:48:43 [JURY] REJECT: Neural Networks in Trading: Temporal Motion Aggregation (Conclusion)
+2026-11-24 16:49:17 [JURY] REJECT: Neural Networks in Trading: Recurrent Modeling of Market Micromovements (Conclusion)
+2026-11-24 16:49:48 [JURY] REJECT: Untitled
+2026-11-24 16:50:23 [JURY] REJECT: Untitled
+2026-11-24 16:50:59 [JURY] REJECT: Architecture for Collective Trading Decisions by AI Agents
+2026-11-24 16:51:42 [JURY] битый JSON от роли prosecutor, повторяю один раз
+2026-11-24 16:52:11 [JURY] REJECT: Creating and Testing a Council of 15 Models in MetaTrader 5
+2026-11-24 16:52:55 [JURY] REJECT: How to Implement Competition Among LLM Agents in MetaTrader 5
+2026-11-24 16:53:36 [JURY] REJECT: Evolutionary Selection of LLM Agents in MetaTrader 5
+2026-11-24 16:54:12 [JURY] REJECT: Implementing an LLM Agent with SQL Memory in MetaTrader 5
+2026-11-24 16:54:54 [JURY] REJECT: Nonlinear OHLC Features Derived from Elliptic Curves
+2026-11-24 16:55:28 [JURY] REJECT: From Signal to Trade via a Chain of Agents: LangChain Architecture on Top of MQL5
+2026-11-24 16:56:09 [JURY] REJECT: How to Set Up an AI Hedge Fund in MetaTrader 5
+2026-11-24 16:56:47 [JURY] REJECT: How to Implement Metaprompting for Trading Signals in an MQL5 Expert Advisor
+2026-11-24 16:57:20 [JURY] REJECT: How to Implement R/S Analysis and the Hurst Indicator in MQL5
+2026-11-24 16:57:47 [JURY] REJECT: Untitled
+2026-11-24 16:58:19 [JURY] REJECT: Time Series Shapelets: Learning a Price Shape, and Testing Whether It Means Anything
+2026-11-24 16:58:57 [JURY] REJECT: Certified Robustness Radius: Knowing How Much Noise Your ONNX Trading Model Can Survive
+2026-11-24 16:59:39 [JURY] REJECT: Variational Mode Decomposition: Building the Solver, and Measuring What Hindsight Buys
+2026-11-24 17:00:28 [JURY] REJECT: Diebold-Mariano Testing in MQL5: Validating Predictive Edge Across Instruments and Models
+2026-11-24 17:01:02 [JURY] REJECT: Feature Neutralization in MQL5: Orthogonalizing Trading Signals Against Confound Factors
+2026-11-24 17:01:39 [JURY] REJECT: Ollivier-Ricci Curvature: Reading the Shape of a Correlation Network, Not Its Level
+2026-11-24 17:02:23 [JURY] REJECT: Foundation Models for Trading (Part III): Running a Generative AI Forecaster Inside MetaTrader 5
+2026-11-24 17:03:10 [JURY] REJECT: Machine Learning Under Constraint (Part 3): De-Risking Near the Profit Target and the News-Window Rule
+2026-11-24 17:03:46 [JURY] REJECT: Hyperdimensional Computing: Learning in One Integer Add, and the Nulls That Judge It
+2026-11-24 17:04:30 [JURY] REJECT: Online Portfolio Selection: A Provable Regret Bound, and the Cost That Eats It
+2026-11-24 17:04:59 [JURY] REJECT: Forecast Reconciliation (MinT): One Engine for Timeframe Hierarchies and Currency Graphs
+2026-11-24 17:05:31 [JURY] REJECT: Wasserstein Distance for Live Feature-Drift Detection in MQL5: Monitoring ONNX Model Inputs with Optimal Transport
+2026-11-24 17:05:57 [JURY] REJECT: Hidden Semi-Markov Models for Duration-Aware Regime Detection in MQL5
+2026-11-24 17:06:38 [JURY] REJECT: Self-Optimizing Expert Advisors in MQL5 (Part 20): Causality Regularization With Time-Lagged Independent Components Analysis (3)
+2026-11-24 17:07:13 [JURY] REJECT: Rough Volatility: Building a Roughness Index Feature from the RFSV Model for ML Trade Filtering
+2026-11-24 17:07:59 [JURY] REJECT: Offline Reinforcement Learning in MQL5: Conservative Q-Learning from Historical Trade Logs Without Live Exploration
+2026-11-24 17:08:39 [JURY] REJECT: Behavioural Cloning in a Live Trading System: What Live Experience Can and Cannot Teach
+2026-11-24 17:09:14 [JURY] REJECT: Optimal Trade Exit in MQL5: Longstaff-Schwartz Least-Squares Monte Carlo for Continuation-Value Estimation
+2026-11-24 17:09:55 [JURY] битый JSON от роли prosecutor, повторяю один раз
+2026-11-24 17:10:23 [JURY] REJECT: Neural Additive Models for Fully Interpretable Signal Attribution in MQL5
+2026-11-24 17:11:01 [JURY] REJECT: Confident Learning: Finding Mislabeled Trades Before They Poison Your Classifier
+2026-11-24 17:11:31 [JURY] REJECT: Per-Setup Trade Ledger in MQL5: Find Out Which of Your EA's Entries Is Losing Money
+2026-11-24 17:11:37 [JURY] обработано: 40
