@@ -8,3 +8,4 @@ READY.txt
 data/debug/
 __pycache__/
 *.pyc
+data/cache/
