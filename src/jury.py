@@ -139,7 +139,42 @@ def _excerpt(t: str) -> str:
     return t if len(t) <= 90000 else t[:50000] + "\n...\n" + t[-40000:]
 
 
+def dedupe_passed() -> int:
+    """Убирает повторы строк одной статьи (по url) из passed_edges.jsonl. Возвращает число убранных."""
+    if not os.path.exists(PASSED_PATH):
+        return 0
+    seen, keep, removed = set(), [], 0
+    with open(PASSED_PATH, encoding="utf-8") as fh:
+        for line in fh:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                u = json.loads(line).get("url")
+            except ValueError:
+                keep.append(line)
+                continue
+            if u in seen:
+                removed += 1
+                continue
+            seen.add(u)
+            keep.append(line)
+    if removed:
+        with open(PASSED_PATH, "w", encoding="utf-8") as fh:
+            fh.write("\n".join(keep) + "\n")
+        _log(f"[JURY] убрано повторов в passed_edges.jsonl: {removed}")
+    return removed
+
+
+def _already_passed(url: str) -> bool:
+    if not os.path.exists(PASSED_PATH):
+        return False
+    with open(PASSED_PATH, encoding="utf-8") as fh:
+        return any(f'"url": "{url}"' in line for line in fh)
+
+
 def run_pending() -> None:
+    dedupe_passed()
     files = sorted(glob.glob(os.path.join(CAND_DIR, "*.json")))
     pending = []
     for f in files:
@@ -174,7 +209,7 @@ def run_pending() -> None:
             d["jury"] = {"advocate": adv, "prosecutor": pro, "judge": ver}
             with open(f, "w", encoding="utf-8") as fh:
                 json.dump(d, fh, ensure_ascii=False)
-            if verdict == "PASS":
+            if verdict == "PASS" and not _already_passed(d["url"]):
                 with open(PASSED_PATH, "a", encoding="utf-8") as fh:
                     fh.write(json.dumps({"url": d["url"], "title": d["title"],
                                          "published_year": d.get("published_year"), **ver},

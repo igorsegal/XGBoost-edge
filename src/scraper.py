@@ -100,15 +100,33 @@ def _find_year(html: str, soup) -> Optional[int]:
     return None
 
 
+def _clean_title(t: str) -> str:
+    t = re.sub(r"\s+", " ", t or "").strip()
+    for suffix in (" - MQL5 Articles", " - MQL5", " | MQL5 Articles"):
+        if t.endswith(suffix):
+            t = t[: -len(suffix)].strip()
+    return t
+
+
 def _find_title(soup) -> str:
-    og = soup.find("meta", property="og:title")
-    if og and og.get("content"):
-        return og["content"].strip()
-    h1 = soup.find("h1")
-    if h1 and h1.get_text(strip=True):
-        return h1.get_text(strip=True)
-    if soup.title and soup.title.get_text(strip=True):
-        return soup.title.get_text(strip=True).split(" - ")[0]
+    """Заголовок: несколько запасных способов, 'Untitled' только если нет ни одного."""
+    for attrs in ({"property": "og:title"}, {"name": "twitter:title"}, {"name": "title"}):
+        m = soup.find("meta", attrs=attrs)
+        if m and _clean_title(m.get("content")):
+            return _clean_title(m.get("content"))
+    for sc in soup.find_all("script", type="application/ld+json"):
+        mm = re.search(r'"headline"\s*:\s*"((?:[^"\\]|\\.)+)"', sc.string or sc.get_text() or "")
+        if mm and _clean_title(mm.group(1)):
+            return _clean_title(mm.group(1).replace('\\"', '"'))
+    for tag in ("h1",):
+        h = soup.find(tag)
+        if h and _clean_title(h.get_text(" ", strip=True)):
+            return _clean_title(h.get_text(" ", strip=True))
+    if soup.title and _clean_title(soup.title.get_text()):
+        return _clean_title(soup.title.get_text())
+    h2 = soup.find("h2")
+    if h2 and _clean_title(h2.get_text(" ", strip=True)):
+        return _clean_title(h2.get_text(" ", strip=True))
     return "Untitled"
 
 
@@ -126,6 +144,8 @@ def parse_article_page(html: str, url: str) -> Optional[Dict]:
     soup = BeautifulSoup(html, "lxml")
     pub_year = _find_year(html, soup)
     title = _find_title(soup)
+    if title == "Untitled":
+        print(f"  [ВНИМАНИЕ] нет заголовка у {url}")
     for tag in soup(["script", "style", "nav", "footer"]):
         tag.decompose()
     raw_text = _find_body(soup)
