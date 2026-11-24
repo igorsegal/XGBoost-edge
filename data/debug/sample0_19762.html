@@ -1,0 +1,1360 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="x-dns-prefetch-control" content="on">
+  <link rel="dns-prefetch" href="https://c.mql5.com">
+  <meta name="robots" content="max-snippet:250,max-image-preview:large">
+  <meta name="description" content="We present to the reader an implementation of the SpikingBrain framework’s approaches based on recurrent linear attention with gates, discussed in detail in this article. Forward pass, gradient propagation, and weight update algorithms ensure efficient processing of financial time series and enable the practical implementation of the framework’s key concepts.">
+  <meta property="og:url" content="https://www.mql5.com/en/articles/19762">
+  <meta property="og:title" content="Neural Networks in Trading: From Transformers to Spiking Neurons (Key Components)">
+  <meta property="og:description" content="We present to the reader an implementation of the SpikingBrain framework’s approaches based on recurrent linear attention with gates, discussed in detail in this article. Forward pass, gradient propagation, and weight update algorithms ensure efficient processing of financial time series and enable the practical implementation of the framework’s key concepts.">
+  <meta property="og:image" content="https://c.mql5.com/2/172/19762-neyroseti-v-treydinge-ot-transformerov-k-spaykovim-neyronam_1200x628.jpg">
+  <meta property="og:image:secure_url" content="https://c.mql5.com/2/172/19762-neyroseti-v-treydinge-ot-transformerov-k-spaykovim-neyronam_1200x628.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:type" content="article">
+  <meta property="article:published_time" content="2026-10-08T10:05:52.0000000Z">
+  <meta property="article:author" content="https://www.mql5.com/en/users/dng">
+  <meta property="article:section" content="MetaTrader 5">
+  <meta property="article:tag" content="Trading systems">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@mql5com">
+  <meta name="twitter:image" content="https://c.mql5.com/2/172/19762-neyroseti-v-treydinge-ot-transformerov-k-spaykovim-neyronam_1200x628.jpg">
+  <meta name="theme-color" content="#4a76b8">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="https://www.mql5.com/manifest.json">
+  <link rel="apple-touch-icon" sizes="57x57" href="https://www.mql5.com/apple-touch-icon-57x57.png">
+  <link rel="apple-touch-icon" sizes="76x76" href="https://www.mql5.com/apple-touch-icon-76x76.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="https://www.mql5.com/apple-touch-icon-120x120.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="https://www.mql5.com/apple-touch-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="https://www.mql5.com/apple-touch-icon-167x167.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://www.mql5.com/apple-touch-icon-180x180.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="https://www.mql5.com/apple-touch-icon-192x192.png">
+  <link rel="icon" sizes="192x192" href="https://www.mql5.com/android-touch-icon-192x192.png">
+  <link rel="icon" sizes="128x128" href="https://www.mql5.com/android-touch-icon-128x128.png">
+  <link rel="shortcut icon" href="https://c.mql5.com/i/favicon4.ico">
+  <link rel="describedby" href="https://www.mql5.com/llms.txt" type="text/markdown">
+  <meta name="msapplication-config" content="none">
+  <meta name="referrer" content="no-referrer-when-downgrade">
+  <meta property="qc:admins" content="36367170677651456375">
+  <meta property="wb:webmaster" content="073d7690269bcd81">
+  <link href="https://c.mql5.com/styles/core.014c88f485403b7cba7e3a47af5df221.css" type="text/css" rel="stylesheet" media="all">
+  <link href="https://c.mql5.com/styles/all.a5418197f583e92c77667d6e88d3bfa3.css" type="text/css" rel="stylesheet" media="all">
+  <link href="https://c.mql5.com/styles/articles.aa7cb07010062a9d4f26dbad7eb36197.css" type="text/css" rel="stylesheet" media="all">
+  <link href="/en/articles/rss" rel="alternate" type="application/rss+xml" title="Articles on the development and application of MetaTrader 5 trading robots and technical indicators">
+  <link rel="canonical" href="https://www.mql5.com/en/articles/19762">
+  <link rel="alternate" hreflang="en" href="https://www.mql5.com/en/articles/19762">
+  <link rel="alternate" hreflang="ru" href="https://www.mql5.com/ru/articles/19762">
+  <link rel="alternate" hreflang="es" href="https://www.mql5.com/es/articles/19762">
+  <link rel="alternate" hreflang="pt" href="https://www.mql5.com/pt/articles/19762">
+  <title>Neural Networks in Trading: From Transformers to Spiking Neurons (Key Components) - MQL5 Articles</title>
+  <script async="" src="https://www.mql5.com/ff/rq?tz_offset=0&amp;ids=wdausxxqrpvhekbwjrjlhqjghyhesrqqau%2Cbfogggabsofabcpxuzmgaibarmaxasdrj%2Cvgckrufggwxdtfscpyalmenexmvhljduja&amp;ssn=1795513146765027454&amp;ssn_dr=11&amp;ssn_sr=0&amp;fv_date=1795513146&amp;ref=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F19762&amp;title=Neural%20Networks%20in%20Trading%3A%20From%20Transformers%20to%20Spiking%20Neurons%20(Key%20Components)%20-%20MQL5%20Articles&amp;scr_res=1366x768&amp;ac=179551315724935248&amp;fz_uniq=5073715639611346232&amp;sv=2552"></script><script async="" defer="" src="/ff/core.js"></script><script>
+    (function(a,e,f,g,b,c,d){a[b]||(a.FintezaCoreObject=b,a[b]=a[b]||function(){(a[b].q=a[b].q||[]).push(arguments)},a[b].l=1*new Date,c=e.createElement(f),d=e.getElementsByTagName(f)[0],c.async=!0,c.defer=!0,c.src=g,d&&d.parentNode&&d.parentNode.insertBefore(c,d))})
+      (window, document, "script", "/ff/core.js", "fz");
+    window.fz("register", "website", {id: "sqjxkxkswybhifrohpyooonwgbvsfzmayq",trackLinks: true,sendEventsByBeacon: true,});
+  </script>
+  <script>
+    !function(){window.mqGlobal={};var t=!1,n=!1,e=[],o=[],i=[];function d(t){var n;for(n=0;n<t.length;n+=1)t[n]()}function c(){t||(t=!0,d(e),d(o),o=[],e=[])}function a(){c(),n||(n=!0,d(i),i=[])}if(mqGlobal.AddOnReady=function(n,i){t?n(document):i?e.push(n):o.push(n)},mqGlobal.AddOnLoad=function(t){n?t(document):i.push(t)},mqGlobal.AddOnActiveWindowChange=function(t){this._onvisibility||(this._onvisibility=[]),this._onvisibility[this._onvisibility.length]=t},document.addEventListener)document.addEventListener("DOMContentLoaded",c,!1),window.addEventListener("load",a,!1);else if(document.attachEvent&&(document.attachEvent("onreadystatechange",(function(){switch(document.readyState){case"interactive":c();break;case"complete":a()}})),window.attachEvent("onload",a),document.documentElement.doScroll&&window==window.top)){!function n(){if(!t&&document.body)try{document.documentElement.doScroll("left"),c()}catch(t){setTimeout(n,0)}}()}}();
+    mqGlobal.CookieDomain = ".mql5.com";
+    mqGlobal.Language = 'en';
+    mqGlobal.IsMobile = false;
+    mqGlobal.ClearRteStorage = function (e) { if (window.GStorage || (window.GStorage = globalStorage()), window.GStorage.supported) try { var o = e; window.GStorage.getItem("rte_autosave_uid", function (e, t) { t == o && (window.GStorage.removeItem("rte_autosave_text"), window.GStorage.removeItem("rte_autosave_date"), window.GStorage.removeItem("rte_autosave_uid")) }) } catch (e) { } };
+  </script>
+  
+  <script src="https://c.mql5.com/js/all.33b519888d8f16d7894ad5f6e870daa4.js" defer="defer"></script>
+  <script src="https://c.mql5.com/js/vendor.255ec4ae38267278c2823d8c90fea431.js" defer="defer"></script>
+  <script src="https://c.mql5.com/js/articles.c443d16c59e317d536ae7477d0c6f7e6.js" defer="defer"></script>
+<style id="c-nvz9zt">.s-suggestions.c-nvz9zt {position:absolute;left:0;right:0;top:100%;z-index:100;background:#fff;box-shadow:0 2px 6px rgba(0, 0, 0, 0.1);border-top:1px solid #dadada;}</style><style id="c-b8amxo">.copy-code-btn.c-b8amxo {background:#fbf9f5;padding:0;border:0;position:absolute;right:8px;top:8px;}
+@media (hover: hover) and (pointer: fine) {.copy-code-btn.c-b8amxo:hover {cursor:pointer;}.copy-code-btn.c-b8amxo:hover svg path {stroke:#707070;}
+}</style></head>
+<body class="cover" id="cover">
+    <header class="head">
+      <a href="https://www.mql5.com" class="head__logo" title="MQL5 - Language of trade strategies built-in the MetaTrader 5 client terminal" aria-label="MQL5 - Language of trade strategies built-in the MetaTrader 5 client terminal"></a>
+        <div class="head__content">
+<nav class="main-menu" id="mainmenu" aria-label="Sections">
+  <ul class="main-menu__top-level" id="menuTopLevel">
+      <li><a href="/en/forum" data-fz-event="MQL5+Menu+Forum">Forum</a></li>
+      <li><a href="/en/market" data-fz-event="MQL5+Menu+Market">Market</a></li>
+      <li><a href="/en/signals" data-fz-event="MQL5+Menu+Signals">Signals</a></li>
+      <li><a href="/en/job" data-fz-event="MQL5+Menu+Job">Freelance</a></li>
+      <li><a href="/en/vps" data-fz-event="MQL5+Menu+VPS">VPS</a></li>
+      <li><a href="/en/quotes/overview" data-fz-event="MQL5+Menu+Overview">Quotes</a></li>
+      <li><a href="https://www.metatrader.com" target="_blank" rel="noopener" data-fz-event="MQL5+Menu+MetaTrader">MetaTrader</a></li>
+        </ul>
+        <ul class="main-menu__second-level" id="menuSecondLevel">
+      <li class="main-menu__selected"><a href="/en/articles" data-fz-event="MQL5+Menu+Articles"> <img src="https://c.mql5.com/i/menu/icon-articles4.svg" alt="" width="16" height="16"> Articles</a></li>
+      <li><a href="/en/code" data-fz-event="MQL5+Menu+CodeBase"> <img src="https://c.mql5.com/i/menu/icon-code4.svg" alt="" width="16" height="16"> CodeBase</a></li>
+      <li><a href="https://forge.mql5.io/?lang=en" target="_blank" rel="noopener" data-fz-event="MQL5+Menu+AlgoForge"> <img src="https://c.mql5.com/i/menu/icon-algoforge4.svg" alt="" width="16" height="16"> Algo Forge</a></li>
+      <li><a href="/en/docs" data-fz-event="MQL5+Menu+Docs"> <img src="https://c.mql5.com/i/menu/icon-docs4.svg" alt="" width="16" height="16"> Documentation</a></li>
+      <li><a href="/en/book" data-fz-event="MQL5+Menu+Book"> <img src="https://c.mql5.com/i/menu/icon-book4.svg" alt="" width="16" height="16"> AlgoBook</a></li>
+      <li><a href="/en/neurobook" data-fz-event="MQL5+Menu+Neurobook"> <img src="https://c.mql5.com/i/menu/icon-neurobook4.svg" alt="" width="16" height="16"> NeuroBook</a></li>
+      <li><a href="/en/economic-calendar" data-fz-event="MQL5+Menu+Economic+Calendar"> <img src="https://c.mql5.com/i/menu/icon-economic-calendar4.svg" alt="" width="16" height="16"> Calendar</a></li>
+      <li><a href="https://web.metatrader.app/terminal?mode=demo&amp;lang=en" target="_blank" rel="nofollow noopener" data-fz-event="MQL5+Menu+Trading"> <img src="https://c.mql5.com/i/menu/icon-trading4.svg" alt="" width="16" height="16"> WebTerminal</a></li>
+      <li><a href="/en/tools" data-fz-event="MQL5+Menu+Tools"> <img src="https://c.mql5.com/i/menu/icon-tools4.svg" alt="" width="16" height="16"> Tools</a></li>
+
+
+    <li class="main-menu__mobile"><a href="/en/about">About</a></li>
+
+          <li class="main-menu__second-tools"><a rel="noopener" href="/en/vps" title="Reliable trader hosting for uninterrupted operation of robots and instant copying of trades" class="button-mt" data-vars-fz="Start+VPS+Trial+Submenu"><img width="18" height="18" src="https://c.mql5.com/i/sidebar/vpstrial2.svg" alt="" loading="lazy">Start VPS Trial</a></li>
+  </ul>
+</nav>
+<div class="main-menu__active">
+  <a id="mainMenuSelected" href="#">
+    <span class="main-menu__primary">Articles</span><span class="main-menu__secondary">Sections</span>
+  </a>
+</div>
+  <form action="https://www.mql5.com/en/search" onsubmit="return false;" autocomplete="off" id="headerSearchForm" class="header-search" method="post">
+    <button type="button" id="headerSearchButton" title="Search" aria-label="Search" class="header-search__button"></button>
+    <div class="header-search__input">
+      <input name="keyword" type="text" enterkeyhint="search" title="Enter search text" placeholder="Search" id="headerSearchKeyword" autocomplete="off">
+      <label for="headerSearchKeyword" class="header-search__placeholder">Type <span>/</span> to search:  @user, $symbol, ...</label>
+      <button type="submit" id="headerSearchSubmit" aria-label="Search" class="header-search__submit"></button>
+    <!----></div>
+    <button type="button" id="headerSearchClean" title="Close" aria-label="Close" class="header-search__clean"></button>
+  </form>
+  <script>mqGlobal.AddOnReady(function(){window.initHeaderSearch('', 'https://www.mql5.com/en/search');});</script>
+  <script>mqGlobal.AddOnReady(function(){window.initSuggestions("headerSearchKeyword","en","https://search.mql5.com/api/query","https://www.mql5.com/en/users_search/suggestion");});</script>
+          <input class="blurHandler" id="mainMenuBlurHandler" type="checkbox">
+        </div>
+        <div class="head__toolbar" id="headerToolbar">
+<div class="container loginRegister">
+  <nav aria-label="Account">
+    <ul id="loginRegisterButtons">
+      <li><a class="login" title="Please sign in. OpenID supported" href="/en/auth_login" rel="nofollow" data-fz-event="MQL5+Menu+Siginin">Log in</a></li>
+      <li><a class="registration en" title="Please register" href="/en/auth_register" rel="nofollow" data-fz-event="MQL5+Menu+Register" onclick="window.fpush('MQL5+Button+Click');">Create an account</a></li>
+    </ul>
+  </nav>
+</div>
+          <div class="container">
+            <div class="toggle-button" id="sidebarToggleButton">
+              <i></i>
+            </div>
+          </div>
+
+          <div class="group-menu" id="groupMenu">
+            <div class="container lang-menu-container">
+              <div id="langMenuContainer" class="lang-menu">
+                <input class="blurHandler" id="langmenuBlurHandler" type="checkbox">
+                <nav aria-label="Language">
+                  <ul class="lang-menu__list" id="langmenu">
+  <li class="lang-menu__list-item lang-menu__list-item_selected"><a href="/en/articles" aria-label="English (English)"><i class="icons-languages icons-languages_en"></i><span>English</span></a></li>
+  <li class="lang-menu__list-item"><a href="/ru/articles" aria-label="Русский (Russian)"><i class="icons-languages icons-languages_ru"></i><span>Русский</span></a></li>
+  <li class="lang-menu__list-item"><a href="/zh/articles" aria-label="中文 (Chinese)"><i class="icons-languages icons-languages_zh"></i><span>中文</span></a></li>
+  <li class="lang-menu__list-item"><a href="/es/articles" aria-label="Español (Spanish)"><i class="icons-languages icons-languages_es"></i><span>Español</span></a></li>
+  <li class="lang-menu__list-item"><a href="/pt/articles" aria-label="Português (Portuguese)"><i class="icons-languages icons-languages_pt"></i><span>Português</span></a></li>
+  <li class="lang-menu__list-item"><a href="/ja/articles" aria-label="日本語 (Japanese)"><i class="icons-languages icons-languages_ja"></i><span>日本語</span></a></li>
+  <li class="lang-menu__list-item"><a href="/de/articles" aria-label="Deutsch (German)"><i class="icons-languages icons-languages_de"></i><span>Deutsch</span></a></li>
+  <li class="lang-menu__list-item"><a href="/ko/articles" aria-label="한국어 (Korean)"><i class="icons-languages icons-languages_ko"></i><span>한국어</span></a></li>
+  <li class="lang-menu__list-item"><a href="/fr/articles" aria-label="Français (French)"><i class="icons-languages icons-languages_fr"></i><span>Français</span></a></li>
+  <li class="lang-menu__list-item"><a href="/it/articles" aria-label="Italiano (Italian)"><i class="icons-languages icons-languages_it"></i><span>Italiano</span></a></li>
+  <li class="lang-menu__list-item"><a href="/tr/articles" aria-label="Türkçe (Turkish)"><i class="icons-languages icons-languages_tr"></i><span>Türkçe</span></a></li>
+                  </ul>
+                </nav>
+              </div>
+            </div>
+          </div>
+        </div>
+    </header>
+  <main class="site-main">
+<div id="bfogggabsofabcpxuzmgaibarmaxasdrj" class="rclnd1pm17phgt3ha ghky8ic0v"><iframe width="800" height="80" frameborder="0" style="vertical-align: top; max-width: 100% !important; display: block;" scrolling="no" src="https://www.mql5.com/ff/sh/sm4wqgxpy6553ggyp2/index.html?link=https%3A%2F%2Fwww.metatrader.com%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay%26utm_content%3Dvisit%26utm_campaign%3Dvisit.metatrader.com.426&amp;a=arztkvuejlwhtdiqmnplzyxxbcdvqyio&amp;s=d47bcfab6252db327a4605dd76e34a34f9ae856861c96abd7751bd37daae5b62&amp;v=1&amp;w=800&amp;h=80&amp;r=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F19762&amp;host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&amp;id=bfogggabsofabcpxuzmgaibarmaxasdrj&amp;fz_uniq=5073715639611346232&amp;custom="></iframe></div>    <div class="body" id="bodyContent">
+
+  <div id="left-sidebar-selector" class="left-sidebar__selector left-sidebar__selector_padding">
+    <div class="left-sidebar__title">
+MetaTrader 5 /     Trading systems
+    </div>
+    <i class="icons-ux icons-ux_arrow-down-black"></i>
+  </div>
+          <div class="articles-container block-with-sidebar">
+            <aside class="left-sidebar left-sidebar_270" id="left-sidebar">
+              
+
+    <ul class="tree-menu-ul">
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/examples">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/examples.svg" alt="" loading="lazy">
+            Examples
+          </a>
+            <ul class="tree-menu__list tree-menu__list_nested">
+                <li class="tree-menu__item">
+                  <a class="tree-menu__link" href="/en/articles/examples_indicators">
+                      <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/examples_indicators.svg" alt="" loading="lazy">
+                    Indicators
+                  </a>
+                </li>
+                <li class="tree-menu__item">
+                  <a class="tree-menu__link" href="/en/articles/examples_experts">
+                      <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/examples_experts.svg" alt="" loading="lazy">
+                    Experts
+                  </a>
+                </li>
+            </ul>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/strategy_tester">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/strategy_tester.svg" alt="" loading="lazy">
+            Tester
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/trading">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/trading.svg" alt="" loading="lazy">
+            Trading
+          </a>
+        </li>
+        <li class="tree-menu__item tree-menu__item_selected">
+          <a class="tree-menu__link" href="/en/articles/trading_systems">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/trading_systems.svg" alt="" loading="lazy">
+            Trading systems
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/integration">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/integration.svg" alt="" loading="lazy">
+            Integration
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/indicators">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/indicator.svg" alt="" loading="lazy">
+            Indicators
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/expert_advisors">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/expert.svg" alt="" loading="lazy">
+            Expert Advisors
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/statistics">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/statistics.svg" alt="" loading="lazy">
+            Statistics and analysis
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/machine_learning">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/machine_learning.svg" alt="" loading="lazy">
+            Machine learning
+          </a>
+        </li>
+        <li class="tree-menu__item">
+          <a class="tree-menu__link" href="/en/articles/interviews">
+              <img class="tree-menu__icon" width="20" height="20" src="https://c.mql5.com/i/sidebar/interviews.svg" alt="" loading="lazy">
+            Interviews
+          </a>
+        </li>
+    </ul>
+  
+
+    <div class="hints-panel">
+      <div class="hints-panel__item">
+        <i class="icons-hints icons-hints_like"></i>
+        <div class="hints-panel__content">
+          Do you like the article?<br>
+          Share it with others —<br>post a <a href="https://www.mql5.com/en/articles/19762" target="_blank">link</a> to it!
+        </div>
+      </div>
+
+      <div class="hints-panel__item">
+        <i class="icons-hints icons-hints_fb-square icons-hints_24px"></i><div class="hints-panel__content">
+Find us on <a href="https://www.facebook.com/mql5.community/" target="_blank" rel="nofollow">Facebook</a>!<br> Join our fan page</div>
+      </div>
+
+      <div class="hints-panel__item">
+        <i class="icons-hints icons-hints_mt-5"></i>
+        <div class="hints-panel__content">
+          Use new possibilities of <a href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/mt5setup.exe?utm_source=www.mql5.com&amp;utm_campaign=download" data-fz-event="MetaTrader+5+Desktop+Download+Article" rel="nofollow sponsored noopener noreferrer">MetaTrader 5</a>
+        </div>
+      </div>
+    </div>
+<div id="vgckrufggwxdtfscpyalmenexmvhljduja" class="rnbn5s4ly03dyhm81 ghky8ic0v"><iframe width="220" height="400" frameborder="0" style="vertical-align: top; max-width: 100% !important; display: block;" scrolling="no" src="https://www.mql5.com/ff/sh/qg3nrg39qbz6bn3jp2/index.html?link=https%3A%2F%2Fforge.mql5.io%3Futm_source%3Dwww.mql5.com%26utm_medium%3Ddisplay%26utm_content%3Dvisit%26utm_campaign%3Dvisit.mql5.226&amp;a=oygnrjjxveoqzycxkjkckcgtshfunvdu&amp;s=1e458fdafe5955c82ea32b518845e77efbe1196295936353793e9e23a750f4d6&amp;v=1&amp;w=220&amp;h=400&amp;r=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F19762&amp;host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&amp;id=vgckrufggwxdtfscpyalmenexmvhljduja&amp;fz_uniq=5073715639611346232&amp;custom="></iframe></div>      <div class="similar-author-articles ui">
+        <h4 class="similar-author-articles__title">Similar articles</h4>
+        <ul class="similar-author-articles__list">
+            <li>
+              <a href="/en/articles/19802" data-fz-event="MQL5+Article+Similar+Article">Neural Networks in Trading: From Transformers to Spiking Neurons (Conclusion)</a>
+            </li>
+            <li>
+              <a href="/en/articles/19709" data-fz-event="MQL5+Article+Similar+Article">Neural Networks in Trading: From Transformers to Spiking Neurons (SpikingBrain)</a>
+            </li>
+            <li>
+              <a href="/en/articles/19870" data-fz-event="MQL5+Article+Similar+Article">Neural Networks in Trading: Training Deep Spiking Models (Spike Integration)</a>
+            </li>
+            <li>
+              <a href="/en/articles/19956" data-fz-event="MQL5+Article+Similar+Article">Neural Networks in Trading: A Spiking-Semantic Approach to Spatiotemporal Identification (Key Components)</a>
+            </li>
+            <li>
+              <a href="/en/articles/19624" data-fz-event="MQL5+Article+Similar+Article">Neural Networks in Trading: Robust Trading Signals in Any Market Regime (Attention Modules)</a>
+            </li>
+        </ul>
+      </div>
+    <div class="freelance-hint">
+      <img src="https://c.mql5.com/i/articles/icon_freelance.svg" width="24" height="24" alt="" loading="lazy">
+      <div class="freelance-hint__text">
+        Use the ideas from this article<br>to order your own robot<br>on Freelance
+      </div>
+        <a target="_blank" class="button button_blue-gray-border" title="Go to Freelance" href="/en/job/new" data-fz-event="MQL5+Article+New+Job">Go to Freelance</a>
+    </div>
+
+            </aside>
+            <div class="content-with-sidebar articles-content splashed">
+              
+
+
+<article>
+  <header class="article-header article-header_light">
+    <section class="article-tools-panel">
+        <div class="article-tools-panel__item">
+          <span class="popup framed client flags">
+            <a class="dropdown" href="javascript:void(false);" aria-label="Language">
+              <span class="icons-languages icons-languages_en"></span><i></i>
+            </a>
+            <span class="popup">
+              <span class="tip">
+                <span></span>
+              </span>
+              <span class="items">
+                    <a href="/ru/articles/19762">Русский</a>
+                    <a href="/es/articles/19762">Español</a>
+                    <a href="/pt/articles/19762">Português</a>
+              </span>
+            </span>
+          </span>
+        </div>
+        
+      <div class="article-tools-panel__item">
+        <a href="#pocket" title="Pocket allows you to insert a complete content description to the appropriate comment" aria-label="to pocket" onclick="return Pocket.Add(this,'en',2,1,19762);" class="article-tools-panel__rounded">
+          <i class="article-pocket-icon"></i>
+        </a>
+      </div>
+      <div class="article-tools-panel__item">
+        <a href="/en/articles/19762?print=" target="_blank" class="article-tools-panel__rounded" rel="nofollow" title="Printer friendly version" aria-label="Printer friendly version">
+          <i class="article-print-icon"></i>
+        </a>
+      </div>
+
+    </section>
+    <section class="article-header__image-box" style="background-color: rgb(68,61,60)">
+        <img class="article-header__image-preview" loading="lazy" width="32" height="16" alt="preview" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAsICAoIBwsKCQoNDAsNERwSEQ8PESIZGhQcKSQrKigkJyctMkA3LTA9MCcnOEw5PUNFSElIKzZPVU5GVEBHSEX/2wBDAQwNDREPESESEiFFLicuRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUX/wAARCAAQACADASIAAhEBAxEB/8QAGAAAAgMAAAAAAAAAAAAAAAAABAUAAgf/xAAiEAABAwMEAwEAAAAAAAAAAAABAAIDBAURFCEiMVFxgaH/xAAWAQEBAQAAAAAAAAAAAAAAAAACAAH/xAAZEQACAwEAAAAAAAAAAAAAAAAAAgFBURL/2gAMAwEAAhEDEQA/AM9p6KJx54PspxSWOnk5Es/Sl7AGnrKLjqpG9HCmhqNWVsNmstO0bY+BCm1xZ2wrat57cpqPJRhW0fS4f//Z">
+      <div class="article-header__gradient" style="background: linear-gradient(90deg, rgba(68,61,60, 1) 0%, rgba(68,61,60, 0.72) 8.31%, rgba(68,61,60, 0) 17.1%), linear-gradient(270deg, rgba(68,61,60, 1) 0%, rgba(68,61,60, 0.72) 8.06%, rgba(68,61,60, 0) 16.59%), linear-gradient(0deg, rgba(68,61,60, 1) 8.26%, rgba(68,61,60, 0.8) 65%, rgba(68,61,60, 0) 100%);"></div>
+        <picture>
+          <source srcset="https://c.mql5.com/2/172/19762-neyroseti-v-treydinge-ot-transformerov-k-spaykovim-neyronam_600x314.jpg, https://c.mql5.com/2/172/19762-neyroseti-v-treydinge-ot-transformerov-k-spaykovim-neyronam_1200x628.jpg 2x" media="(min-width:700px)">
+          <img class="article-header__image" loading="lazy" width="600" height="314" srcset="https://c.mql5.com/2/172/19762-neyroseti-v-treydinge-ot-transformerov-k-spaykovim-neyronam_300x157.jpg, https://c.mql5.com/2/172/19762-neyroseti-v-treydinge-ot-transformerov-k-spaykovim-neyronam_600x314.jpg 2x" src="https://c.mql5.com/2/172/19762-neyroseti-v-treydinge-ot-transformerov-k-spaykovim-neyronam_600x314.jpg" alt="Neural Networks in Trading: From Transformers to Spiking Neurons (Key Components)" onerror="this.style.display='none';">
+        </picture>
+    </section>
+    <section class="article-header__content">
+      <h1>Neural Networks in Trading: From Transformers to Spiking Neurons (Key Components)</h1>
+      <div class="article-header__info">
+        <a href="/en/articles/mt5">MetaTrader 5</a>
+          —
+          <a href="/en/articles/mt5/trading_systems">Trading systems</a>
+        | <time datetime="2026-10-08T10:05Z" title="2026.10.08 10:05" datetime-type="datetime">8 October 2026 at 10:05</time>
+      </div>
+      <div class="article-header__indicators">
+        <span title="Views">
+          <img src="https://c.mql5.com/i/icons.svg#views-white-usage" width="20" height="20" alt="">
+          1 122
+        </span>
+        
+          <a title="Comments" href="/en/forum/517875">
+            <img src="https://c.mql5.com/i/icons.svg#comments-white-usage" width="20" height="20" alt="">
+            1
+          </a>
+      </div>
+      <div class="article-header__author">
+          <div class="article-header__avatar">
+            <img src="https://c.mql5.com/avatar/2014/8/53E8CB77-1C48.png" srcset="https://c.mql5.com/avatar/2014/8/53E8CB77-1C48_big.png 2x" data-user-login="DNG" title="Dmitriy Gizlyk" alt="Dmitriy Gizlyk" loading="lazy" width="60" height="60">
+          </div>
+<a class="author" href="/en/users/dng" data-user-login="DNG">Dmitriy Gizlyk</a>      </div>
+    </section>
+  </header>
+
+    <div class="content">
+      <div class="inner formatted-content">
+        <h3 id="para1">Introduction</h3> <p style="text-align:justify;">Financial markets are like a stormy sea, where a ship’s captain must make split-second decisions, relying not only on charts and compasses but also on intuition honed through years of experience. In today's world, computational models are increasingly taking on this role, and the researcher's task is to create an algorithm capable of rivaling human flexibility and foresight. Against the backdrop of traditional machine learning methods and well-established neural network architectures, the <i>SpikingBrain</i> framework <a href="https://arxiv.org/abs/2509.05276" rel="noreferrer noopener nofollow" target="_blank" title="https://arxiv.org/abs/2509.05276">emerged</a> as a breath of fresh air, capable of filling the researcher’s sails and leading them to new shores of data analysis.</p> <p style="text-align:justify;">A key advantage of <i>SpikingBrain</i> is its event-driven approach to information processing. Unlike classical models, in which data is treated as a continuous stream, spiking networks respond to discrete events, which “makes them better aligned with the nature of real financial signals. The exchange-traded markets never evolves in a steady manner: some periods are calm, with barely noticeable fluctuations, while others are like a squall, bringing sharp spikes in prices. A traditional neural network is forced to process both modes with equal intensity, overloading computational resources and losing accuracy during periods of sudden turbulence. <i>SpikingBrain</i>, on the other hand, allows the system to focus on events, giving it natural efficiency and adaptability.</p> <p style="text-align:justify;">Equally important is the fact that spiking models are energy-efficient. For financial markets, where algorithms often need to run continuously, the ability to reduce the load on hardware without compromising the quality of analysis is a compelling argument. In an era when computing resources are distributed across thousands of strategies and dozens of servers, the ability to maximize benefits while minimizing energy consumption takes on not only technical but also strategic significance. It could be said that <i>SpikingBrain</i> paves the way for <i>intelligent computing</i>. The focus is not on the raw power of the machines, but on elegant architecture and process optimization.</p> <p style="text-align:justify;">The framework's particular strength lies in its ability to support effective knowledge transfer and adaptation. Unlike bulky models that require massive training datasets to function reliably, the spiking architecture makes better use of previously accumulated experience and adapts more quickly to new data. This makes it possible to apply pre-trained models to financial analysis tasks, fine-tuning them even on relatively small datasets. This approach significantly speeds up the model’s practical deployment and makes it a flexible tool capable of accounting for the specific characteristics of a particular market. Consequently, <i>SpikingBrain</i> serves as a bridge between the versatility of pre-trained solutions and the unique characteristics of local data.</p> <p style="text-align:justify;">It is worth emphasizing that <i>SpikingBrain</i> is not merely a declaration of principles, but a coherent system grounded in careful engineering design. It is based on the idea of converting the input signals into a sequence of spikes, which serve as the building blocks for all subsequent processing. This makes it possible to form a rich representation of time series, where each burst of activity carries significant information about the state of the system.</p> <p style="text-align:justify;">Specialized blocks that mimic biological mechanisms are then responsible for transmitting and integrating these signals. They provide flexibility in working with various types of data and lay the foundation for building a multi-level analytical structure.</p> <p style="text-align:justify;">Here, it is worth taking a closer look at an important element of the architecture — the mechanism for encoding signals into spikes. For financial time series, this task is particularly challenging: it is not enough simply to record price or volume values; they must also be transformed into a format in which each spike reflects a significant change in the data. The authors propose several encoding strategies. From a simple threshold-based approach, where a spike occurs when a critical value is exceeded, to more complex schemes that take into account the rate of change and the context of previous events. This wide variety of methods makes the model versatile. It can perform equally well with high-frequency data, where every millisecond counts, and with quieter daily charts, where the overall trend is what matters most.</p> <p style="text-align:justify;">The next key block is the integrators. They are responsible for accumulating and summing incoming impulses, determining the moment when a neuron becomes active. From the perspective of financial markets, this is similar to a noise-filtering mechanism: many small fluctuations can be ignored, but their cumulative effect, once it reaches a certain threshold, triggers a response from the model. This principle allows the model to maintain a balance between sensitivity and stability, which is particularly valuable in the face of market noise.</p> <p style="text-align:justify;">The framework’s authors proposed a model in which the hybrid organization of layers plays a central role. Some of them specialize in identifying short-term patterns, capturing rapid market fluctuations. Others focus on integrating signals over a longer time horizon, which makes it possible to generate more stable forecasts. This combination gives the system a kind of <i>dual vision</i>. It is capable of both capturing the finest details of the present moment and maintaining a strategic perspective. For financial markets, this is akin to being able to see both the movement of a stopwatch’s second hand and the overall rhythm of the pendulum that determines the passage of time.</p> <p style="text-align:justify;">Modules responsible for normalization and network stability are an important part of the architecture. Unlike traditional neural networks, where balance is achieved through extensive regularization procedures, <i>SpikingBrain</i> uses more subtle mechanisms embedded in the very nature of spiking signals. As a result, the network remains stable even when faced with chaotic data, while retaining its ability to make accurate predictions. For the financial market, this quality cannot be overstated: after all, chaos is its constant companion, and the ability to identify hidden patterns within it determines the success of any model.</p> <p style="text-align:justify;">It is also worth noting the modularity of the proposed architecture. The authors have laid down principles that make it possible to expand the model both in breadth and depth, combine spiking elements with traditional deep learning blocks, and develop hybrid solutions. This synthesis opens up even more possibilities for applications in finance. For example, it is possible to build models in which spiking mechanisms are responsible for processing event-driven signals, while classical blocks handle long-term forecasts or the analysis of textual information. The result is a multifaceted tool in which each part of the system performs its own function, and together they form a comprehensive mechanism for analyzing a complex market landscape.</p> <p>The authors’ visualization of the SpikingBrain framework is shown below.</p> <p style="text-align:center;"> <img loading="lazy" src="https://c.mql5.com/2/172/4548536278375__1.png" style="vertical-align:middle;" title="Authors’ visualization of the SpikingBrain framework" width="950"></p> <p style="text-align:justify;">In the practical section of the previous <a href="/en/articles/19709" target="_blank">article</a>, we focused on laying the groundwork necessary for transferring the ideas of <i>SpikingBrain</i> to the MQL5 environment. It was important to demonstrate how theoretical principles can take shape in specific algorithms ready to work with real trading data. We began by implementing a basic component that converts a continuous signal into a discrete spike pulse. This paved the way from an abstract idea to a tool capable of operating within a popular trading platform. This work marked the first step toward building a fully fledged system in which the framework authors’ innovations are put into practice in a live market environment.</p> <p style="text-align:justify;">We have set the direction and laid the groundwork; now we'll move on to a more in-depth analysis of the model's architecture and operating principles.</p> <h3 id="para2"><br><br>Discussion of Implementation</h3> <p style="text-align:justify;">Before moving on to the actual implementation of the proposed approaches, it is worth outlining the key principles of our work. The framework's authors use pre-trained models based on the standard&nbsp;<i>Transformer</i>, and this is an important detail. This approach allows us to avoid spending resources on training <i>from scratch</i> and instead build directly on the accumulated experience of architectures that have proven their effectiveness. Consequently, in our implementation, we can also utilize ready-made algorithms and modules, which makes the process more reliable and flexible.</p> <p style="text-align:justify;">The concept of hybrid attention modules is particularly interesting. The authors propose combining different architectural approaches within a single system — for example, using linear, windowed, or full attention in parallel. In some ways, this resembles the principles implemented in the <i><a href="/en/articles/19494" target="_blank">Extralonger</a></i> framework, where global-local attention has become the basis for a deeper analysis of temporal and spatial relationships.</p> <p style="text-align:justify;">Nevertheless, financial applications have their own unique characteristics, which require careful consideration when choosing an architecture. Thus, windowed attention — which has proven effective in a number of applications — is by no means always the optimal tool for analyzing market time series. On the one hand, the latest quote values do reflect the emerging trend, but on the other hand, this is where the highest level of noise is concentrated. The most significant signals influencing long-term trends are by no means always found in the most recent data points of a time series. Often, they are spread out over a greater distance and manifest as sparse dependencies; simply expanding the analysis window does not always solve the problem. The wider the window, the more computational resources are spent on processing noise rather than identifying useful patterns. As a result, the computational load on the model increases, while the quality of the forecast does not necessarily improve.</p> <p style="text-align:justify;">Therefore, when developing models for financial markets, it is preferable to use more adaptive attention mechanisms. Their task is to filter out the unnecessary and identify rare but truly valuable signals. It is precisely these signals that often prove decisive in shifting market trends and enable models to generate forecasts of practical significance.</p> <p style="text-align:justify;">In this regard, the idea of <a href="/en/articles/19624" target="_blank"><i>graphon-based sparse attention</i></a> looks especially interesting. This approach allows us not simply to mechanically expand the analysis window, but to structure the relationships between elements in the time series, thereby identifying key dependencies in a more efficient manner. Essentially, <i>graphons</i> define a framework over which <i>attention extends</i> only in those directions where there are actual correlations and meaningful signals. This reduces the load on the model and allows resources to be focused on the data areas that really matter.</p> <p style="text-align:justify;">Moreover, the use of graphons fits seamlessly with the framework authors' vision of implementing algorithms such as <i>Mixture of Experts</i> (<i>MoE</i>). The sparse attention structure and the modular <i>MoE</i> architecture reinforce each other. <i>Graphons</i> define interaction paths, while <i>MoE</i> allows for the selective activation of the most appropriate expert blocks. The result is a system that can potentially handle noisy financial time series more effectively and adapt flexibly to the nature of the current market.</p> <p style="text-align:justify;">In fact, it is precisely the idea of combining biologically plausible signal-processing mechanisms with the architectural flexibility of modern neural networks that lies at the heart of <i>SpikingBrain</i>. The framework's authors propose an original solution that goes beyond traditional <i>recurrent</i> or <i>Transformer-based</i> architectures. They take a <i>spiking</i> neuron model as the basis, in which information is transmitted via discrete pulses, and learning is linked to the dynamics of interactions over time. This approach is more in line with the way the human brain works and opens up possibilities for more nuanced and efficient data processing.</p> <p style="text-align:justify;">In addition, the authors' proposed interpretation of the linear attention module is of particular interest. In one of our previous projects, we had already implemented a <i><a href="/en/articles/17069#para34" target="_blank">linear attention</a></i> object and are very familiar with its capabilities. However, the framework's authors proposed a more flexible option. Linear attention is implemented as a recurrent block with added gates, which allows the scope of attention to be significantly expanded without a substantial increase in computational cost.</p> <p style="text-align:justify;">In this version, the attention state is computed recurrently. Each step accumulates information from the previous state, weighting it using <i>gates</i>, and adds new interactions between keys and values.</p> <p style="text-align:center;"> <img alt="" height="25" loading="lazy" src="https://c.mql5.com/2/172/4604153795949.png" style="vertical-align:middle;" width="286"></p> <p style="text-align:center;"> <img alt="" height="25" loading="lazy" src="https://c.mql5.com/2/172/2954739290451.png" style="vertical-align:middle;" width="148"></p> <p style="text-align:justify;">where <i>S<span class="small">t</span></i> is the accumulated state matrix, <i>g<span class="small">t</span></i> is the gate vector, <i>k<span class="small">t</span></i> and <i>v<span class="small">t</span></i> are the keys and values at the current step, and <i>q<span class="small">t</span></i> is the query. This structure makes it possible to retain information about long-range dependencies while simultaneously controlling its relevance through <i>gates</i>.</p> <p style="text-align:justify;">From a financial analysis perspective, this solution is particularly valuable. It makes it possible to account for events spread out over time without overloading the model with unnecessary signals and noise. When combined with <i>graphon-based</i> sparse attention and <i>MoE</i> architecture, recurrent linear attention becomes a powerful tool for generating adaptive forecasts capable of identifying key trends and responding to rapidly changing market conditions.</p> <p style="text-align:justify;">The authors of the <i>SpikingBrain</i> framework propose two main approaches to using hybrid attention: sequential and parallel. The sequential variant involves the use of a stack of attention layers with different architectures, with blocks of the <i>MoE</i> type inserted between them to serve as <i>FeedForward</i> modules. This approach allows the model to process signals of different types sequentially, while maintaining structural flexibility and the ability to selectively activate experts.</p> <p style="text-align:justify;">Parallel mixing, on the other hand, involves the simultaneous use of different attention blocks within a single layer. Their combined result is then sent to a single <i>MoE</i> block for processing, which ensures the integration of information from different perspectives. Moreover, even in a parallel architecture, it is possible to combine different attention modules between the model's layers. The model achieves maximum flexibility, allowing the attention structure to be adapted to the specific characteristics of the data.</p> <p style="text-align:justify;">From the perspective of financial markets, this approach appears particularly attractive. Different information sources, time horizons, and signal types can be processed simultaneously, while the system remains manageable and efficient. When combined with graphon-based sparse attention and recurrent linear attention blocks, hybrid modes make it possible to build complex models capable of capturing both local noisy fluctuations and global market trends.</p> <p style="text-align:justify;"><br></p> <h3 id="para3">Linear Attention Module with Gates</h3> <p style="text-align:justify;">Today, we will begin our practical work by implementing a recurrent linear attention block with gates, which we will implement as a new object called <i>CNeuronGateLineAttention</i>. This object is created as a specialized module within the <i>SpikingBrain</i> architecture and inherits its base functionality from <i>CNeuronSpikeConv</i>. This inheritance makes it easy to integrate the object into the existing infrastructure of spiking neural objects, take advantage of spiking dynamics and recurrent information accumulation, and use parallel computation via <i>OpenCL</i> to accelerate data processing.</p> <p style="text-align:justify;">This solution combines the best of both worlds. Within the object, standard continuous-valued multi-head linear attention is used, ensuring the accurate extraction of key signals and long-range dependencies. At the same time, the parent-class algorithms reduce the dimensionality of the multi-head attention output to the original data dimensionality and convert the resulting values into discrete spike pulses. Thus, the model retains the accuracy of continuous analysis while also gaining the ability to operate within event-driven spiking dynamics, which is particularly important for processing noisy and sparse financial time series.</p> <p style="text-align:justify;">The structure of the new object is shown below.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="keyword">class</span> CNeuronGateLineAttention&nbsp;&nbsp;:&nbsp;&nbsp;<span class="keyword">public</span> CNeuronSpikeConv
+&nbsp;&nbsp;{
+<span class="keyword">protected</span>:
+&nbsp;&nbsp; <span class="keyword">uint</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iDimensionK;
+&nbsp;&nbsp; <span class="keyword">uint</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iVariables;
+&nbsp;&nbsp; <span class="keyword">uint</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iHeads;
+&nbsp;&nbsp; <span class="comment">//---</span>
+&nbsp;&nbsp; CNeuronConvOCL&nbsp;&nbsp;&nbsp;&nbsp;cQKV;
+&nbsp;&nbsp; CNeuronBaseOCL&nbsp;&nbsp;&nbsp;&nbsp;cQ;
+&nbsp;&nbsp; CNeuronBaseOCL&nbsp;&nbsp;&nbsp;&nbsp;cK;
+&nbsp;&nbsp; CNeuronBaseOCL&nbsp;&nbsp;&nbsp;&nbsp;cV;
+&nbsp;&nbsp; CNeuronBaseOCL&nbsp;&nbsp;&nbsp;&nbsp;cKV;
+&nbsp;&nbsp; CNeuronConvOCL&nbsp;&nbsp;&nbsp;&nbsp;cGate;
+&nbsp;&nbsp; CNeuronBaseOCL&nbsp;&nbsp;&nbsp;&nbsp;cState;
+&nbsp;&nbsp; CNeuronBaseOCL&nbsp;&nbsp;&nbsp;&nbsp;cMHAttention;
+&nbsp;&nbsp; <span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">bool</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;feedForward(CNeuronBaseOCL *NeuronOCL) <span class="keyword">override</span>;
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">bool</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;updateInputWeights(CNeuronBaseOCL *NeuronOCL) <span class="keyword">override</span>;
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">bool</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;calcInputGradients(CNeuronBaseOCL *NeuronOCL) <span class="keyword">override</span>;
+
+<span class="keyword">public</span>:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; CNeuronGateLineAttention(<span class="keyword">void</span>) {};
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;~CNeuronGateLineAttention(<span class="keyword">void</span>) {};
+&nbsp;&nbsp; <span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">bool</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Init(<span class="keyword">uint</span> numOutputs, <span class="keyword">uint</span> myIndex, COpenCLMy *open_cl,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">uint</span> variables, <span class="keyword">uint</span> dimension, <span class="keyword">uint</span> dimension_k, <span class="keyword">uint</span> heads,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ENUM_OPTIMIZATION optimization_type, <span class="keyword">uint</span> batch);
+&nbsp;&nbsp; <span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">int</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Type(<span class="keyword">void</span>) <span class="keyword">override</span> <span class="keyword">const</span>&nbsp;&nbsp;{&nbsp;&nbsp;<span class="keyword">return</span> defNeuroneGateLineAttention;&nbsp;&nbsp; }
+&nbsp;&nbsp; <span class="comment">//--- methods for working with files</span>
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">bool</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Save(<span class="keyword">int</span> <span class="keyword">const</span> file_handle) <span class="keyword">override</span>;
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">bool</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Load(<span class="keyword">int</span> <span class="keyword">const</span> file_handle) <span class="keyword">override</span>;
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">void</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SetOpenCL(COpenCLMy *obj)&nbsp;&nbsp; <span class="keyword">override</span>;
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">bool</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Clear(<span class="keyword">void</span>) <span class="keyword">override</span>;
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">void</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SetActivationFunction(ENUM_ACTIVATION value) <span class="keyword">override</span> { };
+&nbsp;&nbsp; <span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">bool</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;WeightsUpdate(CNeuronBaseOCL *source, <span class="keyword">float</span> tau) <span class="keyword">override</span>;
+&nbsp;&nbsp; <span class="keyword">virtual</span> <span class="keyword">uint</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GetVariables(<span class="keyword">void</span>) <span class="keyword">const</span> { <span class="keyword">return</span> iVariables; }
+&nbsp;&nbsp;};
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">The object contains variables for storing the key parameters of its architecture:</p> <ul> <li><i> iDimensionK</i> specifies the dimensionality of the keys, which determines the amount of information stored in each <i>attention head</i>;</li> <li><i>iVariables</i> stores the number of variables being analyzed for signal processing;</li> <li><i>iHeads</i> specifies the number of parallel attention heads, which enables multi-channel analysis of a time series.</li> </ul> <p></p> <p style="text-align:justify;">Queries, keys, and values are processed using a combination of <i>CNeuronBaseOCL</i> and <i>CNeuronConvOCL</i> objects. The <i>cQKV</i> object plays a special role here, as it simultaneously generates all the components of multi-head attention. The unified result is then split into three tensors (<i>q</i>, <i>k</i>, and <i>v</i>) to perform the mathematical operations involved in attention. This approach allows all necessary components to be generated simultaneously, speeds up <i>GPU</i> computations, and reduces the load on the central processor, while maintaining the accuracy of multi-head analysis.</p> <p style="text-align:justify;">All internal components of our <i>CNeuronGateLineAttention</i> object are declared statically, so the class's constructor and destructor remain empty. The block is fully initialized in the <i>Init</i> method, which sets the object's operating parameters, connects the <i>OpenCL</i> compute core, and configures the internal components.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="keyword">bool</span> CNeuronGateLineAttention::Init(<span class="keyword">uint</span> numOutputs, <span class="keyword">uint</span> myIndex, COpenCLMy *open_cl,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">uint</span> variables, <span class="keyword">uint</span> dimension, <span class="keyword">uint</span> dimension_k, <span class="keyword">uint</span> heads,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ENUM_OPTIMIZATION optimization_type, <span class="keyword">uint</span> batch)
+&nbsp;&nbsp;{
+&nbsp;&nbsp; <span class="keyword">if</span>(!CNeuronSpikeConv::Init(numOutputs, myIndex, open_cl, heads * dimension_k, heads * dimension_k,
+                                                  dimension, <span class="number">1</span>, variables, optimization_type, batch))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">The method's algorithm begins by passing control to the parent class, <i>CNeuronSpikeConv</i>. This defines the basic structure of the object. This approach ensures consistency in configuration and allows for the use of proven processing and parallel computing algorithms that have already been implemented in the parent class.</p> <p style="text-align:justify;">In addition, as mentioned earlier, the parent class provides mechanisms for combining the results of multi-head attention into a single final signal, which is reflected in the passed parameters and facilitates the integration of a new object into the model’s overall architecture.</p> <p style="text-align:justify;">After successfully completing the parent initialization, we save the object's specific parameters: key dimensionality <i>iDimensionK</i>, the number of attention heads <i>iHeads</i>, and the number of variables being analyzed <i>iVariables</i>.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; iDimensionK = dimension_k;
+&nbsp;&nbsp; iHeads = heads;
+&nbsp;&nbsp; iVariables = variables;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">These parameters determine the scale of multi-head attention and the structure of the tensors that will accumulate and transmit information within the block.</p> <p style="text-align:justify;">Next, we move on to initializing the internal components. The first object we initialize is <i>cQKV</i>. It simultaneously generates all three components of multi-head attention — queries <i>q</i>, keys <i>k</i>, and values <i>v</i>.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">int</span> index = <span class="number">0</span>;
+&nbsp;&nbsp; <span class="keyword">if</span>(!cQKV.Init(<span class="number">0</span>, index, OpenCL, dimension, dimension, <span class="number">3</span>*iHeads*iDimensionK, <span class="number">1</span>, iVariables, optimization, iBatch))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; cQKV.SetActivationFunction(SIGMOID);
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">This approach speeds up computations, efficiently allocates <i>GPU</i> resources, and ensures the accurate construction of all components of multi-head attention. For <i>cQKV</i>, a sigmoid activation function is specified, which smoothly modulates the input signal and prepares it for recurrent processing.</p> <p style="text-align:justify;">Next, the <i>cQ</i>, <i>cK</i>, and <i>cV</i> objects are initialized.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; index++;
+&nbsp;&nbsp; <span class="keyword">if</span>(!cQ.Init(<span class="number">0</span>, index, OpenCL, iHeads * iDimensionK * iVariables, optimization, iBatch))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; cQ.SetActivationFunction(None);
+&nbsp;&nbsp; index++;
+&nbsp;&nbsp; <span class="keyword">if</span>(!cK.Init(<span class="number">0</span>, index, OpenCL, cQ.Neurons(), optimization, iBatch))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; cK.SetActivationFunction(None);
+&nbsp;&nbsp; index++;
+&nbsp;&nbsp; <span class="keyword">if</span>(!cV.Init(<span class="number">0</span>, index, OpenCL, cQ.Neurons(), optimization, iBatch))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; cV.SetActivationFunction(None);
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">They are designed to store the corresponding tensors and are used in matrix multiplication operations. Activation functions are not used here.</p> <p style="text-align:justify;">The next key component is <i>cKV</i>. It is designed to store the results of matrix multiplication of the key and value tensors.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; index++;
+&nbsp;&nbsp; <span class="keyword">if</span>(!cKV.Init(<span class="number">0</span>, index, OpenCL, cQ.Neurons()*iDimensionK, optimization, iBatch))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; cKV.SetActivationFunction(None);
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">As a result, the object accumulates the information needed to compute attention and passes it on to subsequent processing stages.</p> <p style="text-align:justify;">The <i>cGate</i> object is responsible for implementing the gating component of recurrent attention. Using a sigmoid activation function, it dynamically controls which part of the previous state is retained and how it is combined with the current input data.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; index++;
+&nbsp;&nbsp; <span class="keyword">if</span>(!cGate.Init(<span class="number">0</span>, index, OpenCL, dimension, dimension, iDimensionK * iHeads, <span class="number">1</span>, iVariables, optimization, iBatch))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; cGate.SetActivationFunction(SIGMOID);
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">This is critically important for financial time series, where signals can be sparse and noisy: the gating mechanism makes it possible to filter out unnecessary fluctuations while retaining meaningful information from previous steps.</p> <p style="text-align:justify;">The <i>cState</i> object accumulates the previous attention state, enabling recurrent processing. It stores accumulated data on key dependencies over time, which are then used to generate the block's final output.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; index++;
+&nbsp;&nbsp; <span class="keyword">if</span>(!cState.Init(<span class="number">0</span>, index, OpenCL, cKV.Neurons(), optimization, iBatch))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; cState.SetActivationFunction(None);
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">In combination with <i>cKV</i> and <i>cGate</i>, this makes it possible to implement recurrent linear attention with gates, which can account for both local short-term market fluctuations and global trends, ensuring the accurate identification of meaningful signals.</p> <p style="text-align:justify;"><i>cMHAttention</i> completes the internal configuration. It combines various attention channels and generates the final signal for subsequent computations.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; index++;
+&nbsp;&nbsp; <span class="keyword">if</span>(!cMHAttention.Init(<span class="number">0</span>, index, OpenCL, cQ.Neurons(), optimization, iBatch))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; cMHAttention.SetActivationFunction(None);
+<span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">true</span>;
+&nbsp;&nbsp;}
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">The <i>Init</i> method thoroughly checks whether each component was initialized successfully and returns <i>false</i> if any step fails. Thus, a fully operational object is created that can efficiently process financial time series, combining the precision of continuous multi-head attention with the advantages of discrete spiking dynamics and recurrent information accumulation.</p> <p style="text-align:justify;">Once the object has been initialized, the next step is to organize the forward pass. This process is implemented in the <i>feedForward</i> method, which handles the sequential processing of input data, recurrent state accumulation, and the generation of multi-head attention results.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="keyword">bool</span> CNeuronGateLineAttention::feedForward(CNeuronBaseOCL *NeuronOCL)
+&nbsp;&nbsp;{
+&nbsp;&nbsp; <span class="keyword">if</span>(!cQKV.FeedForward(NeuronOCL))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">In the first step, the method of the same name of the <i>cQKV</i> object is called. Here, the combined query <i>q</i>, key <i>k</i>, and value <i>v</i> tensors are created for multi-head attention. This approach speeds up computations because all three entities are generated simultaneously, and the subsequent separation into individual tensors allows standard attention operations to be performed.</p> <p style="text-align:justify;">Next, the <i>FeedForward</i> method of the <i>cGate</i> object is called, generating the gate signals.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!cGate.FeedForward(NeuronOCL))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">The gating mechanism determines which part of the previous state is retained and which part is updated with the current input data. This is especially important for financial time series, where signals are sparse and prone to noise: gates help filter out noisy fluctuations and preserve meaningful patterns.</p> <p style="text-align:justify;">The next step is to split the combined <i>cQKV</i> output into three separate tensors using the <i>DeConcat</i> function.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!DeConcat(cQ.getOutput(), cK.getOutput(), cV.getOutput(), cQKV.getOutput(),
+                     iDimensionK, iDimensionK, iDimensionK, iHeads * iVariables))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">After that, the keys are matrix-multiplied by the values using <i>MatMul</i>. The result is stored in the <i>cKV</i> object, which accumulates information for recurrent state accumulation, ensuring efficient data storage for subsequent computations.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!MatMul(cK.getOutput(), cV.getOutput(), cKV.getOutput(), iDimensionK, <span class="number">1</span>,
+                                      iDimensionK, iHeads * iVariables, <span class="macro">true</span>))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">Recurrent state updates are performed in the <i>cState</i> object. First, <i>SwapOutputs</i> is called to save the values from the previous forward pass.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!cState.SwapOutputs())
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; <span class="keyword">if</span>(!DiagMatMul(cGate.getOutput(), cState.getPrevOutput(), cState.getOutput(),
+              iDimensionK, iDimensionK, iHeads * iVariables, cState.Activation()))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; <span class="keyword">if</span>(!SumAndNormilize(cState.getOutput(), cKV.getOutput(), cState.getOutput(),
+                                                  iDimensionK, <span class="macro">false</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">Next, <i>DiagMatMul</i> is applied using the gate outputs and the previous state. In this step, the block's new current state is formed. After that, the result is summed with the results from <i>cKV</i>. These operations isolate meaningful signals and suppress noise, ensuring that the information is accurately represented for the next step.</p> <p style="text-align:justify;">The final step is to perform matrix multiplication of the query <i>cQ</i> by the updated state <i>cState</i>, which produces the final output of multi-head attention in the <i>cMHAttention</i> object.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!MatMul(cQ.getOutput(), cState.getOutput(), cMHAttention.getOutput(), <span class="number">1</span>,
+                          iDimensionK, iDimensionK, iVariables * iHeads, <span class="macro">true</span>))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">This result is passed to the parent class <i>CNeuronSpikeConv</i> to generate discrete spike pulses.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!CNeuronSpikeConv::FeedForward(cMHAttention.AsObject()))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+<span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">true</span>;
+&nbsp;&nbsp;}
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">As a result, continuous attention calculations are transformed into events that can be used in spiking dynamics and subsequent forecasting of market trends.</p> <p style="text-align:justify;">Taken together, the <i>feedForward</i> method creates a coherent data flow: tensor generation, gating regulation, recurrent state accumulation, and multi-head attention aggregation. This approach enables the model to work effectively with financial time series, taking into account short-term fluctuations and long-range dependencies, and to generate accurate signals for forecasting market trends.</p> <p style="text-align:justify;">Here, we have deliberately chosen not to include the residual connections typical of the standard&nbsp;<i>Transformer</i> architecture. This is because we plan to use several attention modules in parallel. The presence of a separate residual connection in each of them could shift the emphasis toward the input data and weaken the influence of the extracted signals. To eliminate this effect, we provide a single shared path for residual connections among all attention modules within a single layer of the model, which helps maintain a balance between analyzing the raw data and learning from the identified patterns.</p> <p style="text-align:justify;">However, the forward pass is only half the battle. To train the model, it is necessary to correctly distribute the prediction error among all components involved in the process according to their influence on the final result. In the <i>CNeuronGateLineAttention</i> object, this mechanism is implemented in the <i>calcInputGradients</i> method, which performs backpropagation and computes gradients for all internal components.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="keyword">bool</span> CNeuronGateLineAttention::calcInputGradients(CNeuronBaseOCL *NeuronOCL)
+&nbsp;&nbsp;{
+&nbsp;&nbsp; <span class="keyword">if</span>(!NeuronOCL)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+<span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">if</span>(!CNeuronSpikeConv::calcInputGradients(cMHAttention.AsObject()))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">In the first step, the method verifies that the pointer to the <i>NeuronOCL</i> source data object is valid. Next, the parent class's method with the same name is called, passing a pointer to the <i>cMHAttention</i> object, in order to propagate the gradients received from subsequent model objects to the multi-head attention mechanism, distributing each head’s contribution to the overall result.</p> <p style="text-align:justify;">The next step is to compute the gradients for the query cQ and the accumulated state <i>cState</i>. The <i>MatMulGrad</i> method distributes the error proportionally to the influence of each input signal on the final result of multi-head attention.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!MatMulGrad(cQ.getOutput(), cQ.getGradient(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cState.getOutput(), cState.getGradient(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cMHAttention.getGradient(), <span class="number">1</span>, iDimensionK,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iDimensionK, iVariables * iHeads, <span class="macro">true</span>))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">Next, the gradients are passed to the <i>cKV</i> object, adjusting the values according to the activation function.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!DeActivation(cKV.getOutput(), cKV.getGradient(), cState.getGradient(), cKV.Activation()))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">Special attention is given to the gating component. The <i>DiagMatMulGrad</i> method distributes the error between the gate output <i>cGate</i> and the previous state <i>cState</i>.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!DiagMatMulGrad(cGate.getOutput(), cGate.getGradient(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cState.getPrevOutput(), cKV.getPrevOutput(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cState.getGradient(), iDimensionK, iDimensionK,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iHeads * iVariables))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; Deactivation(cGate)
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">After that, deactivation of the gating block is invoked to account for the activation function and correctly adjust the gradients.</p> <p style="text-align:justify;">Gradients for the keys <i>cK</i> and values <i>cV</i> are computed using <i>MatMulGrad</i>.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!MatMulGrad(cK.getOutput(), cK.getGradient(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cV.getOutput(), cV.getGradient(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cKV.getGradient(), iDimensionK, <span class="number">1</span>,
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iDimensionK, iHeads * iVariables, <span class="macro">true</span>))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">Then, all the gradients (<i>cQ</i>, <i>cK</i>, <i>cV</i>) are recombined into a single tensor, <i>cQKV</i>, using the <i>Concat</i> function.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!Concat(cQ.getGradient(), cK.getGradient(), cV.getGradient(), cQKV.getGradient(),
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;iDimensionK, iDimensionK, iDimensionK, iHeads * iVariables))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; Deactivation(cQKV)
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">This allows us to maintain the consistency of the gradients and correctly distribute the error among the components of multi-head attention.</p> <p style="text-align:justify;">Next, we need to pass the error gradients back to the input data level. Here, we pass values along two data streams. First, we pass the values from the <i>cQKV</i> object.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!NeuronOCL.CalcHiddenGradients(cQKV.AsObject()))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">After that, the pointer to the gradient buffer is temporarily replaced to preserve the previously obtained values.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; CBufferFloat* temp = NeuronOCL.getGradient();
+&nbsp;&nbsp; <span class="keyword">if</span>(!NeuronOCL.SetGradient(PrevOutput, <span class="macro">false</span>))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">Data is then transferred from the gating object <i>cGate</i>, followed by summing the values from the two information streams.</p> <div class="code-box"><pre class="code" data-enhanced="true">&nbsp;&nbsp; <span class="keyword">if</span>(!NeuronOCL.CalcHiddenGradients(cGate.AsObject()))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; <span class="keyword">if</span>(!SumAndNormilize(PrevOutput, temp, temp, GetFilters(), <span class="macro">false</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; <span class="keyword">if</span>(!NeuronOCL.SetGradient(temp, <span class="macro">false</span>))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+<span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">true</span>;
+&nbsp;&nbsp;}
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">The final step is to reset the pointers to the data buffers to their initial state so that they are ready for the weights to be updated during the parameter optimization phase.</p> <p style="text-align:justify;">Thus, the <i>calcInputGradients</i> method forms a complete flow of error propagation from the final multi-head attention to each internal component. This ensures proper training of recurrent linear attention with gates and allows the model to adapt effectively to financial time series, taking into account both local fluctuations and global market trends.</p> <p style="text-align:justify;">The final step in working with the <i>CNeuronGateLineAttention</i> object is optimizing the model parameters, which is implemented in the <i>updateInputWeights</i> method. This is where the weights of all internal components containing trainable parameters are updated.</p> <div class="code-box"><pre class="code" data-enhanced="true"><span class="keyword">bool</span> CNeuronGateLineAttention::updateInputWeights(CNeuronBaseOCL *NeuronOCL)
+&nbsp;&nbsp;{
+&nbsp;&nbsp; <span class="keyword">if</span>(!cQKV.UpdateInputWeights(NeuronOCL))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; <span class="keyword">if</span>(!cGate.UpdateInputWeights(NeuronOCL))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+&nbsp;&nbsp; <span class="keyword">if</span>(!CNeuronSpikeConv::updateInputWeights(cMHAttention.AsObject()))
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">return</span> <span class="macro">false</span>;
+<span class="comment">//---</span>
+&nbsp;&nbsp; <span class="keyword">return</span> <span class="macro">true</span>;
+&nbsp;&nbsp;}
+</pre><button type="button" class="copy-code-btn c-b8amxo" title="Copy to Clipboard"><svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M4 4.5H9
+      C9.39782 4.5 9.77936 4.65804 10.0607 4.93934
+      C10.342 5.22064 10.5 5.60218 10.5 6V14
+      C10.5 14.3978 10.342 14.7794 10.0607 15.0607
+      C9.77936 15.342 9.39782 15.5 9 15.5H4
+      C3.60218 15.5 3.22064 15.342 2.93934 15.0607
+      C2.65804 14.7794 2.5 14.3978 2.5 14V6
+      C2.5 5.60218 2.65804 5.22064 2.93934 4.93934
+      C3.22064 4.65804 3.60218 4.5 4 4.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M7 1.5H11L14.5 5V11
+      C14.5 11.3978 14.342 11.7794 14.0607 12.0607
+      C13.7794 12.342 13.3978 12.5 13 12.5H7
+      C6.60218 12.5 6.22064 12.342 5.93934 12.0607
+      C5.65804 11.7794 5.5 11.3978 5.5 11V3
+      C5.5 2.60218 5.65804 2.22064 5.93934 1.93934
+      C6.22064 1.65804 6.60218 1.5 7 1.5Z" fill="#fff" stroke="#A1A1A1"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M11 1.5V3.5C11 3.89782 11.158 4.27936 11.4393 4.56066C11.7206 4.84196 12.1022 5 12.5 5H14.5L11 1.5Z" fill="#fff" stroke="#A1A1A1" stroke-linejoin="bevel"></path></svg><!----></button></div> <p style="text-align:justify;">The method sequentially passes control to the <i>cQKV</i> and <i>cGate</i> objects, updating their weights based on the accumulated gradients. Control is then passed to the parent class to update the parameters of the multi-head attention result aggregation block.</p> <p style="text-align:justify;">It is worth noting that there are few trainable parameters within <i>CNeuronGateLineAttention</i>, so the method simply performs a careful, sequential transfer of control between components. Nevertheless, this step is critically important: it is here that the model adapts to financial time series, adjusting the weights to accurately forecast trends and effectively recognize significant signals.</p> <p style="text-align:justify;">This concludes our work with the <i>CNeuronGateLineAttention</i> class. The complete code, along with all the methods, is included in the attachment to this article.</p> <p style="text-align:justify;">Today we did a great deal of painstaking work, systematically breaking down and implementing the key components of recurrent linear attention with gates. It is time to take a short break and let our thoughts settle. In the next article, we will continue our work and bring the implementation to its logical conclusion. We will train the model and test its effectiveness using real historical financial market data.</p> <p style="text-align:justify;"><br></p> <h3 id="para4">Conclusion</h3> <p style="text-align:justify;">In this article, we analyzed and implemented in detail a recurrent linear attention block with gates within the <i>CNeuronGateLineAttention</i> object. Step by step, we worked our way from initialization and tensor generation to the forward pass, error backpropagation, and weight optimization, demonstrating how each component affects the processing of financial time series.</p> <p style="text-align:justify;">Particular attention was paid to the architectural decisions: gating regulation, recurrent state accumulation, the combination of multi-head attention, and a unified residual-connection path for all modules within the layer. All of this creates a mechanism capable of identifying meaningful signals, filtering out noise, and taking into account both short-term market fluctuations and long-term trends.</p> <p style="text-align:justify;">Today, we laid a solid foundation for the model's practical operation. In the next article, we will continue along this path, taking the implementation through the training and testing phases using real historical data. This will make it possible to assess how effective the proposed approaches are under real-world market conditions and how they help generate accurate forecasts.</p> <p style="text-align:justify;"><br></p> <h4 id="para5">Links</h4> <ul> <li><a href="https://arxiv.org/abs/2509.05276" rel="noreferrer noopener nofollow" target="_blank" title="SpikingBrain Technical Report: Spiking Brain-inspired Large Models">SpikingBrain Technical Report: Spiking Brain-inspired Large Models</a></li> <li><a href="/en/search#!module=mql5_module_articles&amp;keyword=Neural%20networks&amp;method=2&amp;author=DNG" target="_blank">Other articles in the series</a></li> </ul><br> <h4 id="para6">Programs used in the article</h4> <table cellpadding="3" cellspacing="0" class="standart" width="100%"> <thead> <tr> <th>#</th> <th>Name</th> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td data-label="#">1</td> <td data-label="Name">Study.mq5</td> <td data-label="Type">Expert Advisor</td> <td data-label="Description">Expert Advisor for offline model training</td> </tr> <tr> <td data-label="#">2</td> <td data-label="Name">StudyOnline.mq5</td> <td data-label="Type">Expert Advisor</td> <td data-label="Description">Expert Advisor for online model training</td> </tr> <tr> <td data-label="#">3</td> <td data-label="Name">Test.mq5</td> <td data-label="Type">Expert Advisor</td> <td data-label="Description">Expert Advisor for model testing</td> </tr> <tr> <td data-label="#">4</td> <td data-label="Name">Trajectory.mqh</td> <td data-label="Type">Class library</td> <td data-label="Description">Structure for describing the system state and model architecture</td> </tr> <tr> <td data-label="#">5</td> <td data-label="Name">NeuroNet.mqh</td> <td data-label="Type">Class library</td> <td data-label="Description">Class library for creating a neural network</td> </tr> <tr> <td data-label="#">6</td> <td data-label="Name">NeuroNet.cl</td> <td data-label="Type">Library</td> <td data-label="Description">Code library for an <i>OpenCL</i> program</td> </tr> </tbody> </table>
+      </div>
+          <p style="text-align: right;">
+            <small>
+              Translated from Russian by MetaQuotes Ltd. <br>Original article: <a href="/ru/articles/19762" target="_blank">https://www.mql5.com/ru/articles/19762</a>
+            </small>
+          </p>
+<div id="cb_19762" class="attachBlock">
+  <strong>Attached files</strong> |
+  <div class="grouped-attachments-help">
+    <a title="Download all attachments in the single ZIP archive" href="/en/articles/download/19762.zip">
+      <i class="attach-icon attach-icon_zip"></i>Download ZIP
+    </a>
+  </div>
+    <div class="attachItem">
+      <a title="Download MQL5.zip" href="/en/articles/download/19762/MQL5.zip"><i class="attach-icon attach-icon_zip"></i>MQL5.zip</a>
+      <span class="attachSize">(3135.77 KB)</span>
+    </div>
+</div>
+    </div>
+
+  <div class="copyright">
+    <p><strong>Warning:</strong> All rights to these materials are reserved by MetaQuotes Ltd. Copying or reprinting of these materials in whole or in part is prohibited.</p>
+      <p>This article was written by a user of the site and reflects their personal views. MetaQuotes Ltd is not responsible for the accuracy of the information presented, nor for any consequences resulting from the use of the solutions, strategies or recommendations described.</p>
+  </div>
+
+
+
+    <div class="article__author-with-articles">
+      
+
+
+<div class="article-footer__author">
+  <div class="article-footer__author-avatar">
+    <img id="avatar" src="https://c.mql5.com/avatar/2014/8/53E8CB77-1C48_big.png" title="Dmitriy Gizlyk" alt="Dmitriy Gizlyk" loading="lazy" width="164" height="164">
+  </div>
+  <div class="article-footer__author-content">
+    <div class="article-footer__author-name">
+      <a href="/en/users/dng" title="Dmitriy Gizlyk">Dmitriy Gizlyk</a>
+    </div>
+    <div class="article-footer__author-info">
+      <ul>
+          <li>
+            <i title="Lives" class="icons-profile icons-profile_geo"></i>
+            <a target="_blank" rel="noreferrer noopener nofollow" title="Lives" href="https://maps.google.com/?z=4&amp;q=Ukraine">Ukraine</a>
+          </li>
+        <li>
+          <i title="Rating" class="icons-profile icons-profile_statistics"></i>
+          <a title="Rating" href="/en/users/dng/achievements">110372</a>
+        </li>
+      </ul>
+    </div>
+    <div class="article-footer__author-contacts">
+          <li title="X"><a class="icons-networks icons-networks_tw-mini" target="_blank" rel="noreferrer noopener nofollow" href="https://x.com/Prognoz_2013"></a></li>
+
+    </div>
+    <div class="article-footer__author-bio">Professional programming of any complexity for MT4, MT5, C#.</div>
+  </div>
+</div>
+
+      <div class="other-author-articles ui">
+        <h4 class="other-author-articles__title">Other articles by this author</h4>
+        <ul class="other-author-articles__list">
+          <li><a href="/en/articles/20606" data-fz-event="MQL5+Article+From+Author+Article">Neural Networks in Trading: Mesh Approximation of Event Streams as a Tool for Analyzing Price Patterns (MDC Module)</a></li>
+          <li><a href="/en/articles/20584" data-fz-event="MQL5+Article+From+Author+Article">Neural Networks in Trading: Mesh Approximation of Event Streams as a Tool for Analyzing Price Patterns (EEMFlow)</a></li>
+          <li><a href="/en/articles/20559" data-fz-event="MQL5+Article+From+Author+Article">Neural Networks in Trading: Bidirectional Adaptive Temporal Correlation (Conclusion)</a></li>
+          <li><a href="/en/articles/20528" data-fz-event="MQL5+Article+From+Author+Article">Neural Networks in Trading: Bidirectional Adaptive Temporal Correlation (Main Components)</a></li>
+          <li><a href="/en/articles/20506" data-fz-event="MQL5+Article+From+Author+Article">Neural Networks in Trading: Bidirectional Adaptive Temporal Correlation (BAT)</a></li>
+          <li><a href="/en/articles/20477" data-fz-event="MQL5+Article+From+Author+Article">Neural Networks in Trading: A Spatio-Temporal State Model for Financial Data Analysis (Conclusion)</a></li>
+          <li><a href="/en/articles/20447" data-fz-event="MQL5+Article+From+Author+Article">Neural Networks in Trading: A Spatio-Temporal State Space Model for Financial Data Analysis (STSSM Block)</a></li>
+        </ul>
+      </div>
+    </div>
+
+</article>
+
+
+  <div class="article__last-comments" id="articleAdditional">
+    
+<div class="comments-preview">
+    <div class="title">
+      <span></span><b>
+         Last comments |
+ <a href="/en/forum/517875">Go to discussion</a>
+      </b>
+        (1)
+    </div>
+    <div>
+        
+        <div class="comment">
+            <div class="user">
+    <div class="frame"><div class="bg">
+        <img src="https://c.mql5.com/avatar/avatar_na2.png" srcset="https://c.mql5.com/avatar/avatar_na2_big.png 2x" alt="TahianaBE" title="TahianaBE" data-user-login="TahianaBE" loading="lazy" width="60" height="60">
+    </div></div>
+  </div>
+
+          <div class="text">
+            <div>
+              <b><a class="author" href="/en/users/tahianabe" data-user-login="TahianaBE">TahianaBE</a></b>
+              |
+              <span class="comment__date">30 Sep 2025 at 16:54</span>
+              <a id="comment_60528883"></a>
+            </div>
+            <div class="content" id="content60528883">
+              <div class="fquote"><strong><span style="color:#42639C;">MetaQuotes </span> : </strong><br><p>The article <a href="/en/articles/19762" target="_blank">"Neural Networks in Trading: From Transformers to Spiking Neurons (Basic Components)" has </a> been published: </p> <p>Author: <a href="/en/users/DNG" target="_blank" title="DNG">Dmitry Gizlyk </a></p> </div> Hello. I would just like to mention that when I tried to compile Neuronet.mqh, I encountered errors regarding an incorrect number of parameters in the Math.mqh file. In a previous article, you replied that we needed to change `MathPow` to `::MathPow`; this is where I am confused. As a non-programmer, I am unsure whether I should change the `MathPow` functions in `Neuronet.mqh` or `Math.mqh`. I would be grateful if you could clarify this for me. <div>Kind regards. </div>
+            </div>
+          </div>
+        </div>
+    </div>
+</div>
+
+  </div>
+
+
+    <div class="articles-bottom-list">
+        <div class="articles-bottom-list__row">
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Building AI-Powered Trading Systems in MQL5 (Part 12): Giving the Assistant Chart Vision and Tool Access" src="https://c.mql5.com/2/265/23893-building-ai-powered-trading-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/23893" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Building AI-Powered Trading Systems in MQL5 (Part 12): Giving the Assistant Chart Vision and Tool Access</a>
+                <div class="articles-bottom-list__desc">We give our AI chat assistant two new abilities in MQL5: sight and tool access. It can now capture the chart as a screenshot, attach it to a message, and view it in the panel, and it can call tools that read live positions, trade history, indicator values, chart objects, and the economic calendar. The assistant reasons from what it sees and queries rather than text alone.</div>
+              </div>
+          </div>
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Encoding Candlestick Pattern (Part 6): Developing the Encoded Sequence Indicator" src="https://c.mql5.com/2/265/24035-encoding-candlestick-pattern-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/24035" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Encoding Candlestick Pattern (Part 6): Developing the Encoded Sequence Indicator</a>
+                <div class="articles-bottom-list__desc">An on-chart MQL5 indicator generates a live stream of encoded candlestick symbols and a frequency report for the last N bars. It supports color customization and type filtering, and uses A/a, H/h, E/e, G/g, D, and N/n classifications. Traders can quickly review occurrences and common sequences directly on the chart.</div>
+              </div>
+          </div>
+        </div>
+        <div class="articles-bottom-list__row">
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Trade Entry Timing Accuracy Analyzer in MQL5" src="https://c.mql5.com/2/265/23905-trade-entry-timing-accuracy-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/23905" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Trade Entry Timing Accuracy Analyzer in MQL5</a>
+                <div class="articles-bottom-list__desc">This article builds an MQL5 dashboard that evaluates entry timing for closed positions using tick‑based Maximum Adverse Excursion (MAE) and Maximum Favorable Excursion (MFE). It computes an entry efficiency ratio, renders an MAE/MFE scatter plot and an efficiency histogram, and prints a concise summary to the Experts tab. Deal grouping, tick‑level excursion logic, and a standalone verification script are included so you can diagnose entry quality across many trades.</div>
+              </div>
+          </div>
+          <div class="articles-bottom-list__column">
+              <div class="articles-bottom-list__item">
+                <img alt="Regime Discovery by Structure: Implementing Toeplitz Inverse Covariance Clustering (TICC)" src="https://c.mql5.com/2/244/24064-regime-discovery-by-structure-logo.png" loading="lazy" width="60" height="60" class="articles-bottom-list__avatar">
+                <a href="/en/articles/24064" data-fz-event="MQL5+Article+Next+Article" class="articles-bottom-list__title">Regime Discovery by Structure: Implementing Toeplitz Inverse Covariance Clustering (TICC)</a>
+                <div class="articles-bottom-list__desc">This article presents a full MQL5 pipeline for Toeplitz Inverse Covariance Clustering: stacked observations, ADMM‑based graphical lasso with block‑Toeplitz constraints, and dynamic‑programming regime assignment. It separates structure from volatility and conditions away the shared USD leg. The fitted regimes are displayed causally as a non-repainting ribbon with a dependency graph for the active state.</div>
+              </div>
+          </div>
+        </div>
+    </div>
+
+<div class="clear-fix"></div>
+
+<div id="wdausxxqrpvhekbwjrjlhqjghyhesrqqau" class="rx45ft5jkbtq9r7i2 rx45ft5jkbtq9r7i2_articles-view ghky8ic0v"><iframe width="800" height="80" frameborder="0" style="vertical-align: top; max-width: 100% !important; display: block;" scrolling="no" src="https://www.mql5.com/ff/sh/ub4fqgrk4rkv8gz9z2/index.html?link=https%3A%2F%2Fwww.mql5.com%2Fen%2Fforum%2F454106&amp;a=bkbqgaxtrafeuegfvjisjjwjohagrvnr&amp;s=25c5856d7857fc6b6db7cffb15ae4ce40fd19d1ab594d8a900ad65673d9ffa0e&amp;v=1&amp;w=800&amp;h=80&amp;r=https%3A%2F%2Fwww.mql5.com%2Fen%2Farticles%2F19762&amp;host=https%3A%2F%2Fwww.mql5.com%2Fff%2F&amp;id=wdausxxqrpvhekbwjrjlhqjghyhesrqqau&amp;fz_uniq=5073715639611346232&amp;custom="></iframe></div>
+    
+
+<div class="hidden" id="popupRegisterLogin">
+  <div class="register-login-popup">
+    <div class="register-login-popup__header">
+      <img src="https://c.mql5.com/i/registerlandings/logo-2.png" srcset="https://c.mql5.com/i/registerlandings/logo-2_2x.png 2x" alt="MQL5 - Language of trade strategies built-in the MetaTrader 5 client terminal" loading="lazy" width="74" height="24">
+    </div>
+    <div class="register-login-popup__content">
+      <div class="register-login-popup__desc">
+        <div class="register-login-popup__title">You are missing trading opportunities:</div>
+        <ul>
+<li>Free trading apps</li>
+<li>Over 8,000 signals for copying</li>
+<li>Economic news for exploring financial markets</li>
+</ul>
+      </div>
+      <div class="register-login-popup__forms ui">
+        <div class="register-login-popup__tabs" id="registerLoginPopupTabs">
+          <span data-id="register" id="registerLoginPopupTab_register" class="register-login-popup__tab register-login-popup__tab_active">Registration</span>
+          <span data-id="login" id="registerLoginPopupTab_login" class="register-login-popup__tab">Log in</span>
+        </div>
+        <div id="registerLoginPopupTabContent_register">
+          <div class="ui auth-form__content">
+    
+  <script type="text/javascript">/*<![CDATA[*/ if (!window.V) var V = []; /*]]>*/</script>
+<script>/*<![CDATA[*/ if(! window.V) var V=[]; /*]]>*/</script>
+<form method="POST" action="/en/auth_register_short" id="PopupRegisterquickRegisterForm" onsubmit="PopupRegisterquickRegistration.OnSubmit(this,'en');if(Validate(this)) Ajax.form(this,{onready:PopupRegisterquickRegistration.OnSuccessPopup,onerror:PopupRegisterquickRegistration.OnError,onbeginrequest:PopupRegisterquickRegistration.DisableInputs,onendrequest:PopupRegisterquickRegistration.EnableInputs});return(false);" enctype="multipart/form-data"><input type="hidden" name="__signature" value="4827cbdb114e1386757410f5e21ada07">
+    <div class="auth-form__inputs">
+      <input type="hidden" value="0" name="IsValidate" id="PopupRegisterIsValidate">
+
+      <!--[if lt IE 10]><div class="note">Login:</div><![endif]-->
+      <div class="auth-form__box-input">
+        <input type="text" id="PopupRegisterusername" name="username" class="input" maxlength="32" onchange="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.CheckUserName();}" onkeyup="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.ValidateUserName(this, 'Enter a valid login');}" placeholder="Login" title="May contain Latin letters, digits, dots, dashes,underscore characters. Cannot start or end with a dot. The allowed length is 3 to 32 characters." onfocus="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnFocus(this,'');}" onblur="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnBlur(this);}">
+        <script id="validate_PopupRegisterusername">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['PopupRegisterusername',10,'You may use Latin characters, numbers, underscores and periods.',validate_username]);}); /*]]>*/</script>
+
+        <label class="label" for="PopupRegisterusername">latin characters without spaces</label>
+      </div>
+      <!--[if lt IE 10]><div class="note">Your email:</div><![endif]-->
+      <div class="auth-form__box-input">
+        <input class="input" type="email" id="PopupRegisteremail" name="email" placeholder="Your email" title="Please enter the email (it may not exceed 256 characters). For example: john@example.com" onchange="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnChange(this);}" onfocus="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnFocus(this,'');}" onblur="if(window.PopupRegisterquickRegistration){PopupRegisterquickRegistration.OnBlur(this);}">
+        <script id="validate_PopupRegisteremail">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['PopupRegisteremail',10,'Enter a valid email address',validate_email]);}); /*]]>*/</script>
+
+        <label class="label" for="PopupRegisteremail">a password will be sent to this email</label>
+      </div>
+      <input name="PrefixId" type="hidden" value="Popup+Register">
+    </div>
+    <span id="PopupRegisterquickRegisterSubmit">
+      <input type="submit" value="Register" id="PopupRegisterquickRegisterButton" title="Sign up and receive an email with your password" class="button button_yellow">
+    </span>
+    <span id="PopupRegisterquickRegisterErrorMessage" class="quick-register-error-message field-validation-error" style="text-align: center; margin-top: 16px; display: none;">
+      An error occurred
+    </span>
+</form>
+    
+</div>
+<div class="auth-social">
+  <ul class="auth-social-list" id="PopupRegistersocialList">
+    <li><a onclick="window.fpush({name: 'MQL5+Popup+Register+Google', unit: 'section', value: 'Articles'}); " href="https://www.mql5.com/en/auth_oauth2?provider=Google&amp;amp;return=popup&amp;amp;reg=1" class="auth-soc-button qa-google-button auth-soc-button_google" rel="nofollow">Log in With Google</a></li>
+  </ul>
+</div>
+<div class="auth-block-agree">
+  <p>
+    You agree to <a target="_blank" href="/en/about/privacy">website policy</a> and <a target="_blank" href="/en/about/terms">terms of use</a>
+  </p>
+</div>
+
+
+        </div>
+        <div id="registerLoginPopupTabContent_login" class="hidden">
+            <div id="loginRegistrationHint" class="auth-form__text">
+    If you do not have an account, please <a href="https://www.mql5.com/en/auth_register" rel="nofollow" style="vertical-align: top">register</a>
+  </div>
+<div class="ui auth-form__content auth-form__content_login" id="loginFormWrapper">
+    
+  <div id="needCookies" class="need-cookies hidden">
+    <div class="danger-box">
+      <p>Allow the use of cookies to log in to the MQL5.com website.</p>
+<p>Please enable the necessary setting in your browser, otherwise you will not be able to log in.</p>
+    </div>
+  </div>
+<script>/*<![CDATA[*/ if(! window.V) var V=[]; /*]]>*/</script>
+<form method="POST" action="/en/auth_login" id="loginForm" onsubmit="if(window.quickLogin){return window.quickLogin.onSubmit(this);}var result = Validate(this); if(result) { preventDoubleSubmit(this); } return result;"><input id="RedirectAfterLoginUrl" name="RedirectAfterLoginUrl" type="hidden" value=""><input id="RegistrationUrl" name="RegistrationUrl" type="hidden" value=""><input data-val="true" data-val-required="The ShowOpenId field is required." id="ShowOpenId" name="ShowOpenId" type="hidden" value="True"><input id="TrackingSection" name="TrackingSection" type="hidden" value="Articles">    <input name="ViewType" type="hidden" value="5">
+      <input name="PrefixId" type="hidden" value="Popup+Login">
+    <div id="loginCredentials">
+    <!--[if lt IE 10]><div class="note">Your login:</div><![endif]-->
+    <div class="auth-form__box-input">
+      <input aria-label="Your login" class="input qa-login" id="Login" name="Login" onchange="if(window.quickLogin){window.quickLogin.onChange(this);}" placeholder="Login" title="Your login" type="text" value="">
+      <script id="validate_Login">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['Login',1,'Enter login specified when signing up']);});mqGlobal.AddOnReady(function() {V.push(['Login',10,'Email cannot be used. Enter your login please',validateLogin]);}); /*]]>*/</script>
+    </div>
+    <!--[if lt IE 10]><div class="note">Password:</div><![endif]-->
+    <div class="auth-form__box-input">
+      <div class="input-with-show">
+        <input aria-label="Password" autocomplete="off" class="input qa-password" id="Password" name="Password" onchange="if(window.quickLogin){window.quickLogin.onChange(this);}" placeholder="Password" title="Enter the password please" type="password">
+        <button type="button" class="input-with-show__icon" title="Show password" aria-label="Show password" aria-pressed="false" onclick="if(window.quickLogin){window.quickLogin.showPass(this, 'Show password', 'Hide password');}"></button>
+      </div>
+      <script id="validate_Password">/*<![CDATA[*/ mqGlobal.AddOnReady(function() {V.push(['Password',1,'Please enter the password']);}); /*]]>*/</script>
+    </div>
+    </div>
+    <script type="text/javascript">
+    function validateLogin(input) {
+      return !/^\w+([-+.'']{1,2}\w+)* @\w+([-.]\w+)*\.\w+([-.]\w+)*$/i.test(input.value);
+    }
+    </script>
+    <div id="loginTwoFactor" style="display: none;" data-url="/en/auth_two_factor" data-signature="813180bbcbad842e33a9cade71201829" data-error="Error occurred. Please try again later." data-confirm="Confirm" data-code-prompt="Enter the six-digit code from your authenticator app." data-recovery-prompt="Enter recovery code number {0} from the list you saved during setup.">
+      <p id="loginTwoFactorPrompt">Enter the six-digit code from your authenticator app.</p>
+      <div class="auth-form__box-input">
+        <input class="input input_two-factor" type="text" id="loginTwoFactorCode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" dir="ltr" placeholder="000000" aria-label="Authorization code verification" aria-describedby="loginTwoFactorPrompt" disabled="">
+      </div>
+    </div>
+    <p id="loginInlineError" class="field-validation-error" role="alert" style="display: none;"></p>
+    <p id="loginPasswordResetError" class="field-validation-error" role="alert" style="display: none;">Please use <a href="/en/auth_forgotten">Password recovery</a></p>
+    <div class="forgot" id="loginForgotBlock"><a id="loginForgotLink" href="https://www.mql5.com/en/auth_forgotten?return=popup">Forgot your login/password?</a></div>
+    <div class="forgot" id="loginTwoFactorRecoveryBlock" style="display: none;">
+      <a id="loginTwoFactorRecovery" class="link">Lost your authenticator?</a>
+    </div>
+    <input type="submit" class="button button_yellow qa-submit" id="loginSubmit" value="Log in" title="Enter">
+</form>  <div id="loginTwoFactorRecovered" style="display: none;">
+    <p>You are signed in. Two-factor authentication has been disabled. Set it up again and scan a new QR code, or continue with two-factor authentication disabled.</p>
+    <a id="loginTwoFactorSettings" class="button button_yellow">Enable two-factor authentication</a>
+    <a id="loginTwoFactorContinue" class="button" style="margin-top: 12px;">Continue</a>
+  </div>
+</div>
+
+  <div class="auth-social" id="authSocialBlock">
+    <ul class="auth-social-list" id="PopupLoginsocialList">
+      <li><a onclick="window.fpush({name: 'MQL5+Popup+Login+Google', unit: 'section', value: 'Articles'}); " href="https://www.mql5.com/en/auth_oauth2?provider=Google&amp;amp;return=popup" class="auth-soc-button qa-google-button auth-soc-button_google" rel="nofollow">Log in With Google</a></li>
+    </ul>
+  </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script id="popupSection" type="application/json">{"section": "Articles"}</script>
+<script id="popupTranslate" data-type="translate" type="application/json">
+{
+  "popup":
+  {
+  "EmailTitle" : "The password has been sent to {0}",
+  "EmailDescription" : "Log in using the obtained password and the login specified during the registration",
+  "SubmitButtonText" : "Activate account",
+  "RegistrationTip" : "If you have not received the password email, check the spam folder or &lt;a href={0}&gt;repeat the registration&lt;/a&gt;"
+  }
+}
+</script>
+
+    
+
+    
+
+
+            </div>
+          </div>
+    </div>
+  </main>
+
+
+<footer class="footer desktop" id="footer">
+  <ul class="links links_desktop">
+      <li id="navFooterCommunity">
+        <nav aria-label="Website: Sections">
+          <ul>
+            <li><a href="https://web.metatrader.app/terminal?mode=demo&amp;lang=en" target="_blank" rel="nofollow noopener" data-fz-event="MQL5+Footer+Trading">Online trading / WebTerminal</a></li>
+            <li><a href="/en/code" data-fz-event="MQL5+Footer+CodeBase">Free technical indicators and robots</a></li>
+            <li><a href="/en/articles" data-fz-event="MQL5+Footer+Articles">Articles about programming and trading</a></li>
+            <li><a href="/en/job" data-fz-event="MQL5+Footer+Job">Order trading robots on the Freelance</a></li>
+            <li><a href="/en/market" data-fz-event="MQL5+Footer+Market">Market of Expert Advisors and applications	</a></li>
+            <li><a href="/en/signals" data-fz-event="MQL5+Footer+Signals">Follow forex signals</a></li>
+            <li><a href="/en/vps" data-fz-event="MQL5+Footer+VPS">Low latency forex VPS</a></li>
+            <li><a href="/en/forum" data-fz-event="MQL5+Footer+Forum">Traders forum</a></li>
+            <li><a href="/en/blogs" data-fz-event="MQL5+Footer+Blogs">Trading blogs</a></li>
+            <li><a rel="nofollow" href="/en/charts" data-fz-event="MQL5+Footer+Charts">Charts</a></li>
+            <li><a href="/en/widgets" data-fz-event="MQL5+Footer+Widgets">Free widgets</a></li>
+          </ul>
+        </nav>
+      </li>
+      <li id="navFooterMt5">
+        <nav aria-label="MetaTrader 5 Trade Platform">
+          <ul>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com" data-fz-event="MQL5+Footer+MetaTrader+5"><span class="nobr">MetaTrader 5</span> Trading Platform</a></li>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/releasenotes" data-fz-event="MQL5+Footer+MetaTrader+5"><span class="nobr">MetaTrader 5</span> latest updates</a></li>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/news" data-fz-event="MQL5+Footer+MetaTrader+5">News, implementations and technology</a></li>
+            <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/terminal/help" data-fz-event="MQL5+Footer+MetaTrader+5"><span class="nobr">MetaTrader 5</span> User Manual</a></li>
+            <li><a href="/en/docs" data-fz-event="MQL5+Footer+Docs">MQL5 language of trading strategies</a></li>
+            <li><a rel="nofollow noopener" href="https://cloud.mql5.com" data-fz-event="MQL5+Footer+Cloud">MQL5 Cloud Network</a></li>
+            <li><a rel="noopener" href="https://forge.mql5.io/?lang=en" data-fz-event="MQL5+Footer+Forge" target="_blank">MQL5 Algo Forge</a></li>
+              <li><a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/mt5setup.exe?utm_source=www.mql5.com&amp;utm_campaign=download" data-fz-event="MetaTrader+5+Desktop+Download+Footer">Download <span class="nobr">MetaTrader 5</span></a></li>
+              <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/terminal/help/start_advanced/installation" data-fz-event="MQL5+Footer+MetaTrader+5">Install Platform</a></li>
+              <li><a rel="nofollow noopener" href="https://www.metatrader5.com/en/terminal/help/start_advanced/deinstallation" data-fz-event="MQL5+Footer+MetaTrader+5">Uninstall Platform</a></li>
+          </ul>
+        </nav>
+
+      </li>
+    <li id="navFooterWebsite">
+        <nav aria-label="Website">
+          <ul>
+            <li><a rel="nofollow" href="/en/about" data-fz-event="MQL5+Footer+About">About</a></li>
+              <li><a href="/en/wall" data-fz-event="MQL5+Footer+Wall">Timeline</a></li>
+            <li><a rel="nofollow" href="/en/about/terms" data-fz-event="MQL5+Footer+About">Terms and Conditions</a></li>
+            <li><a rel="nofollow" href="/en/about/autopayments" data-fz-event="MQL5+Footer+About">Recurring Payment Agreement</a></li>
+            <li><a rel="nofollow" href="/en/about/agencyagreement" data-fz-event="MQL5+Footer+About">Agency Agreement – Offer</a></li>
+            <li><a rel="nofollow" href="/en/about/privacy" data-fz-event="MQL5+Footer+About">Privacy and Data Protection Policy</a></li>
+            <li><a href="/en/data-sources" data-fz-event="MQL5+Footer+DataSources">Data Sources</a></li>
+            <li><a rel="nofollow" href="/en/about/cookies" data-fz-event="MQL5+Footer+About">Cookies Policy</a></li>
+            <li>
+                <a rel="nofollow" href="/en/contact" data-fz-event="MQL5+Footer+Contacts">Contacts and requests</a>
+            </li>
+          </ul>
+        </nav>
+    </li>
+
+      <li>
+        <div class="footer__products">
+          <div class="footer__product">
+            <a target="_blank" rel="nofollow noopener" href="https://www.metatrader5.com" class="footer__product-name">MetaTrader 5</a>
+            <div class="footer__product-links">
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/mt5setup.exe?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon windows" data-fz-event="MetaTrader+5+Desktop+Download+Footer"><div class="footer__product-link-hint footer__product-link-hint-short">Download MetaTrader 5 for Windows</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.ltd/mt5/MetaTrader5.pkg.zip?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon macos" data-fz-event="MetaTrader+5+Desktop+Download+Footer"><div class="footer__product-link-hint footer__product-link-hint-short">Download MetaTrader 5 for MacOS</div></a>
+            <a rel="nofollow noopener" href="https://www.mql5.com/en/articles/625?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon linux" data-fz-event="MetaTrader+5+Desktop+Download+Footer"><div class="footer__product-link-hint footer__product-link-hint-short">Download MetaTrader 5 for Linux</div></a>
+            <a rel="nofollow noopener" href="https://web.metatrader.app/terminal?mode=demo&amp;lang=en" class="icon web"><div class="footer__product-link-hint footer__product-link-hint-short">Open MetaTrader 5 WebTerminal</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mt5/ios?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes&amp;hl=en" class="icon ios" data-fz-event="MetaTrader+5+iOS+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/c1c4cd9cbd49e9f1.png)">Scan to install from App Store</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mt5/android?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes&amp;hl=en" class="icon android" data-fz-event="MetaTrader+5+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/afc2bab603ef62e7.png)">Scan to install from Google Play</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mt5/android/app-gallery?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes" class="icon huawei" data-fz-event="MetaTrader+5+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/bd10f45a3d61c404.png)">Scan to install from Huawei AppGallery</div></a>
+            <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.software.corp/mt5/metatrader5.apk?utm_source=www.mql5.com&amp;utm_campaign=install.metaquotes" class="icon ark" data-fz-event="MetaTrader+5+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/253081c4da455e66.png)">Scan to get Android APK file</div></a>
+            </div>
+          </div>
+          <div>
+            <div class="footer__product">
+              <a target="_blank" rel="nofollow noopener" href="https://www.metatrader5.com/en/news/2270" class="footer__product-name">MQL5 Channels</a>
+              <div class="footer__product-links">
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mql5.channels/ios?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon ios" data-fz-event="MQL5+Channels+iOS+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/1b697989dc2445d5.png)">Scan to install from App Store</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mql5.channels/android?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon android" data-fz-event="MQL5+Channels+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/aa3876298bf4b95b.png)">Scan to install from Google Play</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/mql5.channels/android/app-gallery?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon huawei" data-fz-event="MQL5+Channels+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/0843a8a2e12f9b78.png)">Scan to install from Huawei AppGallery</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.software.corp/mql5channels/mql5channels.apk?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon ark" data-fz-event="MQL5+Channels+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/21805012f0baa519.png)">Scan to get Android APK file</div></a>
+              </div>
+            </div>
+            <div class="footer__product">
+              <a target="_blank" rel="nofollow noopener" href="https://www.tradays.com/en/download?utm_source=www.mql5.com&amp;utm_campaign=download" data-fz-event="MQL5+Footer+Download+Tradays" class="footer__product-name">Economic Calendar</a>
+              <div class="footer__product-links">
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/tradays/ios?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon ios" data-fz-event="Tradays+iOS+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/93dbd287c43b0f0e.png)">Scan to install from App Store</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/tradays/android?utm_source=www.mql5.com&amp;utm_campaign=download&amp;hl=en" class="icon android" data-fz-event="Tradays+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/009272874cc05ac8.png)">Scan to install from Google Play</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/mobile/tradays/android/app-gallery?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon huawei" data-fz-event="Tradays+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/df384f0c0ea46413.png)">Scan to install from Huawei AppGallery</div></a>
+              <a rel="nofollow noopener" href="https://download.terminal.free/cdn/web/metaquotes.software.corp/tradays/tradays.apk?utm_source=www.mql5.com&amp;utm_campaign=download" class="icon ark" data-fz-event="Tradays+Android+Download+Footer"><div class="footer__product-link-hint" style="background-image: url(https://c.mql5.com/qr/fe67645e20910571.png)">Scan to get Android APK file</div></a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer__networks">
+          <a href="https://www.facebook.com/mql5.community/" target="_blank" rel="nofollow" title="Facebook"><i class="icons-networks icons-networks_fb"></i></a>
+          <a href="https://t.me/mql5dev" target="_blank" rel="nofollow" title="Telegram"><i class="icons-networks icons-networks_tg"></i></a>
+          <a href="https://x.com/mql5com" target="_blank" rel="nofollow" title="X (Twitter)"><i class="icons-networks icons-networks_tw"></i></a>
+          <a href="https://www.youtube.com/@MetaQuotesOfficial" target="_blank" rel="nofollow" title="YouTube"><i class="icons-networks icons-networks_yt"></i></a>
+          <a href="https://www.linkedin.com/company/mql5" target="_blank" rel="nofollow" title="LinkedIn"><i class="icons-networks icons-networks_linkedin"></i></a>
+          <span>Subscribe to algotrading news</span>
+        </div>
+  
+        <div class="footer__other">
+          <div class="footer__not-a-broker">Not a broker, no real trading accounts</div>
+          <div class="copyright">35 Dodekanisou str, Germasogeia, 4043,&nbsp;Limassol,&nbsp;Cyprus</div>
+          <div class="copyright">Copyright 2000-2026, <span class="nobr">MetaQuotes Ltd</span></div>
+        </div>
+      </li>
+  </ul>
+</footer>
+
+
+  <div class="shadow-layer" id="layer"></div>
+      
+  
+  <script>
+    mqGlobal.AddOnReady(function () { Mql5Cookie.init('mql5.com','5073715639611346232'); });
+    mqGlobal.AddOnReady(function(){if(!window.Pocket){window.Pocket=new PocketManager();}});mqGlobal.AddOnReady(function(){if(!window.translateManager){window.translateManager=new Translate(undefined,'Error: failed to translate. Please try again later.');}if(document.querySelectorAll){var translateElements=document.querySelectorAll(".translateMenu");if(translateElements){var i=0,count=translateElements.length;for(i;i<count;i++){(function(i){var contentid=dataset(translateElements[i],"contentid"),sourcelang=dataset(translateElements[i],"sourcelang"),targetlang=dataset(translateElements[i],"targetlang"),moduleid=parseInt(dataset(translateElements[i],"moduleid")),typeid=parseInt(dataset(translateElements[i],"typeid")),entityid=parseInt(dataset(translateElements[i],"entityid"));Core.AddHandler(translateElements[i],"mouseover",function(){return translateManager.SetMenu(this,contentid,sourcelang,targetlang,moduleid,typeid,entityid);});})(i);}}}});window.fz("show","wdausxxqrpvhekbwjrjlhqjghyhesrqqau");window.mqGlobal.AddOnLoad(function(){window.fpush('MQL5+Article+Open');Articles.CheckOnScrollDown();});mqGlobal.AddOnReady(function(){window.PopupRegisterquickRegistration=new QuickRegistration('PopupRegister','Popup+Register','Articles');});function validate_username(input){var reg=/^([a-z0-9]){1}([\-._a-z0-9]){1,30}([\-_a-z0-9]){1}$/i,value=input.value,result=true;if(reg.test(value)){result=true;}else{result=false;window.fpush({name:'MQL5+Popup+Register+Invalid+Login',unit:'section',value:'Articles'});}return result;}function validate_email(input){var reg=/^\w+([-+.'']{1,2}\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$/i,value=input.value,result=true,length_value=value.length;if(reg.test(value)&&length_value>=1&&length_value<=40){result=true;}else{result=false;window.fpush({name:'MQL5+Popup+Register+Invalid+Email',unit:'section',value:'Articles'});}return result;};mqGlobal.AddOnReady(function(){var username=$('PopupRegisterusername'),email=$('PopupRegisteremail');if(username)username.value='';if(email)email.value='';});mqGlobal.AddOnReady(function(){window.quickLogin=new QuickLogin('Popup+Login','Articles');});mqGlobal.AddOnLoad(function(){window.showLoginRegisterPopupAtEnd();});mqGlobal.AddOnLoad(function(){window.tooltipUserInfo.init();});window.fz("show","bfogggabsofabcpxuzmgaibarmaxasdrj");window.fz("show","vgckrufggwxdtfscpyalmenexmvhljduja");mqGlobal.AddOnReady(function(){window.floatVerticalPanelNode=FloatVerticalPanel('This website uses cookies. Learn more about our <a href="/en/about/cookies">Cookies Policy</a>.','cookie_accept');});mqGlobal.AddOnReady(function(){window.initAddCopyButtonsToCodes('Copy to Clipboard');});
+    if (typeof Attach !== "undefined")
+      Attach.setAcceptFilter(".mq4,.jpeg,.webp,.gif,.mqproj,.txt,.log,.set,.mqh,.sqlite,.ex5,.mp4,.onnx,.webm,.png,.mq5,.ipynb,.mt5,.ex4,.jpg,.py,.csv,.ini,.zip,.tpl,.md,.cl");
+  </script>
+  <div class="b-fixed-mt" id="bFixedMt" style="display: none;">
+    
+  </div>
+  <script type="application/ld+json">
+    [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "url": "https://www.mql5.com",
+        "logo": "https://c.mql5.com/i/community/logo_mql5-2.png",
+        "sameAs": [
+          "https://www.facebook.com/mql5.community",
+          "https://www.x.com/mql5com",
+          "https://www.youtube.com/user/MetaQuotesOfficial"
+        ]
+      }
+       , 
+{"@context":"https://schema.org","@type":"ItemList","itemListElement":[{"@type":"SiteNavigationElement","position":1,"name":"Forum","description":"Discussions of trading strategies and algorithmic trading. MQL5.community  the largest forex forum","url":"https://www.mql5.com/en/forum","children":[]},{"@type":"SiteNavigationElement","position":2,"name":"Market","description":"MetaTrader Market - a Market of trading robots, indicators, trading books and magazines","url":"https://www.mql5.com/en/market","children":[]},{"@type":"SiteNavigationElement","position":3,"name":"Signals","description":"Social trading, copy trading and account monitoring with MetaTrader - Trading Signals on MQL5.com","url":"https://www.mql5.com/en/signals","children":[]},{"@type":"SiteNavigationElement","position":4,"name":"Freelance","description":"Order trading robots, technical indicators and algorithmic trading applications. Forex jobs. Freelance on MQL5.com. Hire MetaTrader experts and specialists","url":"https://www.mql5.com/en/job","children":[]},{"@type":"SiteNavigationElement","position":5,"name":"Quotes","description":"","url":"https://www.mql5.com/en/quotes/overview","children":[]},{"@type":"SiteNavigationElement","position":6,"name":"MetaTrader","description":"","url":"https://www.metatrader.com","children":[]},{"@type":"SiteNavigationElement","position":7,"name":"WebTerminal","description":"WebTerminal for the MetaTrader trading platform. Online forex trading.","url":"https://web.metatrader.app/terminal?mode=demo","children":[]},{"@type":"SiteNavigationElement","position":8,"name":"Calendar","description":"","url":"https://www.mql5.com/en/economic-calendar","children":[]},{"@type":"SiteNavigationElement","position":9,"name":"VPS","description":"","url":"https://www.mql5.com/en/vps","children":[]},{"@type":"SiteNavigationElement","position":10,"name":"Articles","description":"","url":"https://www.mql5.com/en/articles","children":[]},{"@type":"SiteNavigationElement","position":11,"name":"CodeBase","description":"Download trading robots, technical indicators and scripts with source code - MQL5 Code Base for MetaTrader 5","url":"https://www.mql5.com/en/code","children":[]},{"@type":"SiteNavigationElement","position":12,"name":"Algo Forge","description":"","url":"https://forge.mql5.io","children":[]},{"@type":"SiteNavigationElement","position":13,"name":"Documentation","description":"MetaQuotes Language 5 (MQL5) Reference - Documentation on MQL5.com","url":"https://www.mql5.com/en/docs","children":[]}]}    
+,
+{"@context":"https://schema.org","@type":"TechArticle","mainEntityOfPage":{"@type":"WebPage","@id":"https://www.mql5.com/en/articles/19762"},"headline":"Neural Networks in Trading: From Transformers to Spiking Neurons (Key Components)","image":["https://c.mql5.com/2/172/4548536278375__1.png","https://c.mql5.com/2/172/4604153795949.png","https://c.mql5.com/2/172/2954739290451.png"],"datePublished":"2026-10-08T10:05:52+00:00Z","dateModified":"2026-10-08T10:04:15+00:00Z","author":{"@type":"Person","name":"Dmitriy Gizlyk","url":"https://www.mql5.com/en/users/dng"},"editor":{"@type":"Organization","name":"MetaQuotes","url":"https://www.mql5.com/en/users/metaquotes","address":{"@type":"PostalAddress","addressCountry":"CY"}},"publisher":{"@type":"Organization","name":"MQL5 Community","url":"https://www.mql5.com","logo":{"@type":"ImageObject","url":"https://c.mql5.com/i/community/logo_mql5-2.png"}},"description":"We present to the reader an implementation of the SpikingBrain frameworks approaches based on recurrent linear attention with gates, discussed in detail in this article. Forward pass, gradient propagation, and weight update algorithms ensure efficient processing of financial time series and enable the practical implementation of the frameworks key concepts."}
+,
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"item":"https://www.mql5.com/en/articles","name":"Articles"},{"@type":"ListItem","position":2,"item":"https://www.mql5.com/en/articles/mt5","name":"MetaTrader 5"},{"@type":"ListItem","position":3,"item":"https://www.mql5.com/en/articles/mt5/trading_systems","name":"Trading systems"}]}
+
+    ]
+  </script>
+
+
+<div class="float-vertical-panel">This website uses cookies. Learn more about our <a href="/en/about/cookies">Cookies Policy</a>.<span class="float-vertical-panel__cross"></span></div></body></html>
