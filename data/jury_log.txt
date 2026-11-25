@@ -170,3 +170,17 @@
 2026-11-25 03:13:04 [JURY] REJECT: Defining your Edge (Part 6): Harnessing Fourier Transform and a Spiking Neural Network in an Expert Advisor
 2026-11-25 03:13:34 [JURY] REJECT: Untitled
 2026-11-25 03:13:40 [JURY] обработано: 11
+2026-11-25 18:04:02 [JURY] в очереди: 11
+2026-11-25 18:04:26 [JURY] REJECT: Neural Networks in Trading: Decomposition Instead of Scaling — Building Modules
+2026-11-25 18:04:56 [JURY] REJECT: Neural Networks in Trading: The Temporal Query Model (TQNet)
+2026-11-25 18:05:37 [JURY] битый JSON от роли prosecutor, повторяю один раз
+2026-11-25 18:06:13 [JURY] REJECT: Neural Networks in Trading: The Temporal Query Model (Conclusion)
+2026-11-25 18:06:51 [JURY] REJECT: Implementing a Continuous LLM Adaptation System for Algorithmic Trading
+2026-11-25 18:07:21 [JURY] REJECT: Cricket Algorithm (CA)
+2026-11-25 18:07:44 [JURY] REJECT: Enhanced Colliding Bodies Optimization (ECBO)
+2026-11-25 18:08:30 [JURY] REJECT: How to Create and Adapt an RL Agent with an LLM and Quantum Encoding for Algorithmic Trading in MQL5
+2026-11-25 18:09:14 [JURY] REJECT: Development and Forward Testing of an Autonomous LLM Agent for Trading with SEAL
+2026-11-25 18:10:00 [JURY] PASS: Defining your Edge (Part 4): Applying Isotonic Regression and PNN Price-Forecasting in an Expert Advisor
+2026-11-25 18:10:30 [JURY] REJECT: Native Isolation Forest for Execution-Quality Anomaly Detection in MQL5
+2026-11-25 18:10:47 [JURY] REJECT: The ZeroMQ Message Transfer Protocol in MQL5: Implementing the REQ/REP pattern
+2026-11-25 18:10:53 [JURY] обработано: 11
