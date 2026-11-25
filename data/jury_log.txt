@@ -157,3 +157,16 @@
 2026-11-24 17:37:08 [JURY] REJECT: Random Matrix Theory: Denoising the Correlation Matrix for Multi-Symbol EAs
 2026-11-24 17:37:37 [JURY] REJECT: Building a Neural Loss-Pattern Auditor in MQL5
 2026-11-24 17:37:43 [JURY] обработано: 3
+2026-11-25 03:07:44 [JURY] в очереди: 11
+2026-11-25 03:08:09 [JURY] REJECT: Neural Networks in Trading: Heterogeneity-Informed Meta-Parameter Learning (HimNet)
+2026-11-25 03:08:40 [JURY] REJECT: Neural Networks in Trading: Heterogeneity-Informed Meta-Parameter Learning (Key Components)
+2026-11-25 03:09:15 [JURY] REJECT: Neural Networks in Trading: The Adaptive Graph Diffusion Model (SAGDFN)
+2026-11-25 03:09:45 [JURY] REJECT: Neural Networks in Trading: The Adaptive Graph Diffusion Model (Attention Module)
+2026-11-25 03:10:24 [JURY] REJECT: LLM-Based Trading Agent with Embedded Top Trader Philosophy
+2026-11-25 03:10:50 [JURY] REJECT: How to Connect an LLM to an MQL5 Expert Advisor via a Python Server
+2026-11-25 03:11:13 [JURY] REJECT: Testing for Residual Autocorrelation with the Ljung-Box Portmanteau Test in MQL5
+2026-11-25 03:11:40 [JURY] REJECT: Machine Learning in Pure MQL5 (Part 1): Logistic Regression from Scratch with SGD
+2026-11-25 03:12:17 [JURY] REJECT: Defining your Edge (Part 5): Using GARCH Variance and Volatility-Scaled LSTM in an Expert Advisor
+2026-11-25 03:13:04 [JURY] REJECT: Defining your Edge (Part 6): Harnessing Fourier Transform and a Spiking Neural Network in an Expert Advisor
+2026-11-25 03:13:34 [JURY] REJECT: Untitled
+2026-11-25 03:13:40 [JURY] обработано: 11

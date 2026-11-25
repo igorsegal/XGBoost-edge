@@ -84,3 +84,8 @@ https://www.mql5.com/en/articles/20559	no_test_results	Neural Networks in Tradin
 https://www.mql5.com/en/articles/20477	no_test_results	Neural Networks in Trading: A Spatio-Temporal State Model for Financial Data Analysis (Conclusion)	len=3506 edge=8 proof=0 test=1 grid=0
 https://www.mql5.com/en/articles/13942	no_trading_logic	Neural Networks in Practice: A Question of Scale	len=34361 edge=1 proof=0 test=1 grid=0
 https://www.mql5.com/en/articles/23172	title:files	MLP (Multilayer Perceptron) Inside an MQL5 Expert Advisor: Training on Historical Data Without Python or Weight Files	len=28791 edge=105 proof=20 test=7 grid=0
+https://www.mql5.com/en/articles/19425	no_test_results	Neural Networks in Trading: The Adaptive Graph Diffusion Model (Conclusion)	len=45000 edge=37 proof=0 test=1 grid=0
+https://www.mql5.com/en/articles/23564	no_test_results	MetaTrader 5 Machine Learning Blueprint (Part 21): Feature Importance Analysis	len=27011 edge=138 proof=1 test=0 grid=0
+https://www.mql5.com/en/articles/21310	no_trading_logic	The Dragonfly Algorithm (DA)	len=45000 edge=4 proof=3 test=10 grid=0
+https://www.mql5.com/en/articles/19286	no_test_results	Neural Networks in Trading: Heterogeneity-Informed Meta-Parameter Learning (Conclusion)	len=45000 edge=29 proof=2 test=2 grid=0
+https://www.mql5.com/en/articles/21292	no_trading_logic	Beetle Swarm Optimization (BSO)	len=45000 edge=6 proof=4 test=16 grid=0
