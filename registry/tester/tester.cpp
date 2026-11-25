@@ -1,5 +1,6 @@
 // tester.cpp - тестер правил из реестра на истории XFBAR001.
-// Запуск: tester <config.json> [--selftest] [--exam]
+// Запуск: tester <config.json> [--selftest] [--exam] [--trades=файл.csv]
+// Правила kind=strategy (свои вход, стоп и цель) считаются своим модулем, общий выход через 24 бара к ним не применяется.
 // Без --exam считается только разработка: бары после начала экзамена не загружаются.
 // --exam открывает закрытый экзамен: только для основного теста, прошедшего разработку, и один раз на версию правила.
 // Реестр даёт значения параметров по умолчанию; конфиг теста включает правила и переопределяет параметры.
@@ -7,6 +8,8 @@
 #include "bars.h"
 #include "expr_rule.h"
 #include "rules/hedge.h"
+#include "rules/london_trap.h"
+#include "rules/classic_trace.h"
 #include <cstdio>
 #include <set>
 #include <algorithm>
@@ -136,6 +139,42 @@ static int dump_indicator(int argc, char** argv) {
     return 0;
 }
 
+// ---- стратегии со своими выходами ----
+struct Strat { std::vector<LtTrade> trades; std::vector<int> sigs, lim; std::string fjson, ftext; };
+static bool has_strategy(const std::string& id) { return id == "LONDON_TRAP_01" || id == "CLASSIC_TRACE_01"; }
+static std::string funnel_str(std::initializer_list<std::pair<const char*, long>> v, bool json) {
+    std::string r; for (const auto& kv : v) { if (!r.empty()) r += json ? "," : ", "; r += json ? "\"" + std::string(kv.first) + "\":" + std::to_string(kv.second) : std::string(kv.first) + " " + std::to_string(kv.second); }
+    return json ? "{" + r + "}" : r;
+}
+static Strat run_strategy(const std::string& id, const Params& P, const Bars& m, const Bars& h, BarCache& cache, int start, double comm, bool by_price) {
+    Strat s;
+    if (id == "LONDON_TRAP_01") {
+        LtResult r = lt_run(P, m, h, cache.get("D1"), start, comm, by_price); const LtFunnel& f = r.f;
+        s.trades = r.trades; s.sigs = r.sigs; s.lim.assign(r.trades.size(), 0);
+        auto text = [&](bool json) { return funnel_str({{"days", f.days}, {"days_bias", f.bias}, {"days_asia_ok", f.asia_ok}, {"days_ready", f.ready}, {"days_swept", f.swept}, {"true_moves", f.true_move}, {"returns", f.returns},
+            {"rej_spread", f.rej_spread}, {"rej_busy", f.rej_busy}, {"rej_gap", f.rej_gap}, {"rej_losses", f.rej_losses}, {"rej_rr", f.rej_rr}, {"entries", f.entries}}, json); };
+        s.fjson = text(true); s.ftext = text(false);
+    } else {
+        CtResult r = ct_run(P, m, h, start, comm, by_price); const CtFunnel& f = r.f;
+        s.trades = r.trades; s.sigs = r.sigs; s.lim = r.lim;
+        auto text = [&](bool json) { return funnel_str({{"breakouts", f.breakouts}, {"true_moves", f.true_moves}, {"returns", f.returns}, {"rej_spread", f.rej_spread}, {"rej_busy", f.rej_busy}, {"rej_losses", f.rej_losses},
+            {"landmark", f.landmark}, {"rej_gap", f.rej_gap}, {"rej_target", f.rej_target}, {"rej_rr", f.rej_rr}, {"limit_placed", f.limit_placed}, {"limit_dropped", f.limit_dropped}, {"entries_market", f.entries_market}, {"entries_limit", f.entries_limit}}, json); };
+        s.fjson = text(true); s.ftext = text(false);
+    }
+    return s;
+}
+static std::vector<Trade> strat_trades(const Strat& r, const Bars& b) {
+    std::vector<Trade> out; for (const auto& t : r.trades) out.push_back({t.i_sig, t.i_in, t.i_out, t.dir, t.pnl, t.R, b.t[t.i_in]}); return out;
+}
+static void write_trades(const std::string& path, const Strat& r, const Bars& b) {
+    FILE* f = fopen(path.c_str(), "wb"); if (!f) throw std::runtime_error("не записать сделки: " + path);
+    fprintf(f, "signal_time,entry_time,exit_time,dir,entry,exit,sl,tp,pnl,R,be,why,limit\n");
+    for (size_t k = 0; k < r.trades.size(); ++k) { const LtTrade& t = r.trades[k];
+        fprintf(f, "%lld,%lld,%lld,%d,%.10g,%.10g,%.10g,%.10g,%.10g,%.10g,%d,%s,%d\n",
+            (long long)b.t[t.i_sig], (long long)b.t[t.i_in], (long long)b.t[t.i_out], t.dir, t.entry, t.exit, t.sl, t.tp, t.pnl, t.R, t.be, t.why.c_str(), r.lim[k]); }
+    fclose(f);
+}
+
 // Порча баров после точки среза (для проверки причинности): бар j портится, если он закрывается позже cut_t.
 static void scramble(Bars& b, int64_t cut_t) {
     for (size_t i = 0; i < b.size(); ++i) if (b.t[i] + b.period_sec > cut_t) { b.o[i] *= 1.37; b.h[i] *= 1.41; b.l[i] *= 0.63; b.c[i] = b.c[i] * 0.77 + 0.1; }
@@ -145,10 +184,10 @@ int main(int argc, char** argv) {
     try {
         if (argc >= 2 && std::string(argv[1]) == "--dump") return dump_indicator(argc, argv);
         if (argc < 2) { std::cerr << "Использование: tester <config.json> [--selftest] [--exam]\n"; return 2; }
-        bool selftest = false, exam = false;
+        bool selftest = false, exam = false; std::string tradesPath;
         for (int i = 2; i < argc; ++i) {
             std::string a = argv[i];
-            if (a == "--selftest") selftest = true; else if (a == "--exam") exam = true; else throw std::runtime_error("неизвестный ключ: " + a);
+            if (a == "--selftest") selftest = true; else if (a == "--exam") exam = true; else if (a.rfind("--trades=", 0) == 0) tradesPath = a.substr(9); else throw std::runtime_error("неизвестный ключ: " + a);
         }
         std::string cfgPath = argv[1];
         JV cfg = json_load(cfgPath);
@@ -173,7 +212,7 @@ int main(int argc, char** argv) {
         if (PL.train < 1 || PL.test < 1 || (int)per.at("step_months").num(2) != PL.test) throw std::runtime_error("нужно: обучение и проверка от 1 месяца, сдвиг равен проверке");
 
         const JV& cs = cfg.at("costs"), &ex = cfg.at("exits");
-        ExitCfg X; X.hold = (int)ex.at("hold_bars").num(24); X.stopMult = ex.at("stop_atr_mult").num(2.0); X.atrP = (int)ex.at("atr_period").num(14);
+        ExitCfg X; X.hold = ex.has("hold_bars") ? (int)ex.at("hold_bars").num(24) : 24; X.stopMult = ex.has("stop_atr_mult") ? ex.at("stop_atr_mult").num(2.0) : 2.0; X.atrP = ex.has("atr_period") ? (int)ex.at("atr_period").num(14) : 14;
         if (pair.size() != 6 || (pair.substr(3) != "USD" && pair.substr(0, 3) != "USD")) throw std::runtime_error("комиссия умеет только инструменты с USD: " + pair);
         const double lot = pair.substr(0, 3) == "XAU" ? 100.0 : 100000.0;     // золото: лот 100 унций
         if (cs.has("lot_units") && cs.at("lot_units").num(lot) != lot) throw std::runtime_error("lot_units в конфиге не соответствует инструменту " + pair);
@@ -195,7 +234,8 @@ int main(int argc, char** argv) {
         std::string head = " \"tester\":\"" + std::string(VERSION) + "\",\n \"test_name\":\"" + testName + "\",\n \"pair\":\"" + pair + "\", \"timeframe\":\"" + tf + "\",\n";
         head += " \"role\":\"" + role + "\",\n \"scheme\":\"" + std::to_string(PL.train) + "+" + std::to_string(PL.test) + "\",\n";
         std::string costs = " \"costs\":{\"commission_per_lot_usd\":" + num_s(cs.at("commission_per_lot_usd").num(7)) + ",\"lot_units\":" + num_s(lot) + ",\"spread\":\"по бару из файла\"},\n";
-        costs += " \"exits\":{\"hold_bars\":" + std::to_string(X.hold) + ",\"stop_atr_mult\":" + num_s(X.stopMult) + "},\n";
+        if (ex.has("by_rule") && ex.at("by_rule").boolean(false)) costs += " \"exits\":{\"by_rule\":true},\n";
+        else costs += " \"exits\":{\"hold_bars\":" + std::to_string(X.hold) + ",\"stop_atr_mult\":" + num_s(X.stopMult) + "},\n";
         std::string devRules, examRules; int exitCode = 0, examDone = 0;
 
         // прогон одного правила по отрезку (окна идут подряд): возвращает JSON и признак прохождения
@@ -225,7 +265,11 @@ int main(int argc, char** argv) {
             const JV& rc = cfg.at("rules").at(id);
             if (!rc.at("enabled").boolean(false)) { printf("[%s] выключено в конфиге\n", id.c_str()); continue; }
             bool isExpr = rj.has("implementation") && rj.at("implementation").t == JV::OBJ && rj.at("implementation").has("kind") && rj.at("implementation").at("kind").str() == "expr";
-            if (!isExpr && !fac.count(id)) { printf("[%s] ВКЛЮЧЕНО, но реализации в тестере нет\n", id.c_str()); exitCode = 3; continue; }
+            bool isStrat = rj.has("implementation") && rj.at("implementation").t == JV::OBJ && rj.at("implementation").has("kind") && rj.at("implementation").at("kind").str() == "strategy";
+            const bool byRule = ex.has("by_rule") && ex.at("by_rule").boolean(false);
+            if (isStrat != byRule) throw std::runtime_error("[" + id + "] в конфиге exits.by_rule должно быть true только для правил со своими выходами");
+            if (isStrat && !has_strategy(id)) { printf("[%s] ВКЛЮЧЕНО, но реализации в тестере нет\n", id.c_str()); exitCode = 3; continue; }
+            if (!isExpr && !isStrat && !fac.count(id)) { printf("[%s] ВКЛЮЧЕНО, но реализации в тестере нет\n", id.c_str()); exitCode = 3; continue; }
             Params P;
             for (const auto& kv : rj.at("params").o) P[kv.first] = kv.second.at("default").num(0);
             std::string over;
@@ -238,12 +282,39 @@ int main(int argc, char** argv) {
             }
             BarCache cache; cache.dir = bdir; cache.pair = pair; cache.cutoff = devCut;
             std::unique_ptr<IRule> rule;
-            if (isExpr) rule.reset(new ExprRule(rj, P, b, cache, catalog)); else { rule = fac[id](); rule->init(P, b); }
-            std::vector<double> A = atr(b, X.atrP);
-            std::vector<int> sigs;
-            std::vector<Trade> tr = simulate(*rule, b, A, first_at(b, wDev.front().t0), X, &sigs);
+            std::vector<int> sigs; std::vector<Trade> tr; Strat lt;
+            if (isStrat) {
+                lt = run_strategy(id, P, b, cache.get("H1"), cache, first_at(b, wDev.front().t0), X.comm, X.comm_by_price);
+                sigs = lt.sigs; tr = strat_trades(lt, b);
+                if (!tradesPath.empty()) write_trades(tradesPath, lt, b);
+            } else {
+                if (isExpr) rule.reset(new ExprRule(rj, P, b, cache, catalog)); else { rule = fac[id](); rule->init(P, b); }
+                std::vector<double> A = atr(b, X.atrP);
+                tr = simulate(*rule, b, A, first_at(b, wDev.front().t0), X, &sigs);
+            }
 
-            if (selftest) {
+            if (selftest && isStrat) {
+                // портим все свечи (M5, H1, D1, включая спред), закрывающиеся после среза: сигналы, входы и закрытые сделки до среза не меняются
+                int diff = 0, checked = 0; const double fr[] = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+                for (double f : fr) {
+                    int cut = (int)(b.size() * f); const int64_t cutT = b.t[cut];
+                    auto spoil = [&](Bars& x) { scramble(x, cutT); for (size_t i = 0; i < x.size(); ++i) if (x.t[i] + x.period_sec > cutT) x.spread[i] = x.spread[i] * 3 + 7; };
+                    Bars m2 = b; spoil(m2); BarCache c2 = cache; for (auto& kv : c2.m) spoil(kv.second);
+                    Strat r2 = run_strategy(id, P, m2, c2.get("H1"), c2, first_at(b, wDev.front().t0), X.comm, X.comm_by_price);
+                    for (int i = 0; i < cut; ++i) if (r2.sigs[i] != sigs[i]) ++diff;
+                    std::vector<LtTrade> a1, a2; for (const auto& t : lt.trades) if (t.i_in < cut) a1.push_back(t); for (const auto& t : r2.trades) if (t.i_in < cut) a2.push_back(t);
+                    if (a1.size() != a2.size()) { ++diff; continue; }
+                    for (size_t k = 0; k < a1.size(); ++k) {
+                        const LtTrade &u = a1[k], &v = a2[k]; ++checked;
+                        if (u.i_in != v.i_in || u.dir != v.dir || u.entry != v.entry || u.sl != v.sl || u.tp != v.tp) ++diff;
+                        else if ((u.i_out < cut || v.i_out < cut) && (u.i_out != v.i_out || u.exit != v.exit || u.pnl != v.pnl)) ++diff;
+                    }
+                }
+                printf("[%s] SELFTEST причинности (8 точек среза): проверено сделок %d, расхождений %d -> %s\n", id.c_str(), checked, diff, diff == 0 ? "OK" : "ЕСТЬ ЗАГЛЯДЫВАНИЕ");
+                if (diff) { exitCode = 4; if (exam) { printf("[%s] экзамен не открыт: проверка причинности не пройдена\n", id.c_str()); continue; } }
+            }
+
+            if (selftest && !isStrat) {
                 // Проверка на заглядывание в будущее: для нескольких точек среза портим все бары, закрывающиеся после среза,
                 // и сравниваем всё, что правило видит до среза: сигналы, а у правил-условий ещё и значения всех индикаторов на каждом баре.
                 int totalDiff = 0, totalSer = 0; const double fr[] = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
@@ -263,6 +334,10 @@ int main(int argc, char** argv) {
             printf("\n[%s] %s %s  параметры: %s\n", id.c_str(), pair.c_str(), tf.c_str(), over.empty() ? "по умолчанию" : over.c_str());
             bool devOk = false;
             std::string js = report(id, over, "dev", wDev, b, tr, sigs, devOk);
+            if (isStrat) {
+                printf("  отбор: %s\n", lt.ftext.c_str());
+                js.insert(js.rfind("\"verdict\""), "\"funnel\":" + lt.fjson + ",\n   ");
+            }
             devRules += (devRules.empty() ? "" : ",\n") + js;
 
             if (!exam) continue;
@@ -292,12 +367,19 @@ int main(int argc, char** argv) {
             }
             Bars be = full; cut_bars(be, examCut);
             BarCache ce; ce.dir = bdir; ce.pair = pair; ce.cutoff = examCut;
-            std::unique_ptr<IRule> re;
-            if (isExpr) re.reset(new ExprRule(rj, P, be, ce, catalog)); else { re = fac[id](); re->init(P, be); }
-            std::vector<double> Ae = atr(be, X.atrP); std::vector<int> se;
-            std::vector<Trade> te = simulate(*re, be, Ae, first_at(be, wExam.front().t0), X, &se);
+            std::vector<int> se; std::vector<Trade> te; Strat le;
+            if (isStrat) {
+                le = run_strategy(id, P, be, ce.get("H1"), ce, first_at(be, wExam.front().t0), X.comm, X.comm_by_price);
+                se = le.sigs; te = strat_trades(le, be);
+            } else {
+                std::unique_ptr<IRule> re;
+                if (isExpr) re.reset(new ExprRule(rj, P, be, ce, catalog)); else { re = fac[id](); re->init(P, be); }
+                std::vector<double> Ae = atr(be, X.atrP);
+                te = simulate(*re, be, Ae, first_at(be, wExam.front().t0), X, &se);
+            }
             bool exOk = false;
             std::string ej = report(id, over, "exam", wExam, be, te, se, exOk);
+            if (isStrat) ej.insert(ej.rfind("\"verdict\""), "\"funnel\":" + le.fjson + ",\n   ");
             examRules += (examRules.empty() ? "" : ",\n") + ej; ++examDone;
         }
         auto save = [&](const std::string& mode, const Bars& bb, const std::string& rules, const std::string& outPath) {

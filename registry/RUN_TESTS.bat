@@ -20,6 +20,14 @@ echo [3/5] check indicators against independent Python...
 if errorlevel 1 ( echo INDICATOR CHECK FAILED & pause & exit /b 1 )
 "%PY%" tests\xcheck_indicators2.py tester\tester.exe %BARS%
 if errorlevel 1 ( echo INDICATOR CHECK 2 FAILED & pause & exit /b 1 )
+for %%P in (EURUSD GBPUSD USDJPY) do (
+  "%PY%" tests\xcheck_london.py tester\tester.exe configs\london_trap_%%P_M5.json
+  if errorlevel 1 ( echo LONDON TRAP CHECK FAILED %%P & pause & exit /b 1 )
+)
+for %%P in (EURUSD GBPUSD USDJPY) do (
+  "%PY%" tests\xcheck_classic.py tester\tester.exe configs\classic_trace_%%P_M5.json
+  if errorlevel 1 ( echo CLASSIC TRACE CHECK FAILED %%P & pause & exit /b 1 )
+)
 echo [4/5] run all configs, development windows only...
 for %%f in (configs\*.json) do (
   echo ===== %%f

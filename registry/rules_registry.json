@@ -2009,6 +2009,519 @@
     ]
    },
    "results": []
+  },
+  {
+   "id": "LONDON_TRAP_01",
+   "name": "Лондонский капкан: вынос границы Азии против направления H1 и возврат",
+   "source": {
+    "type": "course",
+    "article_id": 0,
+    "url": "",
+    "title": "Классический след хозяина рынка (SniperPips), сетап №2 по code_artifact.md",
+    "year": 2026,
+    "spec_file": "registry/specs/LONDON_TRAP_01.md"
+   },
+   "status": "tested_fail",
+   "enabled_by_default": false,
+   "direction": "both",
+   "timeframes": [
+    "M5"
+   ],
+   "pairs": [
+    "EURUSD",
+    "GBPUSD",
+    "USDJPY"
+   ],
+   "entry_long": "H1 бычье; в 07:00–10:30 UTC вынос ниже коридора Азии на 0,15–1,20 ATR и возврат закрытием внутрь (не больше 3 свечей снаружи); вход на следующей свече",
+   "entry_short": "зеркально",
+   "exit_rule": "цель - противоположная граница коридора; безубыток на половине пути",
+   "stop_rule": "за экстремум выноса + спред + 0,15 ATR(14) M5",
+   "description": "Полный текст правил и допущений: registry/specs/LONDON_TRAP_01.md",
+   "params": {
+    "fractal_n": {
+     "type": "int",
+     "default": 3,
+     "min": 1,
+     "max": 10,
+     "note": "свечей слева и справа у свинга H1"
+    },
+    "asia_end_min": {
+     "type": "int",
+     "default": 420,
+     "min": 60,
+     "max": 720,
+     "note": "конец коридора Азии и начало окна, минуты от 00:00 UTC"
+    },
+    "window_end_min": {
+     "type": "int",
+     "default": 630,
+     "min": 120,
+     "max": 1020,
+     "note": "конец окна, минуты от 00:00 UTC"
+    },
+    "min_asia_bars": {
+     "type": "int",
+     "default": 72,
+     "min": 1,
+     "max": 288,
+     "note": "минимум свечей M5 в коридоре"
+    },
+    "asia_atr_max": {
+     "type": "float",
+     "default": 0.45,
+     "min": 0.05,
+     "max": 3.0,
+     "note": "ширина коридора в долях дневного ATR"
+    },
+    "atr_period": {
+     "type": "int",
+     "default": 14,
+     "min": 2,
+     "max": 100,
+     "note": "период ATR"
+    },
+    "sweep_min_atr": {
+     "type": "float",
+     "default": 0.15,
+     "min": 0.0,
+     "max": 5.0,
+     "note": "минимальная глубина выноса в ATR M5"
+    },
+    "sweep_max_atr": {
+     "type": "float",
+     "default": 1.2,
+     "min": 0.1,
+     "max": 20.0,
+     "note": "максимальная глубина выноса в ATR M5"
+    },
+    "max_outside": {
+     "type": "int",
+     "default": 3,
+     "min": 0,
+     "max": 50,
+     "note": "свечей подряд с закрытием за границей"
+    },
+    "sl_buffer_atr": {
+     "type": "float",
+     "default": 0.15,
+     "min": 0.0,
+     "max": 5.0,
+     "note": "запас стопа в ATR M5"
+    },
+    "min_rr": {
+     "type": "float",
+     "default": 3.0,
+     "min": 0.0,
+     "max": 20.0,
+     "note": "минимальная прибыль к риску"
+    },
+    "be_fraction": {
+     "type": "float",
+     "default": 0.5,
+     "min": 0.05,
+     "max": 1.0,
+     "note": "доля пути до цели для безубытка"
+    },
+    "spread_mult": {
+     "type": "float",
+     "default": 2.5,
+     "min": 1.0,
+     "max": 100.0,
+     "note": "предел спреда к среднему часа"
+    },
+    "spread_days": {
+     "type": "int",
+     "default": 20,
+     "min": 1,
+     "max": 250,
+     "note": "дней для среднего спреда"
+    },
+    "max_losses": {
+     "type": "int",
+     "default": 2,
+     "min": 1,
+     "max": 100,
+     "note": "убыточных сделок за сутки"
+    },
+    "max_entry_gap_min": {
+     "type": "int",
+     "default": 15,
+     "min": 0,
+     "max": 1440,
+     "note": "наибольший разрыв до свечи входа, минут"
+    }
+   },
+   "assumptions": [
+    "Все пункты, не заданные в документе, перечислены в registry/specs/LONDON_TRAP_01.md и записаны до первого прогона (2026-11-25)."
+   ],
+   "implementation": {
+    "language": "cpp",
+    "kind": "strategy",
+    "file": "tester/rules/london_trap.h",
+    "factory": "lt_run"
+   },
+   "audit": {
+    "lookahead": "ok",
+    "duplicate_of": null,
+    "constitution_ok": true,
+    "notes": [
+     "2026-11-25: проверка причинности (selftest, 8 точек среза, будущие свечи M5, H1, D1 и спред испорчены): расхождений 0.",
+     "2026-11-25: независимый расчёт на Python (tests/xcheck_london.py): 534 сделки по EURUSD, GBPUSD, USDJPY за весь отрезок прогона совпали одна к одной.",
+     "2026-11-25: разработка не пройдена ни на одной паре; экзамен не открывался."
+    ]
+   },
+   "results": [
+    {
+     "date": "2026-11-25",
+     "test": "london_trap_EURUSD_M5_wf",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "EURUSD",
+     "timeframe": "M5",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 225,
+      "win_pct": 13.78,
+      "net_pips": -175.8,
+      "profit_factor": 0.784,
+      "avg_R": -0.1809,
+      "max_dd_pips": 245.4,
+      "pos_windows": "11/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "london_trap_GBPUSD_M5_wf",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "GBPUSD",
+     "timeframe": "M5",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 202,
+      "win_pct": 27.72,
+      "net_pips": -59.6,
+      "profit_factor": 0.942,
+      "avg_R": -0.084,
+      "max_dd_pips": 117.7,
+      "pos_windows": "12/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "london_trap_USDJPY_M5_wf",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "USDJPY",
+     "timeframe": "M5",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 107,
+      "win_pct": 10.28,
+      "net_pips": -276.0,
+      "profit_factor": 0.483,
+      "avg_R": -0.3885,
+      "max_dd_pips": 276.0,
+      "pos_windows": "7/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    }
+   ]
+  },
+  {
+   "id": "CLASSIC_TRACE_01",
+   "name": "Классический след: сужающийся треугольник и вынос против направления H1",
+   "source": {
+    "type": "course",
+    "article_id": 0,
+    "url": "",
+    "title": "Классический след хозяина рынка (SniperPips), сетап №1 по code_artifact.md",
+    "year": 2026,
+    "spec_file": "registry/specs/CLASSIC_TRACE_01.md"
+   },
+   "status": "tested_fail",
+   "enabled_by_default": false,
+   "direction": "both",
+   "timeframes": [
+    "M5"
+   ],
+   "pairs": [
+    "EURUSD",
+    "GBPUSD",
+    "USDJPY"
+   ],
+   "entry_long": "H1 бычье; треугольник на M5; вынос ниже острия на 0,15–1,20 ATR и возврат; по рынку при ориентире слева, иначе лимитный ордер",
+   "entry_short": "зеркально",
+   "exit_rule": "цель - ближайший нетронутый ордер-блок или равные экстремумы на H1; безубыток на половине пути",
+   "stop_rule": "за экстремум выноса + спред + 0,15 ATR(14) M5",
+   "description": "Полный текст правил и допущений: registry/specs/CLASSIC_TRACE_01.md",
+   "params": {
+    "fractal_n": {
+     "type": "int",
+     "default": 3,
+     "min": 1,
+     "max": 10,
+     "note": "свечей слева и справа у свинга H1"
+    },
+    "atr_period": {
+     "type": "int",
+     "default": 14,
+     "min": 2,
+     "max": 100,
+     "note": "период ATR"
+    },
+    "sweep_min_atr": {
+     "type": "float",
+     "default": 0.15,
+     "min": 0.0,
+     "max": 5.0,
+     "note": "минимальная глубина выноса в ATR M5"
+    },
+    "sweep_max_atr": {
+     "type": "float",
+     "default": 1.2,
+     "min": 0.1,
+     "max": 20.0,
+     "note": "максимальная глубина выноса в ATR M5"
+    },
+    "max_outside": {
+     "type": "int",
+     "default": 3,
+     "min": 0,
+     "max": 50,
+     "note": "свечей подряд с закрытием за границей"
+    },
+    "sl_buffer_atr": {
+     "type": "float",
+     "default": 0.15,
+     "min": 0.0,
+     "max": 5.0,
+     "note": "запас стопа в ATR M5"
+    },
+    "min_rr": {
+     "type": "float",
+     "default": 3.0,
+     "min": 0.0,
+     "max": 20.0,
+     "note": "минимальная прибыль к риску"
+    },
+    "be_fraction": {
+     "type": "float",
+     "default": 0.5,
+     "min": 0.05,
+     "max": 1.0,
+     "note": "доля пути до цели для безубытка"
+    },
+    "spread_mult": {
+     "type": "float",
+     "default": 2.5,
+     "min": 1.0,
+     "max": 100.0,
+     "note": "предел спреда к среднему часа"
+    },
+    "spread_days": {
+     "type": "int",
+     "default": 20,
+     "min": 1,
+     "max": 250,
+     "note": "дней для среднего спреда"
+    },
+    "max_losses": {
+     "type": "int",
+     "default": 2,
+     "min": 1,
+     "max": 100,
+     "note": "убыточных сделок за сутки"
+    },
+    "max_entry_gap_min": {
+     "type": "int",
+     "default": 15,
+     "min": 0,
+     "max": 1440,
+     "note": "наибольший разрыв до свечи входа, минут"
+    },
+    "tri_min_bars": {
+     "type": "int",
+     "default": 12,
+     "min": 4,
+     "max": 200,
+     "note": "наименьшая длина треугольника"
+    },
+    "tri_max_bars": {
+     "type": "int",
+     "default": 30,
+     "min": 4,
+     "max": 300,
+     "note": "наибольшая длина треугольника"
+    },
+    "apex_bars": {
+     "type": "int",
+     "default": 6,
+     "min": 1,
+     "max": 50,
+     "note": "свечей в границах острия"
+    },
+    "tri_atr_bars": {
+     "type": "int",
+     "default": 3,
+     "min": 1,
+     "max": 20,
+     "note": "свечей в коротком ATR"
+    },
+    "tri_atr_max": {
+     "type": "float",
+     "default": 0.35,
+     "min": 0.01,
+     "max": 5.0,
+     "note": "короткий ATR к высоте левой половины"
+    },
+    "window_start_min": {
+     "type": "int",
+     "default": 420,
+     "min": 0,
+     "max": 1380,
+     "note": "начало окна, минуты UTC"
+    },
+    "window_end_min": {
+     "type": "int",
+     "default": 1020,
+     "min": 60,
+     "max": 1440,
+     "note": "конец окна, минуты UTC"
+    },
+    "limit_body_part": {
+     "type": "float",
+     "default": 0.5,
+     "min": 0.0,
+     "max": 1.0,
+     "note": "доля тела свечи выноса для лимитной цены"
+    },
+    "limit_ttl_bars": {
+     "type": "int",
+     "default": 5,
+     "min": 1,
+     "max": 100,
+     "note": "жизнь лимитного ордера, свечей"
+    },
+    "eq_spread_mult": {
+     "type": "float",
+     "default": 2.0,
+     "min": 0.0,
+     "max": 50.0,
+     "note": "допуск равных экстремумов в спредах"
+    }
+   },
+   "assumptions": [
+    "Все пункты, не заданные в документе, перечислены в registry/specs/CLASSIC_TRACE_01.md и записаны до первого прогона (2026-11-25)."
+   ],
+   "implementation": {
+    "language": "cpp",
+    "kind": "strategy",
+    "file": "tester/rules/classic_trace.h",
+    "factory": "ct_run"
+   },
+   "audit": {
+    "lookahead": "ok",
+    "duplicate_of": null,
+    "constitution_ok": true,
+    "notes": [
+     "2026-11-25: проверка причинности (selftest, 8 точек среза, будущие свечи M5, H1 и спред испорчены): расхождений 0.",
+     "2026-11-25: независимый расчёт на Python (tests/xcheck_classic.py): 2851 сделка по EURUSD, GBPUSD, USDJPY и все счётчики отбора совпали.",
+     "2026-11-25: при первой сверке разошёлся один счётчик выносов EURUSD из-за округления на границе отношения ровно 0,35; допуск сравнения задан 1e-9 в обеих программах, сделки не изменились.",
+     "2026-11-25: разработка не пройдена ни на одной паре (USDJPY: нетто больше нуля, профит-фактор 1,05); экзамен не открывался. Плюс USDJPY даёт только сделки длиннее суток, свопы не учтены."
+    ]
+   },
+   "results": [
+    {
+     "date": "2026-11-25",
+     "test": "classic_trace_EURUSD_M5_wf",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "EURUSD",
+     "timeframe": "M5",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 948,
+      "win_pct": 4.01,
+      "net_pips": -1446.5,
+      "profit_factor": 0.659,
+      "avg_R": -0.3034,
+      "max_dd_pips": 1559.0,
+      "pos_windows": "9/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "classic_trace_GBPUSD_M5_wf",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "GBPUSD",
+     "timeframe": "M5",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 957,
+      "win_pct": 7.63,
+      "net_pips": -1584.3,
+      "profit_factor": 0.748,
+      "avg_R": -0.2586,
+      "max_dd_pips": 2106.1,
+      "pos_windows": "8/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "classic_trace_USDJPY_M5_wf",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "USDJPY",
+     "timeframe": "M5",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 946,
+      "win_pct": 4.86,
+      "net_pips": 271.0,
+      "profit_factor": 1.048,
+      "avg_R": 0.2416,
+      "max_dd_pips": 1165.2,
+      "pos_windows": "11/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    }
+   ]
   }
  ]
 }
