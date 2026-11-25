@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """XGB_WF_01: обучение XGBoost по скользящим окнам и прогнозы на проверочных месяцах разработки.
-Правила записаны в registry/specs/XGB_WF_01.md. Читаются только бары и столбцы до 2025-01-01.
+Правила записаны в registry/specs/XGB_WF_01.md и XGB_WF_02.md: правило, срок сделки и стоп берутся из конфига. Читаются только бары и столбцы до 2025-01-01.
 
 Использование: python xgb_wf.py <тестер> <конфиг ml/configs/xgb_XXX_H1.json> <папка баз> <папка столбцов> <папка вывода>
 Печатает строку вида RESULT {...}. Код выхода 0 только если все проверки пройдены.
@@ -19,7 +19,7 @@ REG = HERE.parent
 sys.path.insert(0, str(REG / "tests"))
 import xcheck_common as X
 
-RID = "XGB_WF_01"
+RULES = ("XGB_WF_01", "XGB_WF_02")
 NCOLS = 82
 DROP = (7, 28, 79, 80)                       # повторы и постоянный столбец на H1
 USE = [i for i in range(NCOLS) if i not in DROP]
@@ -83,6 +83,11 @@ def labels(B, pair, hold, mult):
     return R, pnl, out
 
 
+def nights_between(entry_time, exit_bar_time):
+    """Сколько раз сменилась дата UTC между баром входа и баром выхода (выходные входят в счёт)."""
+    return int(exit_bar_time) // 86400 - int(entry_time) // 86400
+
+
 def fit(F, y, P):
     params = {"objective": "reg:squarederror", "max_depth": int(P["max_depth"]), "eta": P["learning_rate"],
               "subsample": P["subsample"], "colsample_bytree": P["colsample_bytree"],
@@ -105,9 +110,13 @@ def train_predict(F, R, T, train0, idx0, rows, P, hold):
 def main(tester, cfg_path, base, ind, work):
     cfg = json.loads(Path(cfg_path).read_text(encoding="utf-8-sig"))
     reg = json.loads((REG / "rules_registry.json").read_text(encoding="utf-8-sig"))
-    rule = next(r for r in reg["rules"] if r["id"] == RID)
+    enabled = [k for k, v in cfg["rules"].items() if v.get("enabled") and k in RULES]
+    if len(enabled) != 1:
+        raise SystemExit("STOP: в конфиге должно быть включено ровно одно правило модели")
+    rid = enabled[0]
+    rule = next(r for r in reg["rules"] if r["id"] == rid)
     P = {k: v["default"] for k, v in rule["params"].items()}
-    P.update(cfg["rules"][RID].get("params", {}))
+    P.update(cfg["rules"][rid].get("params", {}))
     pair, name = cfg["data"]["pair"], cfg["test_name"]
     hold, mult = int(cfg["exits"]["hold_bars"]), float(cfg["exits"]["stop_atr_mult"])
     work = Path(work).resolve()
@@ -170,7 +179,7 @@ def main(tester, cfg_path, base, ind, work):
 
     # сверка 1: сделки из тех же результатов, на которых училась модель; сверка 2: общий расчёт проверок
     start = int(np.searchsorted(T, windows[0][1]))
-    mine, free = [], 0
+    mine, free, nights = [], 0, 0
     for x in np.nonzero(sig)[0]:
         if x + 1 < start or x < free:
             continue
@@ -181,16 +190,19 @@ def main(tester, cfg_path, base, ind, work):
             continue
         mine.append((int(T[x + 1]), float(pnl[x, side]) / (10 * B["pt"])))
         free = int(out[x, side])
+        nights += nights_between(T[x + 1], T[free])
     print("сверка с примерами обучения:")
     bad = X.compare(res, mine, B["T"][0])
     print("сверка с общим расчётом сделок:")
-    bad += X.compare(res, X.trades(B, [int(v) for v in sig], pair, windows[0][1]), B["T"][0])
+    bad += X.compare(res, X.trades(B, [int(v) for v in sig], pair, windows[0][1], hold, mult), B["T"][0])
 
     seg = res["rules"][0]["segments"][0]
     summary = {"pair": pair, "test": name, "trades": seg["trades"], "win_pct": seg["win_pct"], "net_pips": seg["net_pips"],
                "profit_factor": seg["profit_factor"], "avg_R": seg["avg_R"], "max_dd_pips": seg["max_dd_pips"],
                "pos_windows": seg["pos_windows"], "verdict": res["rules"][0]["verdict"],
-               "mismatch": int(bad), "leak_windows": int(leak), "xgboost": xgb.__version__}
+               "nights_per_trade": nights / max(len(mine), 1),
+               "net_pips_per_night": sum(p for _, p in mine) / nights if nights else None,
+               "rule": rid, "mismatch": int(bad), "leak_windows": int(leak), "xgboost": xgb.__version__}
     print("RESULT " + json.dumps(summary, ensure_ascii=False), flush=True)
     return 1 if bad or leak else 0
 

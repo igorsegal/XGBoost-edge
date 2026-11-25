@@ -25,7 +25,7 @@ def dev_windows(first_bar):
 
 DEV_CUT = month(2025, 1)
 
-def trades(B, sig, pair, start):
+def trades(B, sig, pair, start, hold=24, mult=2):
     O, H, L, C, SP, T, pt = B['O'], B['H'], B['L'], B['C'], B['SP'], B['T'], B['pt']; n = len(C)
     tr = [H[0] - L[0]] + [max(H[i] - L[i], abs(H[i] - C[i - 1]), abs(L[i] - C[i - 1])) for i in range(1, n)]
     atr = [None] * n
@@ -36,10 +36,10 @@ def trades(B, sig, pair, start):
     for x in range(n - 1):
         if not sig[x] or x + 1 < first or x < free or atr[x] is None: continue
         e = x + 1
-        if e + 23 >= n: break
-        d = 2 * atr[x]; sp = SP[e] * pt; dr = sig[x]
+        if e + hold - 1 >= n: break
+        d = mult * atr[x]; sp = SP[e] * pt; dr = sig[x]
         entry = O[e] + sp if dr > 0 else O[e]; stop = entry - d if dr > 0 else entry + d; ex = None
-        for k in range(e, e + 24):
+        for k in range(e, e + hold):
             if dr > 0:
                 if k > e and O[k] <= stop: ex = O[k]; break
                 if L[k] <= stop: ex = stop; break
@@ -47,7 +47,7 @@ def trades(B, sig, pair, start):
                 ao = O[k] + SP[k] * pt; ah = H[k] + SP[k] * pt
                 if k > e and ao >= stop: ex = ao; break
                 if ah >= stop: ex = stop; break
-        if ex is None: k = e + 23; ex = C[k] if dr > 0 else C[k] + SP[k] * pt
+        if ex is None: k = e + hold - 1; ex = C[k] if dr > 0 else C[k] + SP[k] * pt
         comm = 7 / lot * (1 if pair.endswith('USD') else entry)     # котировка не в долларах: перевод по цене входа
         pnl = (ex - entry if dr > 0 else entry - ex) - comm
         out.append((T[e], pnl / (10 * pt))); free = k

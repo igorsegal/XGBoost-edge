@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-echo GITHUB_PUSH version 6
+echo GITHUB_PUSH version 7
 cd /d D:\AHexaTrader\XGBoost-edge-git
 if errorlevel 1 ( echo NO PROJECT FOLDER & pause & exit /b 1 )
 where git >nul 2>nul
@@ -17,7 +17,7 @@ echo --- what will be sent
 git --no-pager diff --cached --name-status
 git diff --cached --quiet
 if not errorlevel 1 goto pull
-git commit -q -m "Signal check XGB_DIAG_01; article search starts with trading systems"
+git commit -q -m "XGBoost long-trade variant XGB_WF_02"
 if errorlevel 1 ( echo COMMIT FAILED, nothing sent & pause & exit /b 1 )
 :pull
 echo --- pull

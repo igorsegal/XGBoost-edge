@@ -2881,7 +2881,8 @@
     "constitution_ok": true,
     "notes": [
      "2026-11-25: прогон на GitHub (xgboost 2.1.4, отчёт reports/cloud_tests.md, версия программ 07f3e11): замена будущих баров и столбцов мусором прогнозы не изменила ни в одном окне, расхождений тестера и Python 0.",
-     "2026-11-25: разработка не пройдена ни на одном инструменте (профит-фактор 0,91–1,01 при нужных 1,3); экзамен не открывался. Средний R и просадка в отчёт облака не входят и здесь не записаны."
+     "2026-11-25: разработка не пройдена ни на одном инструменте (профит-фактор 0,91–1,01 при нужных 1,3); экзамен не открывался. Средний R и просадка в отчёт облака не входят и здесь не записаны.",
+     "2026-11-25: разбор XGB_DIAG_01 (версия программ e40f1f4): без расходов по пяти инструментам вместе 0,039 R на сделку, случайные сдвиги хуже в 96,9 % случаев, p = 0,032; по отдельным инструментам порог не пройден, второе сравнение p = 0,13."
     ]
    },
    "results": [
@@ -2996,6 +2997,118 @@
      "tester": "tester 2.0"
     }
    ]
+  },
+  {
+   "id": "XGB_WF_02",
+   "name": "XGBoost на 78 столбцах H1, сделки до 120 баров, скользящее обучение 6+2",
+   "source": {
+    "type": "model",
+    "article_id": 0,
+    "url": "",
+    "title": "Вариант «Б»: XGB_WF_01 с более долгими сделками",
+    "year": 2026,
+    "spec_file": "registry/specs/XGB_WF_02.md"
+   },
+   "status": "implemented_untested",
+   "enabled_by_default": false,
+   "direction": "both",
+   "timeframes": [
+    "H1"
+   ],
+   "pairs": [
+    "EURUSD",
+    "GBPUSD",
+    "USDJPY",
+    "AUDUSD",
+    "XAUUSD"
+   ],
+   "entry_long": "прогноз результата покупки не меньше порога и не меньше прогноза продажи",
+   "entry_short": "прогноз результата продажи не меньше порога и больше прогноза покупки",
+   "exit_rule": "через 120 баров",
+   "stop_rule": "4 × ATR(14)",
+   "description": "Полный текст: registry/specs/XGB_WF_02.md",
+   "params": {
+    "threshold_R": {
+     "type": "float",
+     "default": 0.1,
+     "min": 0.0,
+     "max": 5.0,
+     "note": "порог прогноза для входа, в R"
+    },
+    "rounds": {
+     "type": "int",
+     "default": 200,
+     "min": 1,
+     "max": 5000,
+     "note": "число деревьев"
+    },
+    "max_depth": {
+     "type": "int",
+     "default": 3,
+     "min": 1,
+     "max": 12,
+     "note": "глубина дерева"
+    },
+    "learning_rate": {
+     "type": "float",
+     "default": 0.03,
+     "min": 0.001,
+     "max": 1.0,
+     "note": "шаг"
+    },
+    "subsample": {
+     "type": "float",
+     "default": 0.8,
+     "min": 0.1,
+     "max": 1.0,
+     "note": "доля строк"
+    },
+    "colsample_bytree": {
+     "type": "float",
+     "default": 0.8,
+     "min": 0.1,
+     "max": 1.0,
+     "note": "доля столбцов"
+    },
+    "min_child_weight": {
+     "type": "float",
+     "default": 50,
+     "min": 0,
+     "max": 100000,
+     "note": "наименьший вес листа"
+    },
+    "reg_lambda": {
+     "type": "float",
+     "default": 1.0,
+     "min": 0.0,
+     "max": 1000.0,
+     "note": "штраф L2"
+    },
+    "seed": {
+     "type": "int",
+     "default": 42,
+     "min": 0,
+     "max": 1000000,
+     "note": "зерно случайных чисел"
+    }
+   },
+   "assumptions": [
+    "Срок 120 баров и стоп 4 × ATR(14) утверждены и записаны до первого прогона (2026-11-25); остальное как в XGB_WF_01, подбора нет.",
+    "Свопы не учитываются: данных нет."
+   ],
+   "implementation": {
+    "language": "python",
+    "kind": "signals",
+    "file": "ml/xgb_wf.py",
+    "factory": "train_predict"
+   },
+   "audit": {
+    "lookahead": "unchecked",
+    "duplicate_of": null,
+    "constitution_ok": true,
+    "notes": []
+   },
+   "results": []
   }
  ]
 }

@@ -104,11 +104,15 @@ def run_tests(base, lines):
 
 
 XGBOOST = "xgboost==2.1.4"
+PAIRS = ("EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "XAUUSD")
+
+
+MODELS = (("XGB_WF_01", "xgb"), ("XGB_WF_02", "xgb2"))          # правило и начало имени конфига
 
 
 def run_ml(base, lines):
-    """XGB_WF_01: столбцы H1, обучение по окнам, сделки считает тестер. Пишет раздел отчёта, возвращает число замечаний."""
-    lines += ["## XGBoost (XGB_WF_01), разработка 2020–2024", ""]
+    """Модели XGBoost: столбцы H1, обучение по окнам, сделки считает тестер. Пишет разделы отчёта,
+    возвращает число замечаний."""
     work = REG / "_cloud"
     builder = work / "build_indicators"
     try:
@@ -117,16 +121,26 @@ def run_ml(base, lines):
         if run(["g++", "-O2", "-std=c++17", "-o", builder, REG.parent / "tools" / "build_indicators.cpp"]):
             raise RuntimeError("не скомпилировалось построение столбцов")
     except Exception as e:  # отчёт должен записаться и при сбое
-        lines += [f"**не запустился:** {e}", ""]
+        lines += ["## XGBoost, разработка 2020–2024", "", f"**не запустился:** {e}", ""]
         return 1
-    rows, bad, version = [], 0, ""
-    diag, diag_errors = [], []
-    for pair in ("EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "XAUUSD"):
+    built = {}
+    for pair in PAIRS:
         ind = work / "ind" / pair
         ind.mkdir(parents=True, exist_ok=True)
+        built[pair] = not run([builder, base / pair, ind, pair, "H1"])
+    return sum(run_model(base, work, built, rule, prefix, lines) for rule, prefix in MODELS)
+
+
+def run_model(base, work, built, rule, prefix, lines):
+    """Одна модель: обучение и сделки по пяти инструментам, затем разбор XGB_DIAG_01."""
+    lines += [f"## XGBoost ({rule}), разработка 2020–2024", ""]
+    rows, bad, version = [], 0, ""
+    diag, diag_errors = [], []
+    for pair in PAIRS:
+        name = f"{prefix}_{pair}_H1"
         got, tail = None, ""
-        if not run([builder, base / pair, ind, pair, "H1"]):
-            cmd = [sys.executable, REG / "ml" / "xgb_wf.py", work / "tester", REG / "ml" / "configs" / f"xgb_{pair}_H1.json",
+        if built[pair]:
+            cmd = [sys.executable, REG / "ml" / "xgb_wf.py", work / "tester", REG / "ml" / "configs" / f"{name}.json",
                    base, work / "ind", work / "ml"]
             p = subprocess.run([str(c) for c in cmd], cwd=REG, capture_output=True, text=True, errors="replace")
             print(p.stdout, p.stderr, flush=True)
@@ -136,11 +150,11 @@ def run_ml(base, lines):
         else:
             tail = ["не построились столбцы"]
         if not got:
-            rows.append(f"| {pair} | – | – | – | – | – | – | **ошибка:** {' '.join(tail)[:300]} |")
+            rows.append(f"| {pair} |" + " – |" * 10 + f" **ошибка:** {' '.join(tail)[:300]} |")
             bad += 1
             continue
         version = got["xgboost"]
-        d, err = run_diag(base, work, pair)
+        d, err = run_diag(base, work, name)
         if d:
             diag.append(d)
         if err:
@@ -149,12 +163,15 @@ def run_ml(base, lines):
         checks = "пройдены" if not got["mismatch"] and not got["leak_windows"] else \
             f"**не пройдены:** расхождений {got['mismatch']}, окон с подглядыванием {got['leak_windows']}"
         bad += checks != "пройдены"
+        night = got["net_pips_per_night"]
         rows.append(f"| {pair} | {got['trades']} | {got['win_pct']} | {got['net_pips']} | {got['profit_factor']} "
-                    f"| {got['pos_windows']} | {got['verdict']} | {checks} |")
-    lines += [f"Версия библиотеки: {version or 'неизвестна'}.", "",
-              "| Инструмент | Сделок | Прибыльных, % | Пунктов | Профит-фактор | Плюсовых окон | Критерии | Проверки |",
-              "|---|---|---|---|---|---|---|---|"] + rows + [""]
-    lines += ["## XGBoost: есть ли сигнал без расходов (XGB_DIAG_01)", ""]
+                    f"| {got['avg_R']} | {got['max_dd_pips']} | {got['pos_windows']} | {got['nights_per_trade']:.2f} "
+                    f"| {'–' if night is None else format(night, '.2f')} | {got['verdict']} | {checks} |")
+    lines += [f"Версия библиотеки: {version or 'неизвестна'}. Свопы не учтены.", "",
+              "| Инструмент | Сделок | Прибыльных, % | Пунктов | Профит-фактор | Средний R | Просадка, пунктов "
+              "| Плюсовых окон | Ночей на сделку | Пунктов на ночь | Критерии | Проверки |",
+              "|" + "---|" * 12] + rows + [""]
+    lines += [f"## {rule}: есть ли сигнал без расходов (XGB_DIAG_01)", ""]
     try:
         sys.path.insert(0, str(REG / "ml"))
         import xgb_diag
@@ -169,11 +186,11 @@ def run_ml(base, lines):
     return bad
 
 
-def run_diag(base, work, pair):
+def run_diag(base, work, name):
     """Разбор сигналов одного инструмента. Возвращает (данные или None, текст замечания или пусто)."""
-    cmd = [sys.executable, REG / "ml" / "xgb_diag.py", work / "tester", REG / "ml" / "configs" / f"xgb_{pair}_H1.json",
+    cmd = [sys.executable, REG / "ml" / "xgb_diag.py", work / "tester", REG / "ml" / "configs" / f"{name}.json",
            base, work / "ml", work / "diag"]
-    out = work / "diag" / f"xgb_{pair}_H1_wf_diag.json"
+    out = work / "diag" / f"{name}_wf_diag.json"
     out.unlink(missing_ok=True)
     p = subprocess.run([str(c) for c in cmd], cwd=REG, capture_output=True, text=True, errors="replace")
     print(p.stdout, p.stderr, flush=True)

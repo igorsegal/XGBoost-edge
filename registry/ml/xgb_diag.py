@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""XGB_DIAG_01: есть ли сигнал у XGB_WF_01 без расходов и лучше ли он случайных входов.
-Правила записаны в registry/specs/XGB_DIAG_01.md. Берёт готовые сигналы из прогона xgb_wf.py, ничего не переобучает.
+"""XGB_DIAG_01: есть ли сигнал у модели (XGB_WF_01, XGB_WF_02) без расходов и лучше ли он случайных входов.
+Правила записаны в registry/specs/XGB_DIAG_01.md (для XGB_WF_02 - с отличием из XGB_WF_02.md). Берёт готовые сигналы из прогона xgb_wf.py, ничего не переобучает.
 Читаются только бары до 2025-01-01.
 
 Использование: python xgb_diag.py <тестер> <конфиг ml/configs/xgb_XXX_H1.json> <папка баз> <папка вывода xgb_wf> <папка вывода>
@@ -25,8 +25,9 @@ from xgb_wf import atr14, labels
 PAIRS = ("EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "XAUUSD")
 SEED = 20261125
 REPS = 1000
-EDGE = 24                 # наименьший сдвиг от начала и от конца отрезка, баров
 CONTROL_REPS = 200
+# правило: (наименьший сдвиг от начала и конца отрезка, баров; порог p) - записано в его описании до прогона
+NULL = {"XGB_WF_01": (24, 0.05), "XGB_WF_02": (0, 0.025)}
 NWIN = 27
 
 
@@ -49,14 +50,15 @@ def simulate(idx, side, out, start, hold):
     return taken
 
 
-def shifted(sig, segments, fractions):
-    """Сдвиг ряда сигналов по кругу внутри каждого отрезка [a, b); доля 0..1 задаёт величину сдвига."""
+def shifted(sig, segments, fractions, edge):
+    """Сдвиг ряда сигналов по кругу внутри каждого отрезка [a, b); доля 0..1 задаёт величину сдвига,
+    edge - наименьший сдвиг от начала и от конца отрезка, баров."""
     new = sig.copy()
     for (a, b), u in zip(segments, fractions):
         length = b - a
-        if length <= 2 * EDGE:
+        if length <= 2 * edge:
             continue
-        off = EDGE + int(u * (length - 2 * EDGE + 1))
+        off = edge + int(u * (length - 2 * edge + 1))
         new[a:b] = np.roll(sig[a:b], off)
     return new
 
@@ -66,11 +68,11 @@ def run_signals(sig, out, start, hold):
     return simulate(idx.tolist(), np.where(sig[idx] > 0, 0, 1).tolist(), out, start, hold)
 
 
-def null_runs(sig, segments, fractions, R, out, start, hold):
+def null_runs(sig, segments, fractions, R, out, start, hold, edge):
     """Для каждого варианта сдвига: сумма R и число сделок."""
     total, count = [], []
     for row in fractions:
-        taken = run_signals(shifted(sig, segments, row), out, start, hold)
+        taken = run_signals(shifted(sig, segments, row, edge), out, start, hold)
         total.append(sum(R[x][s] for x, s in taken))
         count.append(len(taken))
     return total, count
@@ -93,6 +95,8 @@ def main(tester, cfg_path, base, mldir, work):
     cfg = json.loads(Path(cfg_path).read_text(encoding="utf-8-sig"))
     pair, name = cfg["data"]["pair"], cfg["test_name"]
     hold, mult = int(cfg["exits"]["hold_bars"]), float(cfg["exits"]["stop_atr_mult"])
+    rid, = [k for k, v in cfg["rules"].items() if v.get("enabled")]
+    edge, p_limit = NULL[rid]
     mldir, work = Path(mldir).resolve(), Path(work).resolve()
     work.mkdir(parents=True, exist_ok=True)
     bars = Path(base).resolve() / pair / f"{pair}_H1.bin"
@@ -122,6 +126,12 @@ def main(tester, cfg_path, base, mldir, work):
     _, pnl, out = labels(B, pair, hold, mult)
     out_l = out.tolist()
     net = [(T[x + 1], float(pnl[x, s]) / (10 * pt)) for x, s in run_signals(sig, out_l, start, hold)]
+    # спред и комиссия, заплаченные в этих же сделках: у покупки спред бара входа, у продажи - бара выхода
+    paid = []
+    for x, s in run_signals(sig, out_l, start, hold):
+        spread = B["SP"][x + 1 if s == 0 else int(out[x, s])] * pt
+        comm1 = 7 / (100 if pair.startswith("XAU") else 100000) * (1 if pair.endswith("USD") else B["O"][x + 1] + (spread if s == 0 else 0))
+        paid.append((spread + comm1) / (10 * pt))
     res_net = json.loads((mldir / f"{name}.json").read_text(encoding="utf-8"))
     print("сверка с тестером, с расходами:")
     bad = X.compare(res_net, net, T[0])
@@ -161,8 +171,8 @@ def main(tester, cfg_path, base, mldir, work):
     rng = np.random.default_rng(SEED)
     u_win = rng.random((REPS, NWIN))
     u_all = rng.random((REPS, 1))
-    within = null_runs(sig, segments, u_win[:, [k - 1 for k in nums]], gR_l, out0_l, start, hold)
-    whole = null_runs(sig, [(segments[0][0], segments[-1][1])], u_all, gR_l, out0_l, start, hold)
+    within = null_runs(sig, segments, u_win[:, [k - 1 for k in nums]], gR_l, out0_l, start, hold, edge)
+    whole = null_runs(sig, [(segments[0][0], segments[-1][1])], u_all, gR_l, out0_l, start, hold, edge)
 
     # проверка самого разбора: сигналы, знающие будущее, обязаны быть лучше всех сдвинутых
     rows = np.arange(segments[0][0], segments[-1][1])
@@ -172,12 +182,12 @@ def main(tester, cfg_path, base, mldir, work):
     cheat[pick] = np.where(gR[pick, 0] >= gR[pick, 1], 1, -1)
     ct = run_signals(cheat, out0_l, start, hold)
     cheat_mean = sum(gR_l[x][s] for x, s in ct) / len(ct)
-    cs, cn = null_runs(cheat, segments, u_win[:CONTROL_REPS, [k - 1 for k in nums]], gR_l, out0_l, start, hold)
+    cs, cn = null_runs(cheat, segments, u_win[:CONTROL_REPS, [k - 1 for k in nums]], gR_l, out0_l, start, hold, edge)
     control = int(all(a / b < cheat_mean for a, b in zip(cs, cn)))
     print(f"подставные сигналы с заглядыванием в будущее: {'лучше всех случайных, OK' if control else 'НЕ ВЫДЕЛЯЮТСЯ'}")
 
-    detail = {"pair": pair, "trades": len(taken), "sum_R": sum(gR_l[x][s] for x, s in taken),
-              "gross_pips": sum(p for _, p in gross), "net_trades": len(net), "net_pips": sum(p for _, p in net),
+    detail = {"pair": pair, "rule": rid, "p_limit": p_limit, "trades": len(taken), "sum_R": sum(gR_l[x][s] for x, s in taken),
+              "gross_pips": sum(p for _, p in gross), "net_trades": len(net), "net_pips": sum(p for _, p in net), "cost_pips": sum(paid),
               "long_share": sum(s == 0 for _, s in taken) / max(len(taken), 1),
               "within": {"sum_R": within[0], "n": within[1]}, "whole": {"sum_R": whole[0], "n": whole[1]},
               "mismatch": int(bad), "control_ok": control}
@@ -201,20 +211,22 @@ def compare_null(items, key):
 
 def report(items):
     """Строки раздела отчёта по всем инструментам."""
-    lines = ["| Инструмент | Сделок без расходов | Пунктов на сделку: с расходами | без расходов | R на сделку без расходов "
-             "| Случайные, середина | Случайных хуже модели, % |", "|---|---|---|---|---|---|---|"]
+    lines = ["| Инструмент | Сделок без расходов | Пунктов на сделку: с расходами | без расходов | спред и комиссия "
+             "| R на сделку без расходов | Случайные, середина | Случайных хуже модели, % |", "|" + "---|" * 8]
     for d in items:
         c = compare_null([d], "within")
         lines.append(f"| {d['pair']} | {d['trades']} | {d['net_pips'] / d['net_trades']:.2f} "
-                     f"| {d['gross_pips'] / d['trades']:.2f} | {c['mean_R']:.4f} | {c['random_median_R']:.4f} "
+                     f"| {d['gross_pips'] / d['trades']:.2f} | {d['cost_pips'] / d['net_trades']:.2f} "
+                     f"| {c['mean_R']:.4f} | {c['random_median_R']:.4f} "
                      f"| {c['below_pct']:.1f} |")
     if len(items) != len(PAIRS):
         return lines + ["", "**Вывод не сделан: разобраны не все инструменты.**", ""]
     main_c, extra = compare_null(items, "within"), compare_null(items, "whole")
-    found = main_c["mean_R"] > 0 and main_c["p"] <= 0.05
+    limit = items[0]["p_limit"]
+    found = main_c["mean_R"] > 0 and main_c["p"] <= limit
     lines += ["", f"Все пять вместе: сделок {main_c['trades']}, средний результат без расходов {main_c['mean_R']:.4f} R, "
               f"середина случайных {main_c['random_median_R']:.4f} R, случайных хуже модели {main_c['below_pct']:.1f} %, "
-              f"p = {main_c['p']:.4f}.", "",
+              f"p = {main_c['p']:.4f} (порог {limit}).", "",
               f"Для сведения, сдвиг по всему периоду: середина случайных {extra['random_median_R']:.4f} R, "
               f"случайных хуже модели {extra['below_pct']:.1f} %, p = {extra['p']:.4f}.", "",
               "**Вывод по записанному критерию: " + ("сигнал есть" if found else "сигнал от случая не отличим") + ".**", ""]
