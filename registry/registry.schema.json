@@ -49,6 +49,7 @@
        "implemented_untested",
        "tested_pass",
        "tested_fail",
+       "dev_pass",
        "prototype_unconfirmed",
        "rejected",
        "example"

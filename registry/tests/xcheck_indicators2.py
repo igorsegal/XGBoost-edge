@@ -7,6 +7,10 @@ import struct, subprocess, sys, math, datetime
 sys.path.insert(0, __import__("os").path.dirname(__import__("os").path.abspath(__file__)))
 from xcheck_indicators import sma, ema, tr_of, hh, ll, src, isn, NAN
 
+def trade_day(d):
+    """Дата бара для пивотов и VWAP: воскресенье считается понедельником."""
+    return (d + datetime.timedelta(days=1)).date() if d.weekday() == 6 else d.date()
+
 def loadv(path):
     d = open(path, "rb").read(); n = struct.unpack_from("<q", d, 32)[0]; sl = struct.unpack_from("<i", d, 56)[0]
     per = struct.unpack_from("<i", d, 16)[0]; off = 60 + sl
@@ -158,7 +162,7 @@ def calc(b, V, per, name, out, source, P):
     if name == "VWAP_SESSION":
         vw, ds, cd, cpv, cv = [], [], None, 0.0, 0.0
         for i in range(n):
-            if dts[i].date() != cd: cd = dts[i].date(); cpv = cv = 0.0
+            if trade_day(dts[i]) != cd: cd = trade_day(dts[i]); cpv = cv = 0.0
             cpv += tp[i] * V[i]; cv += V[i]; w = cpv / cv if cv > 0 else tp[i]; vw.append(w); ds.append(C[i] - w)
         return vw if out == "vwap" else ds
     if name == "FORCE": return ema([NAN] + [(C[i] - C[i - 1]) * V[i] for i in range(1, n)], P["period"])
@@ -195,7 +199,7 @@ def calc(b, V, per, name, out, source, P):
     if name == "HIGHEST": return hh(H, P["period"])
     if name == "LOWEST": return ll(L, P["period"])
     if name in ("PIVOT_DAY", "PIVOT_WEEK"):
-        key = (lambda d: d.date()) if name == "PIVOT_DAY" else (lambda d: d.isocalendar()[:2])
+        key = (lambda d: trade_day(d)) if name == "PIVOT_DAY" else (lambda d: trade_day(d).isocalendar()[:2])
         groups = []; cur = None
         for i in range(n):
             k = key(dts[i])

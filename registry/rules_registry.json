@@ -1,6 +1,6 @@
 {
  "registry_version": 2,
- "description": "Реестр торговых правил XGBoost-edge. Критерии и издержки заморожены 2026-11-24 (claude/xgb_rules_frozen.md).",
+ "description": "Реестр торговых правил XGBoost-edge. Правила проверки: SVOD_PRAVIL.md (критерии от 2026-11-24, скользящие окна и порядок экзамена утверждены 2026-11-25).",
  "defaults": {
   "exits": {
    "hold_bars": 24,
@@ -10,13 +10,16 @@
   "costs": {
    "commission_per_lot_usd": 7,
    "lot_units": 100000,
-   "spread": "по бару из файла истории"
+   "spread": "по бару из файла истории",
+   "lot_units_gold": 100
   },
   "split": {
-   "years": 5,
-   "train_years": 3,
-   "val_years": 1,
-   "clean_years": 1
+   "train_months": 6,
+   "test_months": 2,
+   "step_months": 2,
+   "dev_from": "2020-01",
+   "exam_from": "2025-01",
+   "exam_to": "2026-04"
   },
   "criteria": {
    "min_trades": 100,
@@ -462,6 +465,174 @@
      },
      "verdict": "FAIL",
      "tester": "tester 1.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "hedge_EURUSD_H1_conf040_wf",
+     "mode": "dev",
+     "role": "sensitivity",
+     "pair": "EURUSD",
+     "timeframe": "H1",
+     "scheme": "6+2",
+     "overrides": "confidence=0.400000",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 996,
+      "win_pct": 37.95,
+      "net_pips": 197.8,
+      "profit_factor": 1.013,
+      "avg_R": -0.0099,
+      "max_dd_pips": 1453.4,
+      "pos_windows": "17/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "hedge_EURUSD_H1_conf060_wf",
+     "mode": "dev",
+     "role": "sensitivity",
+     "pair": "EURUSD",
+     "timeframe": "H1",
+     "scheme": "6+2",
+     "overrides": "confidence=0.600000",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 909,
+      "win_pct": 37.4,
+      "net_pips": 160.8,
+      "profit_factor": 1.011,
+      "avg_R": -0.0115,
+      "max_dd_pips": 1490.4,
+      "pos_windows": "16/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "hedge_EURUSD_H1_don_excl_wf",
+     "mode": "dev",
+     "role": "sensitivity",
+     "pair": "EURUSD",
+     "timeframe": "H1",
+     "scheme": "6+2",
+     "overrides": "donchian_include_current=0.000000",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 1056,
+      "win_pct": 37.31,
+      "net_pips": -119.2,
+      "profit_factor": 0.993,
+      "avg_R": -0.0277,
+      "max_dd_pips": 1770.4,
+      "pos_windows": "15/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "hedge_EURUSD_H1_wf",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "EURUSD",
+     "timeframe": "H1",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 1057,
+      "win_pct": 37.28,
+      "net_pips": -77.4,
+      "profit_factor": 0.995,
+      "avg_R": -0.0263,
+      "max_dd_pips": 1728.6,
+      "pos_windows": "15/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "hedge_EURUSD_M15_wf",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "EURUSD",
+     "timeframe": "M15",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 2920,
+      "win_pct": 35.45,
+      "net_pips": -1715.0,
+      "profit_factor": 0.931,
+      "avg_R": -0.0471,
+      "max_dd_pips": 2345.1,
+      "pos_windows": "11/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "hedge_GBPUSD_H1_wf",
+     "mode": "dev",
+     "role": "stability",
+     "pair": "GBPUSD",
+     "timeframe": "H1",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 923,
+      "win_pct": 38.14,
+      "net_pips": 1268.0,
+      "profit_factor": 1.064,
+      "avg_R": 0.0117,
+      "max_dd_pips": 1065.4,
+      "pos_windows": "15/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "hedge_GBPUSD_M15_wf",
+     "mode": "dev",
+     "role": "stability",
+     "pair": "GBPUSD",
+     "timeframe": "M15",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 2929,
+      "win_pct": 34.41,
+      "net_pips": -4146.6,
+      "profit_factor": 0.882,
+      "avg_R": -0.0727,
+      "max_dd_pips": 5018.9,
+      "pos_windows": "9/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
     }
    ]
   },

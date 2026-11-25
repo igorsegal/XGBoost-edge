@@ -9,6 +9,7 @@
 #include <memory>
 #include <stdexcept>
 #include <cmath>
+#include <climits>
 
 struct Bars {
     std::string symbol;
@@ -42,6 +43,12 @@ inline Bars load_xfbar(const std::string& path) {
     for (auto& r : recs) { b.t.push_back(r.time); b.o.push_back(r.o); b.h.push_back(r.h); b.l.push_back(r.l); b.c.push_back(r.c); b.spread.push_back(r.spread); b.v.push_back((double)r.tv); }
     for (size_t i = 1; i < b.size(); ++i) if (b.t[i] <= b.t[i - 1]) throw std::runtime_error("время баров не растёт: " + path);
     return b;
+}
+
+// Оставить только бары, закрывшиеся не позже cutoff.
+inline void cut_bars(Bars& b, int64_t cutoff) {
+    size_t n = b.size(); while (n && b.t[n - 1] + b.period_sec > cutoff) --n;
+    b.t.resize(n); b.o.resize(n); b.h.resize(n); b.l.resize(n); b.c.resize(n); b.spread.resize(n); b.v.resize(n);
 }
 
 // Параметры правила: имя -> число (все параметры в реестре числовые или булевы).

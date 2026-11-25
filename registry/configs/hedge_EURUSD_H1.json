@@ -1,18 +1,20 @@
 {
- "test_name": "hedge_EURUSD_H1",
+ "test_name": "hedge_EURUSD_H1_wf",
  "data": {
-  "bars_dir": "D:\\AHexaTrader\\1DataFiles\\raw",
+  "bars_dir": "D:\\AHexaTrader\\1DataFiles\\BAZA",
   "pair": "EURUSD",
   "timeframe": "H1"
  },
  "period": {
-  "years": 5,
-  "train_years": 3,
-  "val_years": 1
+  "train_months": 6,
+  "test_months": 2,
+  "step_months": 2,
+  "dev_from": "2020-01",
+  "exam_from": "2025-01",
+  "exam_to": "2026-04"
  },
  "costs": {
-  "commission_per_lot_usd": 7,
-  "lot_units": 100000
+  "commission_per_lot_usd": 7
  },
  "exits": {
   "hold_bars": 24,

@@ -12,10 +12,13 @@
 // Кэш баров по таймфреймам (для старших таймфреймов).
 struct BarCache {
     std::string dir, pair; std::map<std::string, Bars> m;
+    int64_t cutoff = INT64_MAX;   // бары, закрывающиеся позже этого момента, не загружаются (разработка не видит экзамен)
     const Bars& get(const std::string& tf) {
         auto it = m.find(tf); if (it != m.end()) return it->second;
         char sep = dir.find('\\') != std::string::npos ? '\\' : '/';
-        return m[tf] = load_xfbar(dir + sep + pair + sep + pair + "_" + tf + ".bin");
+        Bars b = load_xfbar(dir + sep + pair + sep + pair + "_" + tf + ".bin");
+        cut_bars(b, cutoff);
+        return m[tf] = std::move(b);
     }
 };
 

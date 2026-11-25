@@ -4,7 +4,7 @@
 Код возврата 0 = всё в порядке, 1 = есть ошибки. Предупреждения (WARN) не ломают проверку."""
 import json, sys, os, glob, re
 
-STATUSES = {"spec_ready", "implemented_untested", "tested_pass", "tested_fail", "prototype_unconfirmed", "rejected", "example"}
+STATUSES = {"spec_ready", "implemented_untested", "tested_pass", "tested_fail", "dev_pass", "prototype_unconfirmed", "rejected", "example"}
 PRICE_FIELDS = {"open", "high", "low", "close", "spread"}
 KEYWORDS = {"AND", "OR", "NOT"}
 FUNCS = {"abs": 1, "min": 2, "max": 2, "prev": 2, "crossup": 2, "crossdown": 2}
@@ -181,7 +181,7 @@ def check_registry(path, cat):
         if r.get("enabled_by_default") and not impl: err(f"{rid}: включено по умолчанию, но реализации нет")
         if r.get("status") == "prototype_unconfirmed" and r.get("enabled_by_default"): err(f"{rid}: неподтверждённый прототип нельзя включать по умолчанию")
         if r.get("status") == "example" and r.get("enabled_by_default"): err(f"{rid}: учебный пример нельзя включать по умолчанию")
-        if r.get("status") == "tested_pass" and not r.get("results"): err(f"{rid}: статус tested_pass без записей results")
+        if r.get("status") in ("tested_pass", "dev_pass") and not r.get("results"): err(f"{rid}: статус {r.get('status')} без записей results")
         dup = r.get("audit", {}).get("duplicate_of")
         if dup and dup not in {x.get("id") for x in reg["rules"]}: err(f"{rid}: duplicate_of ссылается на несуществующее правило {dup}")
         if not r.get("entry_long") and not r.get("entry_short"): warn(f"{rid}: нет условия входа")
@@ -203,6 +203,18 @@ def check_config(path, reg, cat):
             resolve_inputs(r, vals, cat, f"{fn}:{rid}")
     for k in ("data", "period", "costs", "exits", "criteria", "test_name"):
         if k not in c: err(f"{fn}: нет раздела {k}")
+    per = c.get("period", {})
+    for k in ("train_months", "test_months", "step_months"):
+        if not (isinstance(per.get(k), int) and per[k] >= 1): err(f"{fn}: period.{k} должно быть целым от 1")
+    if per.get("step_months") != per.get("test_months"): err(f"{fn}: сдвиг (step_months) должен быть равен проверке (test_months)")
+    months = [per.get(k) for k in ("dev_from", "exam_from", "exam_to")]
+    if not all(isinstance(m, str) and re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", m) for m in months):
+        err(f"{fn}: period.dev_from, exam_from, exam_to должны быть в виде ГГГГ-ММ")
+    elif not months[0] < months[1] <= months[2]: err(f"{fn}: нужно dev_from < exam_from <= exam_to")
+    pair = c.get("data", {}).get("pair", "")
+    if not (len(pair) == 6 and (pair.endswith("USD") or pair.startswith("USD"))): err(f"{fn}: инструмент {pair}: комиссия считается только для инструментов с USD")
+    lot = 100 if pair.startswith("XAU") else 100000
+    if c.get("costs", {}).get("lot_units", lot) != lot: err(f"{fn}: lot_units не соответствует инструменту {pair}")
 
 if __name__ == "__main__":
     here = os.path.dirname(os.path.abspath(__file__))

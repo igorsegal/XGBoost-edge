@@ -106,6 +106,8 @@ inline int64_t day_of(int64_t t) { return t >= 0 ? t / 86400 : -((-t + 86399) / 
 inline int64_t sec_of_day(int64_t t) { return t - day_of(t) * 86400; }
 inline int weekday_of(int64_t t) { int64_t d = day_of(t) + 3; return (int)(((d % 7) + 7) % 7); }   // 0=понедельник
 inline int64_t week_of(int64_t t) { return (day_of(t) + 3) / 7; }
+// Для пивотов и VWAP воскресный вечер относится к понедельнику (так же построены бары D1 и таблицы индикаторов).
+inline int64_t trading_time(int64_t t) { return weekday_of(t) == 6 ? t + 86400 : t; }
 
 inline IndOut compute_indicator(const std::string& name, const Params& p, const Bars& b, const std::string& source);
 inline IndOut compute_indicator2(const std::string& name, const Params& p, const Bars& b, const std::string& source);
@@ -372,7 +374,7 @@ inline IndOut compute_indicator2(const std::string& name, const Params& p, const
     else if (name == "VWAP_SESSION") {
         Vec vw(n), ds(n); double cpv = 0, cv = 0; int64_t cd = -1;
         for (size_t i = 0; i < n; ++i) {
-            int64_t d = day_of(b.t[i]); if (d != cd) { cd = d; cpv = 0; cv = 0; }
+            int64_t d = day_of(trading_time(b.t[i])); if (d != cd) { cd = d; cpv = 0; cv = 0; }
             double tp = (b.h[i] + b.l[i] + b.c[i]) / 3; cpv += tp * b.v[i]; cv += b.v[i];
             vw[i] = cv > 0 ? cpv / cv : tp; ds[i] = b.c[i] - vw[i];
         }
@@ -427,7 +429,7 @@ inline IndOut compute_indicator2(const std::string& name, const Params& p, const
         bool wk = name == "PIVOT_WEEK"; Vec P(n, NaNv), R1(n, NaNv), S1(n, NaNv), R2(n, NaNv), S2(n, NaNv);
         int64_t cur = -1; double ch = 0, cl = 0, cc = 0, ph = 0, pl2 = 0, pc = 0; bool havePrev = false;
         for (size_t i = 0; i < n; ++i) {
-            int64_t k = wk ? week_of(b.t[i]) : day_of(b.t[i]);
+            int64_t k = wk ? week_of(trading_time(b.t[i])) : day_of(trading_time(b.t[i]));
             if (k != cur) { if (cur != -1) { ph = ch; pl2 = cl; pc = cc; havePrev = true; } cur = k; ch = b.h[i]; cl = b.l[i]; }
             else { ch = std::max(ch, b.h[i]); cl = std::min(cl, b.l[i]); }
             cc = b.c[i];
