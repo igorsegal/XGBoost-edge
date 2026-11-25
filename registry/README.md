@@ -43,3 +43,8 @@
 Отчёт: `reports/cloud_tests.md`. Экзамен в облаке не открывается. Котировки в репозиторий не выкладываются.
 
 После пересборки локальной базы: `python cloud/make_manifest.py D:\AHexaTrader\1DataFiles\BAZA cloud/bars_manifest.json`.
+
+## XGBoost (XGB_WF_01)
+
+Программа `ml/xgb_wf.py` читает бары и столбцы H1 до 2025 года, учит модель по окнам 6+2, пишет файл сигналов; сделки считает тестер (`--signals=файл`), результат сверяется на Python. Конфиги: `ml/configs/`. Запускается на GitHub из `cloud/cloud_test.py` (там ставится библиотека xgboost), отчёт — `reports/cloud_tests.md`. Правила опыта: `specs/XGB_WF_01.md`.
+

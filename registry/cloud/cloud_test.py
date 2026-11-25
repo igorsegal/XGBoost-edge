@@ -103,6 +103,53 @@ def run_tests(base, lines):
     return bad
 
 
+XGBOOST = "xgboost==2.1.4"
+
+
+def run_ml(base, lines):
+    """XGB_WF_01: столбцы H1, обучение по окнам, сделки считает тестер. Пишет раздел отчёта, возвращает число замечаний."""
+    lines += ["## XGBoost (XGB_WF_01), разработка 2020–2024", ""]
+    work = REG / "_cloud"
+    builder = work / "build_indicators"
+    try:
+        if run([sys.executable, "-m", "pip", "install", "--quiet", XGBOOST]):
+            raise RuntimeError("не установилась библиотека " + XGBOOST)
+        if run(["g++", "-O2", "-std=c++17", "-o", builder, REG.parent / "tools" / "build_indicators.cpp"]):
+            raise RuntimeError("не скомпилировалось построение столбцов")
+    except Exception as e:  # отчёт должен записаться и при сбое
+        lines += [f"**не запустился:** {e}", ""]
+        return 1
+    rows, bad, version = [], 0, ""
+    for pair in ("EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "XAUUSD"):
+        ind = work / "ind" / pair
+        ind.mkdir(parents=True, exist_ok=True)
+        got, tail = None, ""
+        if not run([builder, base / pair, ind, pair, "H1"]):
+            cmd = [sys.executable, REG / "ml" / "xgb_wf.py", work / "tester", REG / "ml" / "configs" / f"xgb_{pair}_H1.json",
+                   base, work / "ind", work / "ml"]
+            p = subprocess.run([str(c) for c in cmd], cwd=REG, capture_output=True, text=True, errors="replace")
+            print(p.stdout, p.stderr, flush=True)
+            found = [s for s in p.stdout.splitlines() if s.startswith("RESULT ")]
+            got = json.loads(found[-1][7:]) if found else None
+            tail = (p.stderr or p.stdout).strip().splitlines()[-1:]
+        else:
+            tail = ["не построились столбцы"]
+        if not got:
+            rows.append(f"| {pair} | – | – | – | – | – | – | **ошибка:** {' '.join(tail)[:300]} |")
+            bad += 1
+            continue
+        version = got["xgboost"]
+        checks = "пройдены" if not got["mismatch"] and not got["leak_windows"] else \
+            f"**не пройдены:** расхождений {got['mismatch']}, окон с подглядыванием {got['leak_windows']}"
+        bad += checks != "пройдены"
+        rows.append(f"| {pair} | {got['trades']} | {got['win_pct']} | {got['net_pips']} | {got['profit_factor']} "
+                    f"| {got['pos_windows']} | {got['verdict']} | {checks} |")
+    lines += [f"Версия библиотеки: {version or 'неизвестна'}.", "",
+              "| Инструмент | Сделок | Прибыльных, % | Пунктов | Профит-фактор | Плюсовых окон | Критерии | Проверки |",
+              "|---|---|---|---|---|---|---|---|"] + rows + [""]
+    return bad
+
+
 def main(base, report):
     base = Path(base).resolve()
     now = f"{dt.datetime.now(dt.timezone.utc):%Y-%m-%d %H:%M} UTC"
@@ -111,6 +158,8 @@ def main(base, report):
              "Экзамен (с 2025 года) в облаке не открывается.", ""]
     bad = check_base(base, lines)
     bad += run_tests(base, lines)
+    if (REG / "_cloud" / "tester").exists():
+        bad += run_ml(base, lines)
     lines += ["## Итог", "", "ВСЁ СОВПАЛО" if not bad else f"ЕСТЬ ЗАМЕЧАНИЯ: {bad}", ""]
     report = Path(report)
     report.parent.mkdir(parents=True, exist_ok=True)

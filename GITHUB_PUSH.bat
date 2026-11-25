@@ -17,7 +17,7 @@ echo --- what will be sent
 git --no-pager diff --cached --name-status
 git diff --cached --quiet
 if not errorlevel 1 goto pull
-git commit -q -m "Course setup 3, rules and development tests"
+git commit -q -m "XGBoost walk-forward experiment XGB_WF_01"
 if errorlevel 1 ( echo COMMIT FAILED, nothing sent & pause & exit /b 1 )
 :pull
 echo --- pull

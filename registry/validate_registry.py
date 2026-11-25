@@ -164,7 +164,7 @@ def check_registry(path, cat):
             if p["type"] == "int" and int(p["default"]) != p["default"]: err(f"{rid}.{k}: тип int, а значение {p['default']}")
         impl = r.get("implementation")
         kind = (impl or {}).get("kind", "cpp") if impl else None
-        if impl and kind in ("cpp", "strategy"):
+        if impl and kind in ("cpp", "strategy", "signals"):
             f = os.path.join(base, impl.get("file", ""))
             if not os.path.exists(f): err(f"{rid}: файл реализации не найден: {impl.get('file')}")
         if kind == "expr":

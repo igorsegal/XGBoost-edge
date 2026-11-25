@@ -108,7 +108,7 @@
         "enum": [
          "cpp",
          "expr",
-         "strategy"
+         "strategy", "signals"
         ]
        }
       }

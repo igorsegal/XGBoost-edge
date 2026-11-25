@@ -112,12 +112,14 @@ static void must_write(const void* p, size_t size, size_t n, FILE* f) {
 
 int main(int argc, char** argv) {
     try {
-        if (argc < 3) { printf("usage: build_indicators <quotes_dir> <out_dir> [SYMBOL]\n"); return 2; }
+        if (argc < 3) { printf("usage: build_indicators <quotes_dir> <out_dir> [SYMBOL] [TIMEFRAME]\n"); return 2; }
         std::string in = argv[1], out = argv[2], sym = argc > 3 ? argv[3] : "EURUSD";
         auto S = specs();
         std::string report = "INDICATOR TABLES " + sym + "\n", names;
         const char* tfs[] = {"M1", "M5", "M15", "M30", "H1", "H4", "D1", "W1"};
+        const std::string only = argc > 4 ? argv[4] : "";      // пусто: все таймфреймы
         for (const char* tf : tfs) {
+            if (!only.empty() && only != tf) continue;
             Bars b = load_xfbar(in + "/" + sym + "_" + tf + ".bin");
             size_t n = b.size(), k = std::min(CHECK_BARS, n * 2 / 3);
             size_t split = std::lower_bound(b.t.begin(), b.t.end(), HOLDOUT_FROM) - b.t.begin();

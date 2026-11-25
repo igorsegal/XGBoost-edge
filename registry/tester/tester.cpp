@@ -27,6 +27,27 @@ static std::map<std::string, RuleFactory> factories() {
 
 struct Trade { int i_sig, i_in, i_out; int dir; double pnl, R; int64_t t_in; };
 
+// Сигналы, посчитанные вне тестера (модель): файл "время открытия бара сигнала,сигнал", первая строка - заголовок.
+struct SignalRule : IRule {
+    std::map<int64_t, int> by; std::vector<int> s;
+    explicit SignalRule(const std::string& path) {
+        std::ifstream f(path); std::string line;
+        if (!f || !std::getline(f, line)) throw std::runtime_error("не открыть файл сигналов: " + path);
+        while (std::getline(f, line)) {
+            if (line.empty() || line == "\r") continue;
+            long long t = 0; int v = 0;
+            if (sscanf(line.c_str(), "%lld,%d", &t, &v) != 2 || v < -1 || v > 1 || !by.emplace(t, v).second) throw std::runtime_error("плохая строка в файле сигналов: " + line);
+        }
+    }
+    void init(const Params&, const Bars& b) override {
+        s.assign(b.size(), 0); size_t used = 0;
+        for (size_t i = 0; i < b.size(); ++i) { auto it = by.find(b.t[i]); if (it != by.end()) { s[i] = it->second; ++used; } }
+        if (used != by.size()) throw std::runtime_error("в файле сигналов есть времена, которых нет среди баров разработки");
+    }
+    int warmup() const override { return 0; }
+    int signal(int i) override { return s[i]; }
+};
+
 // Дата по Unix-времени без gmtime_r (переносимо на MinGW).
 static void civil(int64_t t, int& y, int& m, int& d) {
     int64_t z = t / 86400 + 719468; if (t < 0 && t % 86400) z -= 1;
@@ -190,11 +211,11 @@ static void scramble(Bars& b, int64_t cut_t) {
 int main(int argc, char** argv) {
     try {
         if (argc >= 2 && std::string(argv[1]) == "--dump") return dump_indicator(argc, argv);
-        if (argc < 2) { std::cerr << "Использование: tester <config.json> [--selftest] [--exam]\n"; return 2; }
-        bool selftest = false, exam = false; std::string tradesPath;
+        if (argc < 2) { std::cerr << "Использование: tester <config.json> [--selftest] [--exam] [--trades=файл] [--signals=файл]\n"; return 2; }
+        bool selftest = false, exam = false; std::string tradesPath, signalsPath;
         for (int i = 2; i < argc; ++i) {
             std::string a = argv[i];
-            if (a == "--selftest") selftest = true; else if (a == "--exam") exam = true; else if (a.rfind("--trades=", 0) == 0) tradesPath = a.substr(9); else throw std::runtime_error("неизвестный ключ: " + a);
+            if (a == "--selftest") selftest = true; else if (a == "--exam") exam = true; else if (a.rfind("--trades=", 0) == 0) tradesPath = a.substr(9); else if (a.rfind("--signals=", 0) == 0) signalsPath = a.substr(10); else throw std::runtime_error("неизвестный ключ: " + a);
         }
         std::string cfgPath = argv[1];
         JV cfg = json_load(cfgPath);
@@ -273,10 +294,12 @@ int main(int argc, char** argv) {
             if (!rc.at("enabled").boolean(false)) { printf("[%s] выключено в конфиге\n", id.c_str()); continue; }
             bool isExpr = rj.has("implementation") && rj.at("implementation").t == JV::OBJ && rj.at("implementation").has("kind") && rj.at("implementation").at("kind").str() == "expr";
             bool isStrat = rj.has("implementation") && rj.at("implementation").t == JV::OBJ && rj.at("implementation").has("kind") && rj.at("implementation").at("kind").str() == "strategy";
+            bool isSig = rj.has("implementation") && rj.at("implementation").t == JV::OBJ && rj.at("implementation").has("kind") && rj.at("implementation").at("kind").str() == "signals";
             const bool byRule = ex.has("by_rule") && ex.at("by_rule").boolean(false);
             if (isStrat != byRule) throw std::runtime_error("[" + id + "] в конфиге exits.by_rule должно быть true только для правил со своими выходами");
             if (isStrat && !has_strategy(id)) { printf("[%s] ВКЛЮЧЕНО, но реализации в тестере нет\n", id.c_str()); exitCode = 3; continue; }
-            if (!isExpr && !isStrat && !fac.count(id)) { printf("[%s] ВКЛЮЧЕНО, но реализации в тестере нет\n", id.c_str()); exitCode = 3; continue; }
+            if (isSig && signalsPath.empty()) { printf("[%s] ВКЛЮЧЕНО, но не задан файл сигналов (--signals=)\n", id.c_str()); exitCode = 3; continue; }
+            if (!isExpr && !isStrat && !isSig && !fac.count(id)) { printf("[%s] ВКЛЮЧЕНО, но реализации в тестере нет\n", id.c_str()); exitCode = 3; continue; }
             Params P;
             for (const auto& kv : rj.at("params").o) P[kv.first] = kv.second.at("default").num(0);
             std::string over;
@@ -295,7 +318,9 @@ int main(int argc, char** argv) {
                 sigs = lt.sigs; tr = strat_trades(lt, b);
                 if (!tradesPath.empty()) write_trades(tradesPath, lt, b);
             } else {
-                if (isExpr) rule.reset(new ExprRule(rj, P, b, cache, catalog)); else { rule = fac[id](); rule->init(P, b); }
+                if (isExpr) rule.reset(new ExprRule(rj, P, b, cache, catalog));
+                else if (isSig) { rule.reset(new SignalRule(signalsPath)); rule->init(P, b); }
+                else { rule = fac[id](); rule->init(P, b); }
                 std::vector<double> A = atr(b, X.atrP);
                 tr = simulate(*rule, b, A, first_at(b, wDev.front().t0), X, &sigs);
             }
@@ -321,7 +346,8 @@ int main(int argc, char** argv) {
                 if (diff) { exitCode = 4; if (exam) { printf("[%s] экзамен не открыт: проверка причинности не пройдена\n", id.c_str()); continue; } }
             }
 
-            if (selftest && !isStrat) {
+            if (selftest && isSig) printf("[%s] SELFTEST: сигналы посчитаны вне тестера, причинность проверяет программа модели\n", id.c_str());
+            if (selftest && !isStrat && !isSig) {
                 // Проверка на заглядывание в будущее: для нескольких точек среза портим все бары, закрывающиеся после среза,
                 // и сравниваем всё, что правило видит до среза: сигналы, а у правил-условий ещё и значения всех индикаторов на каждом баре.
                 int totalDiff = 0, totalSer = 0; const double fr[] = {0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
@@ -348,6 +374,7 @@ int main(int argc, char** argv) {
             devRules += (devRules.empty() ? "" : ",\n") + js;
 
             if (!exam) continue;
+            if (isSig) { printf("[%s] экзамен не открыт: для сигналов модели он не запрограммирован\n", id.c_str()); exitCode = 5; continue; }
             if (role != "primary") { printf("[%s] экзамен не открыт: он только для основных тестов (role=primary)\n", id.c_str()); exitCode = 5; continue; }
             if (!devOk) { printf("[%s] экзамен не открыт: разработка не пройдена\n", id.c_str()); exitCode = 5; continue; }
             if (wExam.empty()) { printf("[%s] экзамен не открыт: нет данных\n", id.c_str()); exitCode = 5; continue; }
