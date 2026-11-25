@@ -44,7 +44,7 @@ def check(c, m):
     print(("  OK  " if c else "  ОШИБКА ") + m); ok = ok and c
 # A обычный сбор
 def A(url): return (200, LIST if "/articles/" not in url.replace("/en/articles/mt5","").split("articles")[-1][1:2] and url.rstrip("/").split("/")[-1] in ("machine_learning","page2") else art_html(url.split("/")[-1]))
-def isl(url): return url.rstrip("/").split("/")[-1] in ("machine_learning", "page2", "page3")
+def isl(url): return url.rstrip("/").split("/")[-1] in ("trading_systems", "machine_learning", "page2", "page3")
 def A(url): return (200, LIST) if isl(url) else (200, art_html(url.split("/")[-1]))
 g, c = run(A, "A обычный")
 check(len(g) == 3, "собрано ровно 3 (по лимиту XGB_BATCH)"); check(all(5.0 <= x <= 15.0 for x in SLEEPS) and len(SLEEPS) == len(REQ) - 1, f"паузы между запросами {min(SLEEPS):.1f}..{max(SLEEPS):.1f} с, их {len(SLEEPS)}")
@@ -80,4 +80,15 @@ os.remove(sc.CURSOR_PATH); open(sc.SEEN_URLS_PATH, "w").close()
 def G(url): return (200, LIST) if isl(url) else (200, art_html(url.split("/")[-1], body_extra=(" Just a moment. Verify you are human. " + "x " * 40000)))
 g, c = run(G, "G длинная статья с фразой-маркером")
 check(len(g) == 3 and "blocked_utc" not in c, "обычная статья с такой фразой не считается блокировкой")
+# H смена порядка разделов: старый курсор начинает с торговых систем, просмотренное не берётся повторно
+json.dump({"section_idx": 0, "backfill_page": 5, "cutoff_year": 2018, "backfill_completed": False}, open(sc.CURSOR_PATH, "w"))
+open(sc.SEEN_URLS_PATH, "w").write("https://www.mql5.com/en/articles/1000\n")
+g, c = run(A, "H старый курсор")
+check(REQ[0].endswith("/mt5/trading_systems"), "первый запрос - список торговых систем, страница 1")
+check(c["order"] == sc.SECTIONS_ORDER and c["section_idx"] == 0 and c["cutoff_year"] == 2018, "курсор переведён на новый порядок")
+check(all(not x["url"].endswith("/1000") for x in g) and len(g) == 3, "просмотренная статья не взята повторно")
+# I новый курсор не сбрасывается
+json.dump({"section_idx": 1, "backfill_page": 3, "cutoff_year": 2018, "backfill_completed": False, "order": sc.SECTIONS_ORDER}, open(sc.CURSOR_PATH, "w"))
+g, c = run(A, "I новый курсор")
+check(REQ[0].endswith("/mt5/machine_learning/page3"), "курсор нового порядка продолжается со своего места")
 print("ИТОГ:", "ВСЕ ПРОВЕРКИ ПРОШЛИ" if ok else "ЕСТЬ ОШИБКИ")

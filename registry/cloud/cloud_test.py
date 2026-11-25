@@ -120,6 +120,7 @@ def run_ml(base, lines):
         lines += [f"**не запустился:** {e}", ""]
         return 1
     rows, bad, version = [], 0, ""
+    diag, diag_errors = [], []
     for pair in ("EURUSD", "GBPUSD", "USDJPY", "AUDUSD", "XAUUSD"):
         ind = work / "ind" / pair
         ind.mkdir(parents=True, exist_ok=True)
@@ -139,6 +140,12 @@ def run_ml(base, lines):
             bad += 1
             continue
         version = got["xgboost"]
+        d, err = run_diag(base, work, pair)
+        if d:
+            diag.append(d)
+        if err:
+            diag_errors.append(f"{pair}: {err}")
+            bad += 1
         checks = "пройдены" if not got["mismatch"] and not got["leak_windows"] else \
             f"**не пройдены:** расхождений {got['mismatch']}, окон с подглядыванием {got['leak_windows']}"
         bad += checks != "пройдены"
@@ -147,7 +154,37 @@ def run_ml(base, lines):
     lines += [f"Версия библиотеки: {version or 'неизвестна'}.", "",
               "| Инструмент | Сделок | Прибыльных, % | Пунктов | Профит-фактор | Плюсовых окон | Критерии | Проверки |",
               "|---|---|---|---|---|---|---|---|"] + rows + [""]
+    lines += ["## XGBoost: есть ли сигнал без расходов (XGB_DIAG_01)", ""]
+    try:
+        sys.path.insert(0, str(REG / "ml"))
+        import xgb_diag
+        lines += xgb_diag.report(diag) if diag else ["**не посчитано**", ""]
+        if diag and not diag_errors:
+            lines += ["Проверки (две сверки с тестером и подставные сигналы) пройдены по каждому разобранному инструменту.", ""]
+    except Exception as e:  # отчёт должен записаться и при сбое
+        lines += [f"**не посчитано:** {e}", ""]
+        bad += 1
+    if diag_errors:
+        lines += ["**Замечания разбора:** " + "; ".join(diag_errors), ""]
     return bad
+
+
+def run_diag(base, work, pair):
+    """Разбор сигналов одного инструмента. Возвращает (данные или None, текст замечания или пусто)."""
+    cmd = [sys.executable, REG / "ml" / "xgb_diag.py", work / "tester", REG / "ml" / "configs" / f"xgb_{pair}_H1.json",
+           base, work / "ml", work / "diag"]
+    out = work / "diag" / f"xgb_{pair}_H1_wf_diag.json"
+    out.unlink(missing_ok=True)
+    p = subprocess.run([str(c) for c in cmd], cwd=REG, capture_output=True, text=True, errors="replace")
+    print(p.stdout, p.stderr, flush=True)
+    data = json.loads(out.read_text(encoding="utf-8")) if out.is_file() else None
+    if p.returncode or not data:
+        tail = " ".join((p.stderr or p.stdout).strip().splitlines()[-1:])[:300]
+        if data:
+            tail = f"расхождений с тестером {data['mismatch']}, проверка подставными сигналами " \
+                   f"{'пройдена' if data['control_ok'] else 'не пройдена'}"
+        return None, tail or f"код {p.returncode}"
+    return data, ""
 
 
 def main(base, report):

@@ -2783,7 +2783,7 @@
     "year": 2026,
     "spec_file": "registry/specs/XGB_WF_01.md"
    },
-   "status": "implemented_untested",
+   "status": "tested_fail",
    "enabled_by_default": false,
    "direction": "both",
    "timeframes": [
@@ -2876,12 +2876,126 @@
     "factory": "train_predict"
    },
    "audit": {
-    "lookahead": "unchecked",
+    "lookahead": "ok",
     "duplicate_of": null,
     "constitution_ok": true,
-    "notes": []
+    "notes": [
+     "2026-11-25: прогон на GitHub (xgboost 2.1.4, отчёт reports/cloud_tests.md, версия программ 07f3e11): замена будущих баров и столбцов мусором прогнозы не изменила ни в одном окне, расхождений тестера и Python 0.",
+     "2026-11-25: разработка не пройдена ни на одном инструменте (профит-фактор 0,91–1,01 при нужных 1,3); экзамен не открывался. Средний R и просадка в отчёт облака не входят и здесь не записаны."
+    ]
    },
-   "results": []
+   "results": [
+    {
+     "date": "2026-11-25",
+     "test": "xgb_EURUSD_H1_wf",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "EURUSD",
+     "timeframe": "H1",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 1600,
+      "win_pct": 36.69,
+      "net_pips": -1298.9,
+      "profit_factor": 0.948,
+      "pos_windows": "12/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "xgb_GBPUSD_H1_wf",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "GBPUSD",
+     "timeframe": "H1",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 1598,
+      "win_pct": 37.23,
+      "net_pips": -1744.7,
+      "profit_factor": 0.951,
+      "pos_windows": "11/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "xgb_USDJPY_H1_wf",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "USDJPY",
+     "timeframe": "H1",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 1629,
+      "win_pct": 36.59,
+      "net_pips": -1185.0,
+      "profit_factor": 0.968,
+      "pos_windows": "14/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "xgb_AUDUSD_H1_wf",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "AUDUSD",
+     "timeframe": "H1",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-11-01",
+      "to": "2024-12-31",
+      "trades": 1444,
+      "win_pct": 36.08,
+      "net_pips": -2076.1,
+      "profit_factor": 0.908,
+      "pos_windows": "9/25"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "xgb_XAUUSD_H1_wf",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "XAUUSD",
+     "timeframe": "H1",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 1506,
+      "win_pct": 37.18,
+      "net_pips": 9977.4,
+      "profit_factor": 1.012,
+      "pos_windows": "13/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    }
+   ]
   }
  ]
 }

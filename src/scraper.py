@@ -9,8 +9,8 @@ from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 BASE_URL = "https://www.mql5.com"
 TARGET_SECTIONS = [
-    "https://www.mql5.com/en/articles/mt5/machine_learning",
     "https://www.mql5.com/en/articles/mt5/trading_systems",
+    "https://www.mql5.com/en/articles/mt5/machine_learning",
     "https://www.mql5.com/en/articles",
 ]
 DATA_DIR = os.getenv("XGB_DATA", "data")  # тестовый режим: XGB_DATA=data_test
@@ -18,6 +18,7 @@ SEEN_URLS_PATH = os.path.join(DATA_DIR, "seen_urls.txt")
 CURSOR_PATH = os.path.join(DATA_DIR, "cursor.json")
 BATCH_LIMIT = int(os.getenv("XGB_BATCH", "15"))  # тест: XGB_BATCH=5
 CUTOFF_YEAR = 2018
+SECTIONS_ORDER = 2  # номер порядка разделов; при смене порядка курсор начинает с первого раздела (2: сначала торговые системы)
 def load_seen_urls() -> Set[str]:
     if not os.path.exists(SEEN_URLS_PATH):
         return set()
@@ -29,13 +30,17 @@ def append_seen_url(url: str) -> None:
         f.write(url + "\n")
 def load_cursor() -> Dict:
     if not os.path.exists(CURSOR_PATH):
-        return {"section_idx": 0, "backfill_page": 1, "cutoff_year": CUTOFF_YEAR, "backfill_completed": False}
+        return {"section_idx": 0, "backfill_page": 1, "cutoff_year": CUTOFF_YEAR, "backfill_completed": False,
+                "order": SECTIONS_ORDER}
     with open(CURSOR_PATH, "r", encoding="utf-8-sig") as f:
         data = json.load(f)
     data.setdefault("section_idx", 0)
     data.setdefault("backfill_page", 1)
     data.setdefault("cutoff_year", CUTOFF_YEAR)
     data.setdefault("backfill_completed", False)
+    if data.get("order") != SECTIONS_ORDER:
+        # курсор записан для другого порядка разделов; просмотренные статьи помнит seen_urls.txt, повторно они не берутся
+        data.update(section_idx=0, backfill_page=1, backfill_completed=False, order=SECTIONS_ORDER)
     return data
 def save_cursor(cursor: Dict) -> None:
     os.makedirs(os.path.dirname(CURSOR_PATH), exist_ok=True)
