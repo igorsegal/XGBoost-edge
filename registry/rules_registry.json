@@ -2522,6 +2522,255 @@
      "tester": "tester 2.0"
     }
    ]
+  },
+  {
+   "id": "NY_CONTINUATION_01",
+   "name": "Продолжение в Нью-Йорк после неглубокого отката лондонского движения",
+   "source": {
+    "type": "course",
+    "article_id": 0,
+    "url": "",
+    "title": "Классический след хозяина рынка (SniperPips), сетап №3 по code_artifact.md",
+    "year": 2026,
+    "spec_file": "registry/specs/NY_CONTINUATION_01.md"
+   },
+   "status": "tested_fail",
+   "enabled_by_default": false,
+   "direction": "both",
+   "timeframes": [
+    "M5"
+   ],
+   "pairs": [
+    "EURUSD",
+    "GBPUSD",
+    "USDJPY"
+   ],
+   "entry_long": "H1 бычье; движение 07:00–12:00 вверх; откат 0,382–0,618; пробой свинг-максимума отката в 13:30–16:00",
+   "entry_short": "зеркально",
+   "exit_rule": "цель - ближайший нетронутый ордер-блок или равные экстремумы на H1; безубыток на половине пути",
+   "stop_rule": "за экстремум отката + спред + 0,15 ATR(14) M5",
+   "description": "Полный текст правил и допущений: registry/specs/NY_CONTINUATION_01.md",
+   "params": {
+    "fractal_n": {
+     "type": "int",
+     "default": 3,
+     "min": 1,
+     "max": 10,
+     "note": "свечей слева и справа у свинга H1"
+    },
+    "atr_period": {
+     "type": "int",
+     "default": 14,
+     "min": 2,
+     "max": 100,
+     "note": "период ATR"
+    },
+    "sl_buffer_atr": {
+     "type": "float",
+     "default": 0.15,
+     "min": 0.0,
+     "max": 5.0,
+     "note": "запас стопа в ATR M5"
+    },
+    "min_rr": {
+     "type": "float",
+     "default": 3.0,
+     "min": 0.0,
+     "max": 20.0,
+     "note": "минимальная прибыль к риску"
+    },
+    "be_fraction": {
+     "type": "float",
+     "default": 0.5,
+     "min": 0.05,
+     "max": 1.0,
+     "note": "доля пути до цели для безубытка"
+    },
+    "spread_mult": {
+     "type": "float",
+     "default": 2.5,
+     "min": 1.0,
+     "max": 100.0,
+     "note": "предел спреда к среднему часа"
+    },
+    "spread_days": {
+     "type": "int",
+     "default": 20,
+     "min": 1,
+     "max": 250,
+     "note": "дней для среднего спреда"
+    },
+    "max_losses": {
+     "type": "int",
+     "default": 2,
+     "min": 1,
+     "max": 100,
+     "note": "убыточных сделок за сутки"
+    },
+    "max_entry_gap_min": {
+     "type": "int",
+     "default": 15,
+     "min": 0,
+     "max": 1440,
+     "note": "наибольший разрыв до свечи входа, минут"
+    },
+    "eq_spread_mult": {
+     "type": "float",
+     "default": 2.0,
+     "min": 0.0,
+     "max": 50.0,
+     "note": "допуск равных экстремумов в спредах"
+    },
+    "box_start_min": {
+     "type": "int",
+     "default": 420,
+     "min": 0,
+     "max": 1380,
+     "note": "начало лондонской коробки, минуты UTC"
+    },
+    "box_end_min": {
+     "type": "int",
+     "default": 720,
+     "min": 60,
+     "max": 1380,
+     "note": "конец коробки и начало отката"
+    },
+    "pullback_end_min": {
+     "type": "int",
+     "default": 810,
+     "min": 60,
+     "max": 1410,
+     "note": "конец окна отката и начало входов"
+    },
+    "entry_end_min": {
+     "type": "int",
+     "default": 960,
+     "min": 60,
+     "max": 1440,
+     "note": "конец окна входов"
+    },
+    "min_box_bars": {
+     "type": "int",
+     "default": 50,
+     "min": 1,
+     "max": 288,
+     "note": "минимум свечей M5 в коробке"
+    },
+    "retrace_min": {
+     "type": "float",
+     "default": 0.382,
+     "min": 0.0,
+     "max": 1.0,
+     "note": "наименьшая глубина отката"
+    },
+    "retrace_max": {
+     "type": "float",
+     "default": 0.618,
+     "min": 0.0,
+     "max": 2.0,
+     "note": "наибольшая глубина отката в окне"
+    },
+    "retrace_close_max": {
+     "type": "float",
+     "default": 0.705,
+     "min": 0.0,
+     "max": 2.0,
+     "note": "глубже этого свечи не закрываются"
+    }
+   },
+   "assumptions": [
+    "Все пункты, не заданные в документе, перечислены в registry/specs/NY_CONTINUATION_01.md и записаны до первого прогона (2026-11-25)."
+   ],
+   "implementation": {
+    "language": "cpp",
+    "kind": "strategy",
+    "file": "tester/rules/ny_continuation.h",
+    "factory": "ny_run"
+   },
+   "audit": {
+    "lookahead": "ok",
+    "duplicate_of": null,
+    "constitution_ok": true,
+    "notes": [
+     "2026-11-25: проверка причинности (selftest, 8 точек среза, будущие свечи M5, H1 и спред испорчены): расхождений 0.",
+     "2026-11-25: независимый расчёт на Python (tests/xcheck_ny.py): 85 сделок по EURUSD, GBPUSD, USDJPY и все счётчики отбора совпали.",
+     "2026-11-25: разработка не пройдена ни на одной паре (сделок 24–35 при нужных 100; GBPUSD: нетто больше нуля, профит-фактор 1,26, без трёх лучших сделок минус); экзамен не открывался."
+    ]
+   },
+   "results": [
+    {
+     "date": "2026-11-25",
+     "test": "ny_continuation_EURUSD_M5_wf",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "EURUSD",
+     "timeframe": "M5",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 26,
+      "win_pct": 7.69,
+      "net_pips": -299.0,
+      "profit_factor": 0.378,
+      "avg_R": -0.5799,
+      "max_dd_pips": 339.1,
+      "pos_windows": "2/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "ny_continuation_GBPUSD_M5_wf",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "GBPUSD",
+     "timeframe": "M5",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 35,
+      "win_pct": 20.0,
+      "net_pips": 197.6,
+      "profit_factor": 1.256,
+      "avg_R": 0.2514,
+      "max_dd_pips": 266.1,
+      "pos_windows": "5/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-25",
+     "test": "ny_continuation_USDJPY_M5_wf",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "USDJPY",
+     "timeframe": "M5",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 24,
+      "win_pct": 4.17,
+      "net_pips": -489.8,
+      "profit_factor": 0.182,
+      "avg_R": -0.8126,
+      "max_dd_pips": 525.0,
+      "pos_windows": "1/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    }
+   ]
   }
  ]
 }

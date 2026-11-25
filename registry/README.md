@@ -21,7 +21,7 @@
 - Новый индикатор: добавить запись в `indicators_catalog.json`, формулу в `tester\indicators.h` и случай в `tests\xcheck_indicators2.py` (независимый расчёт), статус `implemented` только после совпадения.
 
 ## Стратегии со своими выходами
-`implementation: {"kind": "strategy"}`: правило само задаёт вход, стоп, цель и безубыток (модуль в `tester\rules\`), в конфиге `"exits": {"by_rule": true}`. Полный текст правил и допущений: `specs\<ID>.md`. `--selftest` портит будущие свечи всех используемых таймфреймов вместе со спредом; `--trades=файл.csv` выгружает сделки разработки. Независимые проверки (сверка сделка за сделкой): `tests\xcheck_london.py` для `LONDON_TRAP_01`, `tests\xcheck_classic.py` для `CLASSIC_TRACE_01`.
+`implementation: {"kind": "strategy"}`: правило само задаёт вход, стоп, цель и безубыток (модуль в `tester\rules\`), в конфиге `"exits": {"by_rule": true}`. Полный текст правил и допущений: `specs\<ID>.md`. `--selftest` портит будущие свечи всех используемых таймфреймов вместе со спредом; `--trades=файл.csv` выгружает сделки разработки. Независимые проверки (сверка сделка за сделкой): `tests\xcheck_london.py` для `LONDON_TRAP_01`, `tests\xcheck_classic.py` для `CLASSIC_TRACE_01`, `tests\xcheck_ny.py` (с общим `xcheck_levels.py`) для `NY_CONTINUATION_01`.
 
 ## Проверки
 - `tests\xcheck_indicators.py` и `tests\xcheck_indicators2.py`: каждый индикатор пересчитывается заново на Python (время считается библиотекой datetime) и сравнивается с тестером по каждому бару.

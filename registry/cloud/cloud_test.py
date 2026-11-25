@@ -60,7 +60,8 @@ def run_tests(base, lines):
               ("индикаторы, часть 1", [sys.executable, "tests/xcheck_indicators.py", tester, bars]),
               ("индикаторы, часть 2", [sys.executable, "tests/xcheck_indicators2.py", tester, bars])]
     for title, script, prefix in (("Лондонский капкан", "xcheck_london.py", "london_trap"),
-                                  ("Классический след", "xcheck_classic.py", "classic_trace")):
+                                  ("Классический след", "xcheck_classic.py", "classic_trace"),
+                                  ("Продолжение в Нью-Йорк", "xcheck_ny.py", "ny_continuation")):
         for pair in ("EURUSD", "GBPUSD", "USDJPY"):
             checks.append((f"{title}, {pair}", [sys.executable, f"tests/{script}", tester,
                                                 f"configs/{prefix}_{pair}_M5.json", base]))

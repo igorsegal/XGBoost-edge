@@ -28,6 +28,10 @@ for %%P in (EURUSD GBPUSD USDJPY) do (
   "%PY%" tests\xcheck_classic.py tester\tester.exe configs\classic_trace_%%P_M5.json
   if errorlevel 1 ( echo CLASSIC TRACE CHECK FAILED %%P & pause & exit /b 1 )
 )
+for %%P in (EURUSD GBPUSD USDJPY) do (
+  "%PY%" tests\xcheck_ny.py tester\tester.exe configs\ny_continuation_%%P_M5.json
+  if errorlevel 1 ( echo NY CONTINUATION CHECK FAILED %%P & pause & exit /b 1 )
+)
 echo [4/5] run all configs, development windows only...
 for %%f in (configs\*.json) do (
   echo ===== %%f

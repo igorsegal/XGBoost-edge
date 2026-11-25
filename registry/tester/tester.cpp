@@ -10,6 +10,7 @@
 #include "rules/hedge.h"
 #include "rules/london_trap.h"
 #include "rules/classic_trace.h"
+#include "rules/ny_continuation.h"
 #include <cstdio>
 #include <set>
 #include <algorithm>
@@ -141,7 +142,7 @@ static int dump_indicator(int argc, char** argv) {
 
 // ---- стратегии со своими выходами ----
 struct Strat { std::vector<LtTrade> trades; std::vector<int> sigs, lim; std::string fjson, ftext; };
-static bool has_strategy(const std::string& id) { return id == "LONDON_TRAP_01" || id == "CLASSIC_TRACE_01"; }
+static bool has_strategy(const std::string& id) { return id == "LONDON_TRAP_01" || id == "CLASSIC_TRACE_01" || id == "NY_CONTINUATION_01"; }
 static std::string funnel_str(std::initializer_list<std::pair<const char*, long>> v, bool json) {
     std::string r; for (const auto& kv : v) { if (!r.empty()) r += json ? "," : ", "; r += json ? "\"" + std::string(kv.first) + "\":" + std::to_string(kv.second) : std::string(kv.first) + " " + std::to_string(kv.second); }
     return json ? "{" + r + "}" : r;
@@ -153,6 +154,12 @@ static Strat run_strategy(const std::string& id, const Params& P, const Bars& m,
         s.trades = r.trades; s.sigs = r.sigs; s.lim.assign(r.trades.size(), 0);
         auto text = [&](bool json) { return funnel_str({{"days", f.days}, {"days_bias", f.bias}, {"days_asia_ok", f.asia_ok}, {"days_ready", f.ready}, {"days_swept", f.swept}, {"true_moves", f.true_move}, {"returns", f.returns},
             {"rej_spread", f.rej_spread}, {"rej_busy", f.rej_busy}, {"rej_gap", f.rej_gap}, {"rej_losses", f.rej_losses}, {"rej_rr", f.rej_rr}, {"entries", f.entries}}, json); };
+        s.fjson = text(true); s.ftext = text(false);
+    } else if (id == "NY_CONTINUATION_01") {
+        NyResult r = ny_run(P, m, h, start, comm, by_price); const NyFunnel& f = r.f;
+        s.trades = r.trades; s.sigs = r.sigs; s.lim.assign(r.trades.size(), 0);
+        auto text = [&](bool json) { return funnel_str({{"days", f.days}, {"days_bias", f.bias}, {"days_impulse", f.impulse}, {"days_pullback", f.pullback}, {"days_too_deep", f.too_deep}, {"signals", f.signals},
+            {"rej_spread", f.rej_spread}, {"rej_busy", f.rej_busy}, {"rej_losses", f.rej_losses}, {"rej_gap", f.rej_gap}, {"rej_target", f.rej_target}, {"rej_rr", f.rej_rr}, {"entries", f.entries}}, json); };
         s.fjson = text(true); s.ftext = text(false);
     } else {
         CtResult r = ct_run(P, m, h, start, comm, by_price); const CtFunnel& f = r.f;
