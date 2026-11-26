@@ -196,3 +196,19 @@
 2026-11-26 02:24:26 [JURY] REJECT: Account-Wide Position Sizing in MQL5: Capping Each New Trade by the Risk Already Open
 2026-11-26 02:24:44 [JURY] REJECT: Practical Modules from Other Languages in MQL5 (Part 10): The configparser module from Python
 2026-11-26 02:24:50 [JURY] обработано: 10
+2026-11-26 17:49:52 [JURY] в очереди: 14
+2026-11-26 17:50:25 [JURY] REJECT: Neural Networks in Trading: Mesh-Based Approximation of Event Streams as a Tool for Analyzing Price Patterns (CDC Module)
+2026-11-26 17:50:57 [JURY] REJECT: Broker Time vs Real Market Time — Building a DST-Aware Session Clock in MQL5
+2026-11-26 17:51:34 [JURY] REJECT: Property-Based Testing for Trading Rules in MQL5 (Part 1): Generate Market Scenarios, Test Invariants, Find Edge Cases
+2026-11-26 17:52:13 [JURY] REJECT: From Polling to Events: Building a Reactive MQL5 Trading System with Python and Redis Streams
+2026-11-26 17:52:45 [JURY] REJECT: Building a FIFO-Compliant Position Management Layer for NFA-Regulated MQL5 Accounts
+2026-11-26 17:53:19 [JURY] REJECT: From Evidence to Execution (Part 1): How to Log, Measure, and Decode a Trading Strategy Inside MetaTrader 5 AI
+2026-11-26 17:53:50 [JURY] REJECT: Using the MQL5 Economic Calendar for News Filter (Part 5): The Tier the Calendar Does Not Have
+2026-11-26 17:54:27 [JURY] REJECT: Building a Prop-Firm Rule Guard in MQL5 (Part 1): The Observation Layer
+2026-11-26 17:55:15 [JURY] PASS [Strategy]: Trading Strategy Beyond Raw Volume: Using Transformed Volume Change for Trading
+2026-11-26 17:55:50 [JURY] REJECT: Constant Proportion Portfolio Insurance (CPPI) for MQL5: A Floor-Protected Capital Allocation Strategy
+2026-11-26 17:56:29 [JURY] REJECT: Building a Divergence System (Part V): Adaptive Parabolic SAR Trailing Stop Utility
+2026-11-26 17:57:18 [JURY] REJECT: Low-Frequency Quantitative Strategies in MetaTrader 5 (Part 6): A Constant-Dollar Exposure FX Trading System Based on Fixed-Income Interest Rate Yield Differentials
+2026-11-26 17:57:48 [JURY] REJECT: Building Your Own Expert Advisor (Part 8): ATR and R-Multiple Trailing Stops
+2026-11-26 17:58:30 [JURY] REJECT: Aggregating Order Flow Delta from Tick Data in MQL5
+2026-11-26 17:58:36 [JURY] обработано: 14

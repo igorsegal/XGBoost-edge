@@ -1,0 +1,68 @@
+{
+ "url": "https://www.mql5.com/en/articles/24627",
+ "title": "Trading Strategy Beyond Raw Volume: Using Transformed Volume Change for Trading",
+ "published_year": 2026,
+ "verdict": "PASS",
+ "edge_type": "Strategy",
+ "reject_reason": "",
+ "formula_and_logic": "Стратегия определяет вход по двум одновременным условиям: (1) абсолютное значение сигнала, полученного через цепочку tvm = Ln(volume + 1), Chn = tvm(current) − tvm(previous), signal = arctan(Chn), превышает пользовательский порог InpSignalThreshold; (2) направление свечи (закрытие > открытия для long, закрытие < открытия для short). Направление сделки определяется не знаком сигнала, а направлением свечи — это допущение, явно зафиксированное в тексте. Фильтрация по знаку сигнала (положительный/отрицательный/оба) выполняется как предварительный 'gate', но не определяет сторону позиции — она определяется исключительно ценой. Вход происходит на последнем завершённом баре (индекс 1), с использованием данных только по закрытым барам.",
+ "entry_long": "abs(signal) > InpSignalThreshold AND rates[1].close > rates[1].open",
+ "entry_short": "abs(signal) > InpSignalThreshold AND rates[1].close < rates[1].open",
+ "exit_rule": "Не указан в статье — описаны три режима выхода (фиксированный TP/SL, N-свечной rule, комбинированный), но конкретное правило выхода зависит от выбранного режима и параметров; в демонстрации использован фиксированный TP/SL, однако общее правило выхода не задано единой формулой.",
+ "stop_rule": "Не указан в статье — стоп-лосс вычисляется динамически в зависимости от выбранного режима выхода (фиксированные точки, ATR-кратные значения или их максимум), но единое детерминированное правило стопа не приведено.",
+ "feature_output": "",
+ "parameters": {
+  "InpSignalThreshold": "не указано (называется как пользовательский порог, значение в демонстрации — 0.3, но не объявлено как фиксированный параметр стратегии)",
+  "InpSignalSelection": "SIGNAL_POSITIVE, SIGNAL_NEGATIVE или SIGNAL_BOTH (перечислены в enum, но конкретное значение не задано как часть правила)",
+  "InpUseRealVolume": "логический флаг (true/false), не указано значение",
+  "InpExitMode": "EXIT_TP_SL, EXIT_PROFIT_LOSS_RULES или EXIT_BOTH (перечислены в enum, но конкретное значение не задано как часть правила)"
+ },
+ "timeframes": [
+  "H1"
+ ],
+ "forex_pairs": [
+  "GBPUSD"
+ ],
+ "checks": {
+  "repaint": {
+   "status": "нет",
+   "note": "Все расчёты используют только завершённые бары: v_cur из rates[1], v_prev из rates[2], сигнал вычисляется до проверки условий, перерисовки нет."
+  },
+  "higher_tf": {
+   "status": "нет",
+   "note": "Стратегия работает только на одном таймфрейме, старшие таймфреймы не используются."
+  },
+  "tick_volume": {
+   "status": "нужен",
+   "note": "Стратегия явно поддерживает как real_volume, так и tick_volume, и в спот-форексе по умолчанию используется tick_volume как основной источник данных."
+  }
+ },
+ "source_quotes": [
+  {
+   "about": "Формула логарифмического преобразования",
+   "quote": "The core foundation of this strategy is to transform the real or tick volume into logarithmic space using the formula: tvm= Ln( volume + 1 )"
+  },
+  {
+   "about": "Формула изменения объёма в лог-пространстве",
+   "quote": "Once every bar has a transformed volume value, the strategy looks at the change between consecutive bars: Chn = tvm(current) − tvm(previous)"
+  },
+  {
+   "about": "Активационная функция arctan",
+   "quote": "To make these changes usable as a trading signal rather than a raw statistic, they are passed through an activation function that squashes them into a fixed, interpretable range. //+------------------------------------------------------------------+ //|  Activation Volume function                                      | //+------------------------------------------------------------------+ double TransformSignal(const double chg)   { //--MathArctan is bounded by -1.57 and 1.57 return MathArctan(chg);   }"
+  },
+  {
+   "about": "Условие входа: порог и направление свечи",
+   "quote": "Buy condition: abs(signal) > Threshold and a bullish candle (Close > Open) — the volume signal, whether driven by accelerating or decelerating activity, is strong enough to have cleared the gate, and the bar itself closed higher than it opened. Sell condition: abs(signal) > Threshold and a bearish candle (Close < Open) — the same volume-signal condition, paired with a bar that closed lower than it opened."
+  },
+  {
+   "about": "Использование только закрытых баров",
+   "quote": "//--- Signal is evaluated on the last completed candle (index 1) versus index 2. const double v_cur  = (InpUseRealVolume && rates[1].real_volume > 0) ? (double)rates[1].real_volume : (double)rates[1].tick_volume; const double v_prev = (InpUseRealVolume && rates[2].real_volume > 0) ? (double)rates[2].real_volume : (double)rates[2].tick_volume;"
+  },
+  {
+   "about": "Допущение: направление сделки определяется свечой, а не знаком сигнала",
+   "quote": "Once a signal passes its gate, the direction of the actual order is decided using the candle's own close-versus-open relationship rather than the sign of the signal itself. Buy condition: abs(signal) > Threshold and a bullish candle (Close > Open) ... Sell condition: abs(signal) > Threshold and a bearish candle (Close < Open)"
+  }
+ ],
+ "author_oos_metrics": "Не предоставлены.",
+ "summary": "Статья описывает детерминированную торговую стратегию, основанную на преобразованном изменении объёма: логарифмирование объёма, вычитание предыдущего значения, применение arctan и сравнение с порогом, при этом вход в long или short определяется направлением завершённой свечи, а не знаком сигнала — это явное допущение. Стратегия реализована в MQL5 EA и протестирована на GBPUSD H1 с фиксированными TP/SL, но общее правило выхода и стопа не задано единой формулой, что допустимо по критериям."
+}
