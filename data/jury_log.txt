@@ -184,3 +184,15 @@
 2026-11-25 18:10:30 [JURY] REJECT: Native Isolation Forest for Execution-Quality Anomaly Detection in MQL5
 2026-11-25 18:10:47 [JURY] REJECT: The ZeroMQ Message Transfer Protocol in MQL5: Implementing the REQ/REP pattern
 2026-11-25 18:10:53 [JURY] обработано: 11
+2026-11-26 02:19:52 [JURY] в очереди: 10
+2026-11-26 02:20:15 [JURY] REJECT: Neural Networks in Trading: Mesh Approximation of Event Streams as a Tool for Analyzing Price Patterns (ADM Module)
+2026-11-26 02:20:40 [JURY] REJECT: Overcoming Accessibility Problems in MQL5 Trading Tools (Part VIII): Building a Floating Risk Management Calculator Module for Any EA
+2026-11-26 02:21:10 [JURY] REJECT: Why Backtested Scalpers Diverge in Live Trading (Part 1): Building an Intelligent Friction Guard for Dynamic Spread and Micro-Volatility Filtering
+2026-11-26 02:21:33 [JURY] REJECT: Temporal Causality Audit in MQL5: Validating Recorded Dependencies Against the Decision Time
+2026-11-26 02:22:02 [JURY] REJECT: Building a Modular Pre-Trade Execution Filter Engine in MQL5
+2026-11-26 02:22:32 [JURY] REJECT: Developing Statistical Market Inflection Forecasting Indicator
+2026-11-26 02:23:17 [JURY] PASS: From Evidence to Execution (Part 2): Turning MetaTrader 5 AI Strategy Logs into Robust Rule Based EA
+2026-11-26 02:23:54 [JURY] PASS: Causal Savitzky-Golay Kinematics in MQL5: Non-Repainting Velocity and Acceleration from Local Polynomial Fits
+2026-11-26 02:24:26 [JURY] REJECT: Account-Wide Position Sizing in MQL5: Capping Each New Trade by the Risk Already Open
+2026-11-26 02:24:44 [JURY] REJECT: Practical Modules from Other Languages in MQL5 (Part 10): The configparser module from Python
+2026-11-26 02:24:50 [JURY] обработано: 10
