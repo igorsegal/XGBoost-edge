@@ -1,22 +1,22 @@
 {
  "status": "finished",
- "started_utc": "2026-11-27 02:16:54",
+ "started_utc": "2026-11-27 17:31:26",
  "batch": "15",
  "collected": 15,
- "dropped_by_filter1": 2,
- "sent_to_jury_queue": 13,
+ "dropped_by_filter1": 1,
+ "sent_to_jury_queue": 14,
  "blocked": false,
  "cursor": {
   "section_idx": 0,
-  "backfill_page": 3,
+  "backfill_page": 4,
   "cutoff_year": 2018,
   "backfill_completed": false,
   "order": 2
  },
- "finished_utc": "2026-11-27 02:28:58",
+ "finished_utc": "2026-11-27 17:44:20",
  "queue": {
   "pending": 0,
-  "passed": 7,
-  "rejected": 124
+  "passed": 10,
+  "rejected": 135
  }
 }

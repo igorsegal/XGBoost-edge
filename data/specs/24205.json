@@ -1,0 +1,71 @@
+{
+ "url": "https://www.mql5.com/en/articles/24205",
+ "title": "How to Test and Customize Built-in MQL5 Programs: Envelopes with Alligator Strategy",
+ "published_year": 2026,
+ "verdict": "PASS",
+ "edge_type": "Strategy",
+ "reject_reason": "",
+ "formula_and_logic": "Вход в лонг: закрытие текущего бара <= нижняя линия Envelopes И закрытие предыдущего бара > нижняя линия Envelopes И (состояние Alligator = подтверждённый восходящий ИЛИ нейтральный). Вход в шорт: закрытие текущего бара >= верхняя линия Envelopes И закрытие предыдущего бара < верхняя линия Envelopes И (состояние Alligator = подтверждённый нисходящий ИЛИ нейтральный). Состояние Alligator считается подтверждённым восходящим, если Lips > Teeth > Jaws сохраняется в течение не менее InpTrendMinBars последовательных закрытых баров; подтверждённым нисходящим — если Jaws > Teeth > Lips сохраняется в течение не менее InpTrendMinBars баров; иначе — нейтральное. После сигнала одного направления следующий сигнал того же направления разрешён только через InpSignalCooldown баров. Допущение: состояние Alligator определяется строго по порядку значений трёх скользящих средних (Jaws, Teeth, Lips) на одном и том же закрытом баре без учёта визуальных сдвигов — это прямо указано как реализация.",
+ "entry_long": "close[i] <= LowerBuffer[i] && close[i-1] > LowerBuffer[i-1] && (filter_state == FILTER_CONFIRMED_UP || filter_state == FILTER_NEUTRAL)",
+ "entry_short": "close[i] >= UpperBuffer[i] && close[i-1] < UpperBuffer[i-1] && (filter_state == FILTER_CONFIRMED_DOWN || filter_state == FILTER_NEUTRAL)",
+ "exit_rule": "не указан в статье",
+ "stop_rule": "не указан в статье",
+ "feature_output": "",
+ "parameters": {
+  "InpEnvPeriod": 20,
+  "InpDeviation": 0.5,
+  "InpJawsPeriod": 13,
+  "InpTeethPeriod": 8,
+  "InpLipsPeriod": 5,
+  "InpTrendMinBars": 2,
+  "InpSignalCooldown": 3,
+  "InpGatorMethod": "MODE_SMMA",
+  "InpGatorApplied": "PRICE_MEDIAN",
+  "InpEnvMethod": "MODE_SMA",
+  "InpEnvApplied": "PRICE_CLOSE"
+ },
+ "timeframes": [
+  "любой, указанный в _Period"
+ ],
+ "forex_pairs": [
+  "любая пара, доступная в терминале"
+ ],
+ "checks": {
+  "repaint": {
+   "status": "нет",
+   "note": "Все расчёты используют только закрытые бары i и i-1; визуальные сдвиги применяются только к отображению, а не к логике сигнала."
+  },
+  "higher_tf": {
+   "status": "нет",
+   "note": "Индикатор читает данные только с текущего графика: 'The indicator reads the current chart only.'"
+  },
+  "tick_volume": {
+   "status": "не нужен",
+   "note": "Массив tick_volume[] передаётся в OnCalculate, но нигде не используется в логике сигнала."
+  }
+ },
+ "source_quotes": [
+  {
+   "about": "условие входа в лонг",
+   "quote": "The close crosses from above to at or below the lower line"
+  },
+  {
+   "about": "условие входа в шорт",
+   "quote": "The close crosses from below to at or above the upper line"
+  },
+  {
+   "about": "подтверждение состояния Alligator",
+   "quote": "A directional crossing is accepted only after the corresponding raw Alligator order persists for InpTrendMinBars."
+  },
+  {
+   "about": "коолдаун по направлению",
+   "quote": "After a signal is written, InpSignalCooldown prevents the same direction from appearing again until enough bars have passed."
+  },
+  {
+   "about": "расчёт Alligator без сдвигов для логики",
+   "quote": "we reproduce those components with three unshifted iMA() source series and apply the configured shifts only to the visible plots, not to the source indices used by the signal logic"
+  }
+ ],
+ "author_oos_metrics": "",
+ "summary": "Статья описывает детерминированное торговое правило на основе пересечения ценой границ Envelopes при фильтрации по устойчивому порядке линий Alligator (Jaws/Teeth/Lips), вычисленном по закрытым барам без визуальных сдвигов. Правило включает чёткие условия входа, параметризуемую подтверждённость тренда и коолдаун между сигналами одного направления. Все компоненты реализованы через стандартные MQL5-индикаторы и проверяемы на исторических данных без заглядывания вперёд."
+}

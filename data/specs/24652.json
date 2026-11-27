@@ -1,0 +1,66 @@
+{
+ "url": "https://www.mql5.com/en/articles/24652",
+ "title": "Master the Z-Score: Building Mean-Reverting MQL5 Trading Systems",
+ "published_year": 2026,
+ "verdict": "PASS",
+ "edge_type": "Strategy",
+ "reject_reason": "",
+ "formula_and_logic": "Z-Score is computed as (current_close - SMA_N) / std_dev_N, where SMA_N is the N-period simple moving average of closing prices, and std_dev_N is the population standard deviation (using divisor N, not N−1) over the same N periods. Entry_long triggers on a discrete cross: Z-Score was < InpLowerThresh on the prior closed bar and ≥ InpLowerThresh on the current closed bar. Entry_short triggers symmetrically: Z-Score was > InpUpperThresh on the prior closed bar and ≤ InpUpperThresh on the current closed bar. Exit_long occurs when Z-Score ≥ 0.0; exit_short when Z-Score ≤ 0.0. All calculations use only fully closed bars — no look-ahead or future data.",
+ "entry_long": "Z-Score was < InpLowerThresh on previous closed bar AND Z-Score ≥ InpLowerThresh on current closed bar",
+ "entry_short": "Z-Score was > InpUpperThresh on previous closed bar AND Z-Score ≤ InpUpperThresh on current closed bar",
+ "exit_rule": "For long: Z-Score ≥ 0.0; for short: Z-Score ≤ 0.0",
+ "stop_rule": "не указан в статье",
+ "feature_output": "",
+ "parameters": {
+  "InpZPeriod": 20,
+  "InpUpperThresh": 2.0,
+  "InpLowerThresh": -2.0
+ },
+ "timeframes": [
+  "15-minute",
+  "4H"
+ ],
+ "forex_pairs": [
+  "XAUUSD",
+  "US30",
+  "BTCUSD"
+ ],
+ "checks": {
+  "repaint": {
+   "status": "нет",
+   "note": "Z-Score is calculated exclusively on closed bars using rolling historical windows; no recalculation on incomplete bars or future data."
+  },
+  "higher_tf": {
+   "status": "нет",
+   "note": "No higher time frame data is used; all calculations are on the current chart's timeframe."
+  },
+  "tick_volume": {
+   "status": "не нужен",
+   "note": "Tick volume array is declared but unused in Z-Score calculation; only close[] is used."
+  }
+ },
+ "source_quotes": [
+  {
+   "about": "Z-Score formula using population variance and SMA",
+   "quote": "To compute the Z-Score for a financial instrument at any given price bar, we execute three distinct mathematical operations across a rolling window of length N: 1. Calculate the Simple Moving Average of the closing price over N periods: 2. Calculate the population variance across those same N periods: Note: While sample variance with Bessel's correction ($N-1$) provides an unbiased estimator... population variance ($N$) is intentionally utilized here... 3. Subtract the moving average from the current closing price and divide by the standard deviation:"
+  },
+  {
+   "about": "Entry condition for Strategy 1 long",
+   "quote": "Buy Setup: Z-Score crosses below -2.0 and then re-enters above -2.0. Exit when Z-Score crosses back to 0.0 (the mean)."
+  },
+  {
+   "about": "Entry condition for Strategy 1 short",
+   "quote": "Sell Setup: Z-Score crosses above +2.0 and then re-enters below +2.0. Exit when Z-Score returns to 0.0."
+  },
+  {
+   "about": "MQL5 implementation confirms use of two closed bars for cross detection",
+   "quote": "Copies 2 readings from the indicator buffer starting at bar index 1 (the last fully closed candle)... Stores the Z-Score value of the most recently closed candle. Stores the Z-Score value of the candle right before that."
+  },
+  {
+   "about": "Explicit exit condition at zero",
+   "quote": "Exit when Z-Score crosses back to 0.0 (the mean)."
+  }
+ ],
+ "author_oos_metrics": "не указано",
+ "summary": "Статья описывает детерминированное торговое правило Strategy 1: Classic Mean Reversion, основанное на кроссах Z-Score через фиксированные пороги (±2.0 для входа, 0.0 для выхода), с полностью заданной формулой Z-Score и параметрами. Все условия проверяются строго по закрытым барам без заглядывания вперёд. Стратегия применима на спот-форексе и CFD (XAUUSD, US30, BTCUSD) на таймфреймах 15M и 4H."
+}

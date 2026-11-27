@@ -101,3 +101,4 @@ https://www.mql5.com/en/articles/24399	no_trading_logic	Building a Prop Firm Com
 https://www.mql5.com/en/articles/25236	no_trading_logic	MQL5 Developer Gotchas (Part 2): A Multi-Line Text Block for Chart Labels Beyond the 63-Character Limit	len=45000 edge=6 proof=5 test=34 grid=0
 https://www.mql5.com/en/articles/23825	no_test_results	Automating Chart Patterns in MQL5 (Part 3): The Head and Shoulders and Inverse Head and Shoulders	len=45000 edge=58 proof=0 test=0 grid=0
 https://www.mql5.com/en/articles/24397	no_trading_logic	Building a Prop Firm Compliance Monitor in MQL5 (Part 2): Daily Sessions and Restart-Safe Starting Balances	len=45000 edge=1 proof=33 test=6 grid=0
+https://www.mql5.com/en/articles/23917	no_test_results	Symbol Correlation Monitor with Live Heatmap in MQL5	len=45000 edge=145 proof=1 test=2 grid=0
