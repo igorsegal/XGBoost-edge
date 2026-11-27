@@ -212,3 +212,18 @@
 2026-11-26 17:57:48 [JURY] REJECT: Building Your Own Expert Advisor (Part 8): ATR and R-Multiple Trailing Stops
 2026-11-26 17:58:30 [JURY] REJECT: Aggregating Order Flow Delta from Tick Data in MQL5
 2026-11-26 17:58:36 [JURY] обработано: 14
+2026-11-27 02:20:23 [JURY] в очереди: 13
+2026-11-27 02:20:50 [JURY] REJECT: Institutional-Grade Multi-Currency Portfolio Engine in MQL5 (Part 2): Instrument Universe Management and Symbol Metadata
+2026-11-27 02:21:26 [JURY] REJECT: Adaptive Trade Management in MQL5: Building a Broker-Aware, Deterministic, and Explainable Exit Engine
+2026-11-27 02:21:57 [JURY] REJECT: Price Action Analysis Toolkit Development (Part 84): Validating Recorded Double-Bottom Samples
+2026-11-27 02:22:38 [JURY] REJECT: Price Action Analysis Toolkit Development (Part 85): Visualizing and Reviewing Validated Double-Bottom Samples
+2026-11-27 02:23:39 [JURY] PASS [Strategy]: Automating Classic Market Methods in MQL5 (Part 9): Linda Bradford Raschke's 3/10 Oscillator System
+2026-11-27 02:24:11 [JURY] REJECT: The MQL5 Standard Library Explorer (Part 17): Building a Reusable Portfolio Manager with CArrayObj
+2026-11-27 02:24:39 [JURY] REJECT: The MQL5 Standard Library Explorer (Part 18): Building a Multi-Symbol Indicator Cache
+2026-11-27 02:25:20 [JURY] REJECT: Price Action Analysis Toolkit Development (Part 86): Validating the Entire Sample Library
+2026-11-27 02:25:48 [JURY] REJECT: Interactive Supply and Demand Zone Manager in MQL5 (Part V): Persisting Zones Across Terminal and EA Restarts
+2026-11-27 02:26:26 [JURY] REJECT: Building a Prop Firm Compliance Monitor in MQL5 (Part 3): Daily Drawdown, Overall Drawdown, and Profit Targets
+2026-11-27 02:27:18 [JURY] REJECT: Price Action Analysis Toolkit Development (Part 87): Searching Chart History with Recorded Double-Bottom Samples
+2026-11-27 02:27:47 [JURY] REJECT: Engineering Trading Discipline into Code (Part 9): Building a Trade Activity Audit Trail in MQL5
+2026-11-27 02:28:52 [JURY] PASS [Strategy]: Building A Candlestick Trend Constraint Model (Part 11): Revealing Lower-Timeframe Triggers Within Higher-Timeframe Candle Relationships
+2026-11-27 02:28:58 [JURY] обработано: 13

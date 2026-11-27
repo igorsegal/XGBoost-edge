@@ -1,0 +1,69 @@
+{
+ "url": "https://www.mql5.com/en/articles/24516",
+ "title": "Building A Candlestick Trend Constraint Model (Part 11): Revealing Lower-Timeframe Triggers Within Higher-Timeframe Candle Relationships",
+ "published_year": 2026,
+ "verdict": "PASS",
+ "edge_type": "Strategy",
+ "formula_and_logic": "Детерминированное правило входа состоит из трёх последовательных этапов по закрытым барам: (1) классификация завершённых свечей A и B на D1 для определения направления и уровней (reference_level, protected_level) по чётким условиям продолжения/разворота/сжатия; (2) сканирование завершённых M1-свечей внутри C (от открытия C до за секунду до открытия D) на наличие первой по времени кандидатской свечи, удовлетворяющей одностороннему ретесту уровня и структурному пробою (displacement close через предыдущие InpSwingDepth экстремумы с учётом буфера); (3) подтверждение в D: вход long при появлении завершённой M1-свечи с бычьим displacement (тело ≥ InpMinBodyRangeRatio, направление вверх) и закрытием строго выше (C.high + InpBreakBufferPoints × SYMBOL_POINT); вход short — аналогично, но медвежья свеча с закрытием строго ниже (C.low − InpBreakBufferPoints × SYMBOL_POINT). Все расчёты используют только OHLC и время завершённых баров, без заглядывания вперёд.",
+ "entry_long": "Bullish displacement close strictly above C high + buffer (где buffer = InpBreakBufferPoints × SYMBOL_POINT), при условии, что ранее выполнены: (a) классифицированная A-B связь (например, AB_BULLISH_CONTINUATION или AB_BULLISH_REVERSAL), (b) найден первый по времени в C ретест reference_level и структурный пробой (displacement close > PreviousHigh(trigger_bars,i) + buffer).",
+ "entry_short": "Bearish displacement close strictly below C low − buffer (где buffer = InpBreakBufferPoints × SYMBOL_POINT), при условии, что ранее выполнены: (a) классифицированная A-B связь (например, AB_BEARISH_CONTINUATION или AB_BEARISH_REVERSAL), (b) найден первый по времени в C ретест reference_level и структурный пробой (displacement close < PreviousLow(trigger_bars,i) − buffer).",
+ "exit_rule": "не указан в статье",
+ "stop_rule": "не указан в статье",
+ "feature_output": "",
+ "parameters": {
+  "InpContextTimeframe": "PERIOD_D1",
+  "InpTriggerTimeframe": "PERIOD_M1",
+  "InpBreakBufferPoints": 10,
+  "InpReversalCloseFraction": 0.5,
+  "InpSwingDepth": 3,
+  "InpRetestTolerancePoints": 30,
+  "InpMinBodyRangeRatio": 0.55
+ },
+ "timeframes": [
+  "D1",
+  "M1"
+ ],
+ "forex_pairs": [],
+ "checks": {
+  "repaint": {
+   "status": "нет",
+   "note": "Все уровни (reference_level, protected_level) фиксируются при классификации A-B и не меняются в течение D; сканирование C и D использует только завершённые бары с проверкой по времени (stop_time = g_sequence.d.time - 1), перерисовки нет."
+  },
+  "higher_tf": {
+   "status": "исправимо",
+   "note": "Старший таймфрейм (D1) используется только по закрытым барам A, B, C, D — в коде RefreshContextSequence запрашиваются 4 записи с series indexing, где record 0=D, 1=C, 2=B, 3=A, все — завершённые."
+  },
+  "tick_volume": {
+   "status": "не нужен",
+   "note": "В статье и коде не используется tick_volume; все расчёты основаны исключительно на OHLC и времени из MqlRates."
+  }
+ },
+ "source_quotes": [
+  {
+   "about": "Условие входа long: бычья displacement-свеча с закрытием строго выше C.high + buffer",
+   "quote": "A bullish confirmation requires a bullish displacement close strictly above C high + buffer; the bearish rule requires a bearish displacement close strictly below C low − buffer."
+  },
+  {
+   "about": "Определение displacement-свечи через отношение тела к диапазону",
+   "quote": "A displacement candle is not defined by color alone. Its body must occupy a minimum proportion of its complete range: R_body = |Close - Open| / (High - Low)"
+  },
+  {
+   "about": "Классификация A-B фиксируется на завершённых барах и не меняется в течение D",
+   "quote": "Because A and B are completed records, its output remains fixed throughout Candle D."
+  },
+  {
+   "about": "Сканирование C происходит только по барам, открытых между открытием C и за секунду до открытия D",
+   "quote": "The time-range form of CopyRates selects C’s trigger records by their opening timestamps, from C open through D open minus one second. The stop time excludes a record opening at D."
+  },
+  {
+   "about": "Условие ретеста для бычьего направления: Low ≤ r + t и Close ≥ r − b",
+   "quote": "Directional bullish: Low ≤ r + t and Close ≥ r − b"
+  },
+  {
+   "about": "Буфер вычисляется как InpBreakBufferPoints × SYMBOL_POINT",
+   "quote": "The price buffer is InpBreakBufferPoints multiplied by SYMBOL_POINT."
+  }
+ ],
+ "author_oos_metrics": "",
+ "summary": "Статья описывает детерминированную торговую стратегию на основе четырёх свечей (A-B-C-D), где A и B на D1 задают контекст и направление, C на M1 содержит ретест и структурный пробой, а D на M1 даёт окно подтверждения входа по закрытым барам. Все условия входа выражены точными алгебраическими неравенствами над OHLC и временем, без использования будущих данных, тикового объёма или неопределённых параметров."
+}
