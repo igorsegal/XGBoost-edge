@@ -13,7 +13,10 @@ tmp = tempfile.mkdtemp()
 os.environ.update(XGB_DATA=tmp, JURY_PAUSE="0", DASHSCOPE_API_KEY="SECRET-KEY-123")
 os.environ.pop("XGB_REJUDGE", None)
 os.environ.pop("JURY_LIMIT", None)
+for name in ("OPENROUTER_API_KEY", "JURY_PROVIDER", "JURY_JUDGE_MODEL", "JURY_WORKER_MODEL", "XGB_GOLDEN"):
+    os.environ.pop(name, None)
 import src.jury as jr
+jr._read_key_file = lambda name: ""  # настоящие файлы с ключами проверкам не нужны
 import src.golden as gd
 
 bad = 0
@@ -202,15 +205,69 @@ check("в итоге названа ошибка", "ОШИБКА b" in res and "
 check("эталон не трогает кандидатов и passed", (len(passed_lines()), len(os.listdir(jr.CAND_DIR))), before)
 
 # --- замок: новая версия заданий принимается только после полного успеха
-check("после расхождения версия не принята", (os.path.exists(gd.ACCEPTED), gd.check_accepted()), (False, 1))
-os.makedirs(gd.GOLDEN_DIR, exist_ok=True)
-with open(gd.ACCEPTED, "w", encoding="utf-8") as fh:
-    fh.write(jr.prompt_sha() + " qwen-plus run\n")
+check("после расхождения версия не принята", gd.check_accepted(), 1)
+gd.record(jr.prompt_sha(), "qwen-plus", jr.prompt_sha() + " qwen-plus run")
 check("отпечаток совпал: принята", gd.check_accepted(), 0)
 saved = jr.ROLES["judge"]
 jr.ROLES["judge"] = saved + " правка"
 check("после правки задания снова не принята", gd.check_accepted(), 1)
 jr.ROLES["judge"] = saved
+
+# --- OpenRouter: сам включается только после эталонной проверки
+os.environ["OPENROUTER_API_KEY"] = "OR-SECRET-456"
+check("ключ есть, проверки не было: работает прежняя модель", jr._client()[1], "qwen-plus")
+os.environ["JURY_PROVIDER"] = "openrouter"
+cfg, model, _ = jr._client()
+check("принудительно для проверки", (model, jr.model_id(cfg, model)), ("z-ai/glm-5.3-flash", "openrouter:z-ai/glm-5.3-flash"))
+bodies = []
+
+
+class Answer(io.BytesIO):
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+
+def capture(req, timeout=0):
+    bodies.append((req.full_url, json.loads(req.data)))
+    return Answer(json.dumps({"choices": [{"message": {"content": "{}"}}]}).encode("utf-8"))
+
+
+real_urlopen = jr.urllib.request.urlopen
+jr.urllib.request.urlopen = capture
+jr._ask(cfg, model, "advocate", "x")
+url, body = bodies[-1]
+check("адрес, лёгкое размышление и запас на ответ", (url, body["reasoning"], body["max_tokens"]),
+      ("https://openrouter.ai/api/v1/chat/completions", {"effort": "low"}, 7500))
+check("закреплён один поставщик", body["provider"], {"only": ["z-ai"], "allow_fallbacks": False})
+os.environ["JURY_JUDGE_MODEL"] = "google/gemini-3.5-flash-lite"
+cfg, model, _ = jr._client()
+jr._ask(cfg, model, "judge", "x")
+check("судья на другой модели, без чужого поставщика", (bodies[-1][1]["model"], "provider" in bodies[-1][1]),
+      ("google/gemini-3.5-flash-lite", False))
+check("связка названа целиком", jr.model_id(cfg, model), "openrouter:z-ai/glm-5.3-flash+google/gemini-3.5-flash-lite")
+jr._ask(cfg, model, "prosecutor", "x")
+check("прокурор остаётся на рабочей", bodies[-1][1]["model"], "z-ai/glm-5.3-flash")
+os.environ.pop("JURY_JUDGE_MODEL")
+os.environ.pop("JURY_PROVIDER")
+gd.record(jr.prompt_sha(), "openrouter:z-ai/glm-5.3-flash", jr.prompt_sha() + " openrouter:z-ai/glm-5.3-flash run")
+check("после проверки включается сам", jr._client()[0].get("provider"), "openrouter")
+check("прежнее принятие сохранено", gd.check_accepted(), 0)
+os.environ["JURY_JUDGE_MODEL"] = "other/model"
+check("другой судья не проверен: прежняя модель", jr._client()[1], "qwen-plus")
+os.environ.pop("JURY_JUDGE_MODEL")
+jr.ROLES["judge"] = saved + " правка"
+check("новые задания новой моделью не проверены: прежняя", jr._client()[1], "qwen-plus")
+jr.ROLES["judge"] = saved
+gd.record(jr.prompt_sha(), "openrouter:z-ai/glm-5.3-flash", "")
+check("отзыв принятия возвращает прежнюю", (jr._client()[1], gd.check_accepted()), ("qwen-plus", 0))
+os.environ.pop("OPENROUTER_API_KEY")
+os.environ["JURY_PROVIDER"] = "openrouter"
+check("принудительно без ключа: суда нет, подмены нет", jr._client(), None)
+os.environ.pop("JURY_PROVIDER")
+jr.urllib.request.urlopen = real_urlopen
 
 # --- настоящий набор в репозитории
 real = os.path.join(ROOT, "data", "golden")

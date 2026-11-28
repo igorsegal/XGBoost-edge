@@ -11,6 +11,9 @@
 #include "rules/london_trap.h"
 #include "rules/classic_trace.h"
 #include "rules/ny_continuation.h"
+#include "rules/tokyo_break.h"
+#include "rules/savgol.h"
+#include "rules/iso_pnn.h"
 #include <cstdio>
 #include <set>
 #include <algorithm>
@@ -22,7 +25,7 @@ static const char* VERSION = "tester 2.0";
 
 // ---- таблица реализованных правил: id реестра -> фабрика ----
 static std::map<std::string, RuleFactory> factories() {
-    return { {"HEDGE_ENS_01", make_hedge} };
+    return { {"HEDGE_ENS_01", make_hedge}, {"ISO_PNN_01", make_iso_pnn} };
 }
 
 struct Trade { int i_sig, i_in, i_out; int dir; double pnl, R; int64_t t_in; };
@@ -163,7 +166,7 @@ static int dump_indicator(int argc, char** argv) {
 
 // ---- стратегии со своими выходами ----
 struct Strat { std::vector<LtTrade> trades; std::vector<int> sigs, lim; std::string fjson, ftext; };
-static bool has_strategy(const std::string& id) { return id == "LONDON_TRAP_01" || id == "CLASSIC_TRACE_01" || id == "NY_CONTINUATION_01"; }
+static bool has_strategy(const std::string& id) { return id == "LONDON_TRAP_01" || id == "CLASSIC_TRACE_01" || id == "NY_CONTINUATION_01" || id == "TOKYO_BREAK_01" || id == "SAVGOL_01"; }
 static std::string funnel_str(std::initializer_list<std::pair<const char*, long>> v, bool json) {
     std::string r; for (const auto& kv : v) { if (!r.empty()) r += json ? "," : ", "; r += json ? "\"" + std::string(kv.first) + "\":" + std::to_string(kv.second) : std::string(kv.first) + " " + std::to_string(kv.second); }
     return json ? "{" + r + "}" : r;
@@ -182,6 +185,11 @@ static Strat run_strategy(const std::string& id, const Params& P, const Bars& m,
         auto text = [&](bool json) { return funnel_str({{"days", f.days}, {"days_bias", f.bias}, {"days_impulse", f.impulse}, {"days_pullback", f.pullback}, {"days_too_deep", f.too_deep}, {"signals", f.signals},
             {"rej_spread", f.rej_spread}, {"rej_busy", f.rej_busy}, {"rej_losses", f.rej_losses}, {"rej_gap", f.rej_gap}, {"rej_target", f.rej_target}, {"rej_rr", f.rej_rr}, {"entries", f.entries}}, json); };
         s.fjson = text(true); s.ftext = text(false);
+    } else if (id == "TOKYO_BREAK_01" || id == "SAVGOL_01") {
+        OwnResult r = id == "SAVGOL_01" ? sg_run(P, m, start, comm, by_price) : tk_run(P, m, start, comm, by_price);
+        s.trades = r.trades; s.sigs = r.sigs; s.lim.assign(r.trades.size(), 0);
+        for (const auto& kv : r.f) { const std::string c = s.ftext.empty() ? "" : ", "; s.ftext += c + kv.first + " " + std::to_string(kv.second); s.fjson += (s.fjson.empty() ? "{" : ",") + std::string("\"") + kv.first + "\":" + std::to_string(kv.second); }
+        s.fjson += "}";
     } else {
         CtResult r = ct_run(P, m, h, start, comm, by_price); const CtFunnel& f = r.f;
         s.trades = r.trades; s.sigs = r.sigs; s.lim = r.lim;

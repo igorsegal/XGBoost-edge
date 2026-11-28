@@ -9,3 +9,5 @@ data/debug/
 __pycache__/
 *.pyc
 data/cache/
+openrouter_key.txt
+*_key.txt

@@ -3109,6 +3109,789 @@
     "notes": []
    },
    "results": []
+  },
+  {
+   "id": "TOKYO_BREAK_01",
+   "name": "Пробой токийского диапазона с фильтрами места и тела свечи",
+   "source": {
+    "type": "article",
+    "article_id": 24936,
+    "url": "https://www.mql5.com/en/articles/24936",
+    "title": "From Evidence to Execution (Part 2)",
+    "year": 2026,
+    "spec_file": "registry/specs/TOKYO_BREAK_01.md"
+   },
+   "status": "tested_fail",
+   "enabled_by_default": false,
+   "direction": "both",
+   "timeframes": [
+    "M15"
+   ],
+   "pairs": [
+    "GBPUSD",
+    "EURUSD"
+   ],
+   "entry_long": "закрытие выше верха диапазона + 0,05 ATR, фильтры места и тела",
+   "entry_short": "зеркально",
+   "exit_rule": "цель в долях ширины диапазона; возврат в диапазон; конец дня; 32 свечи; подтяжка стопа",
+   "stop_rule": "от границы диапазона 0,60R (вверх) / 1,50R (вниз)",
+   "description": "Полный текст правил и допущений: registry/specs/TOKYO_BREAK_01.md",
+   "params": {
+    "range_start_min": {
+     "type": "int",
+     "default": 120,
+     "min": 0,
+     "max": 1439,
+     "note": "начало окна, минуты сервера"
+    },
+    "range_end_min": {
+     "type": "int",
+     "default": 600,
+     "min": 1,
+     "max": 1440,
+     "note": "конец окна"
+    },
+    "min_range_bars": {
+     "type": "int",
+     "default": 8,
+     "min": 1,
+     "max": 96,
+     "note": ""
+    },
+    "atr_period": {
+     "type": "int",
+     "default": 14,
+     "min": 2,
+     "max": 100,
+     "note": ""
+    },
+    "dist_prev_max_pts": {
+     "type": "float",
+     "default": 50,
+     "min": -100000,
+     "max": 100000,
+     "note": "фильтр места, пункты"
+    },
+    "body_ratio_min": {
+     "type": "float",
+     "default": 0.8,
+     "min": 0,
+     "max": 1,
+     "note": ""
+    },
+    "buffer_atr": {
+     "type": "float",
+     "default": 0.05,
+     "min": 0,
+     "max": 5,
+     "note": ""
+    },
+    "break_window": {
+     "type": "int",
+     "default": 48,
+     "min": 1,
+     "max": 500,
+     "note": ""
+    },
+    "max_trades_per_range": {
+     "type": "int",
+     "default": 1,
+     "min": 1,
+     "max": 10,
+     "note": ""
+    },
+    "sl_r_up": {
+     "type": "float",
+     "default": 0.6,
+     "min": 0,
+     "max": 10,
+     "note": ""
+    },
+    "sl_r_down": {
+     "type": "float",
+     "default": 1.5,
+     "min": 0,
+     "max": 10,
+     "note": ""
+    },
+    "sl_floor_atr": {
+     "type": "float",
+     "default": 0.5,
+     "min": 0,
+     "max": 10,
+     "note": ""
+    },
+    "sl_spread_mult": {
+     "type": "float",
+     "default": 3.0,
+     "min": 0,
+     "max": 100,
+     "note": ""
+    },
+    "tp_r_up": {
+     "type": "float",
+     "default": 0.85,
+     "min": 0,
+     "max": 10,
+     "note": ""
+    },
+    "tp_r_down": {
+     "type": "float",
+     "default": 0.3,
+     "min": 0,
+     "max": 10,
+     "note": ""
+    },
+    "dead_man_r": {
+     "type": "float",
+     "default": 0.25,
+     "min": 0,
+     "max": 10,
+     "note": ""
+    },
+    "trail_start": {
+     "type": "int",
+     "default": 16,
+     "min": 1,
+     "max": 500,
+     "note": ""
+    },
+    "trail_atr": {
+     "type": "float",
+     "default": 1.5,
+     "min": 0,
+     "max": 20,
+     "note": ""
+    },
+    "max_bars": {
+     "type": "int",
+     "default": 32,
+     "min": 1,
+     "max": 500,
+     "note": ""
+    },
+    "session_end_min": {
+     "type": "int",
+     "default": 1305,
+     "min": 0,
+     "max": 1439,
+     "note": ""
+    },
+    "server_winter_h": {
+     "type": "int",
+     "default": 2,
+     "min": -12,
+     "max": 14,
+     "note": ""
+    },
+    "server_summer_h": {
+     "type": "int",
+     "default": 3,
+     "min": -12,
+     "max": 14,
+     "note": ""
+    }
+   },
+   "assumptions": [
+    "Серверное время UTC+2/+3 (летнее время США).",
+    "Вход по открытию свечи после пробойной.",
+    "Остальное в registry/specs/TOKYO_BREAK_01.md, записано до первого прогона (2026-11-26)."
+   ],
+   "implementation": {
+    "language": "cpp",
+    "kind": "strategy",
+    "file": "tester/rules/tokyo_break.h"
+   },
+   "audit": {
+    "lookahead": "ok",
+    "duplicate_of": null,
+    "constitution_ok": true,
+    "notes": [
+     "Пороги автор выводил на 2025-01..2026-08: закрытый экзамен для этого правила не чистый."
+    ]
+   },
+   "results": [
+    {
+     "date": "2026-11-26",
+     "test": "tokyo_break_EURUSD_M15",
+     "mode": "dev",
+     "role": "sensitivity",
+     "pair": "EURUSD",
+     "timeframe": "M15",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 164,
+      "win_pct": 55.49,
+      "net_pips": -73.1,
+      "profit_factor": 0.941,
+      "avg_R": -0.0375,
+      "max_dd_pips": 377.9,
+      "pos_windows": "11/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-26",
+     "test": "tokyo_break_GBPUSD_M15",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "GBPUSD",
+     "timeframe": "M15",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 141,
+      "win_pct": 55.32,
+      "net_pips": 80.6,
+      "profit_factor": 1.063,
+      "avg_R": 0.0036,
+      "max_dd_pips": 308.8,
+      "pos_windows": "15/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    }
+   ]
+  },
+  {
+   "id": "SAVGOL_01",
+   "name": "Скорость и ускорение по сглаживанию Савицкого-Голея",
+   "source": {
+    "type": "article",
+    "article_id": 25137,
+    "url": "https://www.mql5.com/en/articles/25137",
+    "title": "Causal Savitzky-Golay Kinematics in MQL5",
+    "year": 2026,
+    "spec_file": "registry/specs/SAVGOL_01.md"
+   },
+   "status": "tested_fail",
+   "enabled_by_default": false,
+   "direction": "both",
+   "timeframes": [
+    "M5",
+    "M15",
+    "H1"
+   ],
+   "pairs": [
+    "XAUUSD",
+    "GBPUSD",
+    "EURUSD"
+   ],
+   "entry_long": "скорость > 0, ускорение только что стало > 0",
+   "entry_short": "зеркально",
+   "exit_rule": "ускорение или скорость против позиции; цель 1000 пунктов",
+   "stop_rule": "500 пунктов",
+   "description": "Полный текст правил и допущений: registry/specs/SAVGOL_01.md",
+   "params": {
+    "window": {
+     "type": "int",
+     "default": 21,
+     "min": 5,
+     "max": 101,
+     "note": "окно"
+    },
+    "sl_points": {
+     "type": "float",
+     "default": 500,
+     "min": 1,
+     "max": 100000,
+     "note": ""
+    },
+    "tp_points": {
+     "type": "float",
+     "default": 1000,
+     "min": 1,
+     "max": 100000,
+     "note": ""
+    },
+    "gold_point": {
+     "type": "float",
+     "default": 0.01,
+     "min": 1e-06,
+     "max": 1,
+     "note": "пункт золота"
+    }
+   },
+   "assumptions": [
+    "Пункт золота 0,01.",
+    "Записано в registry/specs/SAVGOL_01.md до первого прогона (2026-11-26)."
+   ],
+   "implementation": {
+    "language": "cpp",
+    "kind": "strategy",
+    "file": "tester/rules/savgol.h"
+   },
+   "audit": {
+    "lookahead": "ok",
+    "duplicate_of": null,
+    "constitution_ok": true,
+    "notes": [
+     "Автор: все три его прогона 2026 года убыточны."
+    ]
+   },
+   "results": [
+    {
+     "date": "2026-11-26",
+     "test": "savgol_EURUSD_H1",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "EURUSD",
+     "timeframe": "H1",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 1012,
+      "win_pct": 37.85,
+      "net_pips": -1900.1,
+      "profit_factor": 0.846,
+      "avg_R": -0.0376,
+      "max_dd_pips": 1955.1,
+      "pos_windows": "10/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-26",
+     "test": "savgol_GBPUSD_M15",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "GBPUSD",
+     "timeframe": "M15",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 4227,
+      "win_pct": 32.01,
+      "net_pips": -11592.0,
+      "profit_factor": 0.657,
+      "avg_R": -0.0548,
+      "max_dd_pips": 11653.4,
+      "pos_windows": "0/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-26",
+     "test": "savgol_XAUUSD_M5",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "XAUUSD",
+     "timeframe": "M5",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 12002,
+      "win_pct": 29.42,
+      "net_pips": -550423.1,
+      "profit_factor": 0.628,
+      "avg_R": -0.0917,
+      "max_dd_pips": 552235.6,
+      "pos_windows": "0/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    }
+   ]
+  },
+  {
+   "id": "ISO_PNN_01",
+   "name": "Вероятность направления по RSI и стохастику: изотоническая регрессия и PNN",
+   "source": {
+    "type": "article",
+    "article_id": 24194,
+    "url": "https://www.mql5.com/en/articles/24194",
+    "title": "Defining your Edge (Part 4)",
+    "year": 2026,
+    "spec_file": "registry/specs/ISO_PNN_01.md"
+   },
+   "status": "tested_fail",
+   "enabled_by_default": false,
+   "direction": "both",
+   "timeframes": [
+    "H4"
+   ],
+   "pairs": [
+    "EURUSD",
+    "GBPUSD",
+    "USDJPY",
+    "AUDUSD",
+    "XAUUSD"
+   ],
+   "entry_long": "оценка >= 0,55 и вероятность роста >= 0,55",
+   "entry_short": "зеркально",
+   "exit_rule": "не как в статье: общий выход тестера",
+   "stop_rule": "не как в статье: общий стоп тестера",
+   "description": "Полный текст правил и допущений: registry/specs/ISO_PNN_01.md",
+   "params": {
+    "rsi_period": {
+     "type": "int",
+     "default": 14,
+     "min": 2,
+     "max": 100,
+     "note": "допущение"
+    },
+    "stoch_k": {
+     "type": "int",
+     "default": 5,
+     "min": 1,
+     "max": 100,
+     "note": "допущение"
+    },
+    "stoch_d": {
+     "type": "int",
+     "default": 3,
+     "min": 1,
+     "max": 100,
+     "note": "допущение"
+    },
+    "stoch_slowing": {
+     "type": "int",
+     "default": 3,
+     "min": 1,
+     "max": 100,
+     "note": "допущение"
+    },
+    "pattern_lookback": {
+     "type": "int",
+     "default": 10,
+     "min": 3,
+     "max": 100,
+     "note": "допущение"
+    },
+    "calibration_window": {
+     "type": "int",
+     "default": 200,
+     "min": 30,
+     "max": 2000,
+     "note": "допущение"
+    },
+    "forecast_horizon": {
+     "type": "int",
+     "default": 6,
+     "min": 1,
+     "max": 100,
+     "note": "допущение"
+    },
+    "entry_probability": {
+     "type": "float",
+     "default": 0.55,
+     "min": 0.5,
+     "max": 0.99,
+     "note": "допущение"
+    },
+    "raw_gate": {
+     "type": "float",
+     "default": 0.05,
+     "min": 0,
+     "max": 0.49,
+     "note": "допущение"
+    },
+    "pnn_samples": {
+     "type": "int",
+     "default": 180,
+     "min": 20,
+     "max": 2000,
+     "note": "из таблицы статьи"
+    },
+    "pnn_sigma": {
+     "type": "float",
+     "default": 0.12,
+     "min": 0.001,
+     "max": 10,
+     "note": "из таблицы статьи"
+    },
+    "pnn_weight": {
+     "type": "float",
+     "default": 0.495,
+     "min": 0,
+     "max": 1,
+     "note": "из таблицы статьи"
+    },
+    "model_mode": {
+     "type": "int",
+     "default": 0,
+     "min": 0,
+     "max": 1,
+     "note": "0 без PNN, 1 с PNN"
+    }
+   },
+   "assumptions": [
+    "Главные настройки в статье не названы: взяты свои, см. registry/specs/ISO_PNN_01.md (записано до первого прогона, 2026-11-26)."
+   ],
+   "implementation": {
+    "language": "cpp",
+    "file": "tester/rules/iso_pnn.h",
+    "factory": "make_iso_pnn"
+   },
+   "audit": {
+    "lookahead": "ok",
+    "duplicate_of": null,
+    "constitution_ok": true,
+    "notes": [
+     "Это проверка идеи, не повторение результата автора."
+    ]
+   },
+   "results": [
+    {
+     "date": "2026-11-26",
+     "test": "iso_pnn_AUDUSD_H4",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "AUDUSD",
+     "timeframe": "H4",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-11-01",
+      "to": "2024-12-31",
+      "trades": 323,
+      "win_pct": 34.06,
+      "net_pips": -3621.8,
+      "profit_factor": 0.664,
+      "avg_R": -0.2119,
+      "max_dd_pips": 4019.5,
+      "pos_windows": "6/25"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-26",
+     "test": "iso_pnn_AUDUSD_H4_pnn",
+     "mode": "dev",
+     "role": "sensitivity",
+     "pair": "AUDUSD",
+     "timeframe": "H4",
+     "scheme": "6+2",
+     "overrides": "model_mode=1.000000",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-11-01",
+      "to": "2024-12-31",
+      "trades": 362,
+      "win_pct": 35.08,
+      "net_pips": -2601.9,
+      "profit_factor": 0.777,
+      "avg_R": -0.1064,
+      "max_dd_pips": 3221.0,
+      "pos_windows": "11/25"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-26",
+     "test": "iso_pnn_EURUSD_H4",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "EURUSD",
+     "timeframe": "H4",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 335,
+      "win_pct": 34.63,
+      "net_pips": -2096.3,
+      "profit_factor": 0.815,
+      "avg_R": -0.0948,
+      "max_dd_pips": 3219.3,
+      "pos_windows": "9/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-26",
+     "test": "iso_pnn_EURUSD_H4_pnn",
+     "mode": "dev",
+     "role": "sensitivity",
+     "pair": "EURUSD",
+     "timeframe": "H4",
+     "scheme": "6+2",
+     "overrides": "model_mode=1.000000",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 381,
+      "win_pct": 36.22,
+      "net_pips": -2121.8,
+      "profit_factor": 0.834,
+      "avg_R": -0.1005,
+      "max_dd_pips": 3603.7,
+      "pos_windows": "10/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-26",
+     "test": "iso_pnn_GBPUSD_H4",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "GBPUSD",
+     "timeframe": "H4",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 361,
+      "win_pct": 39.61,
+      "net_pips": -696.1,
+      "profit_factor": 0.956,
+      "avg_R": -0.0344,
+      "max_dd_pips": 1780.1,
+      "pos_windows": "11/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-26",
+     "test": "iso_pnn_GBPUSD_H4_pnn",
+     "mode": "dev",
+     "role": "sensitivity",
+     "pair": "GBPUSD",
+     "timeframe": "H4",
+     "scheme": "6+2",
+     "overrides": "model_mode=1.000000",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 391,
+      "win_pct": 38.87,
+      "net_pips": -463.3,
+      "profit_factor": 0.973,
+      "avg_R": -0.0102,
+      "max_dd_pips": 2595.6,
+      "pos_windows": "15/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-26",
+     "test": "iso_pnn_USDJPY_H4",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "USDJPY",
+     "timeframe": "H4",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 369,
+      "win_pct": 36.59,
+      "net_pips": 1437.5,
+      "profit_factor": 1.086,
+      "avg_R": 0.0487,
+      "max_dd_pips": 1841.1,
+      "pos_windows": "11/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-26",
+     "test": "iso_pnn_USDJPY_H4_pnn",
+     "mode": "dev",
+     "role": "sensitivity",
+     "pair": "USDJPY",
+     "timeframe": "H4",
+     "scheme": "6+2",
+     "overrides": "model_mode=1.000000",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 391,
+      "win_pct": 36.57,
+      "net_pips": 986.9,
+      "profit_factor": 1.055,
+      "avg_R": 0.0452,
+      "max_dd_pips": 2649.9,
+      "pos_windows": "14/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-26",
+     "test": "iso_pnn_XAUUSD_H4",
+     "mode": "dev",
+     "role": "primary",
+     "pair": "XAUUSD",
+     "timeframe": "H4",
+     "scheme": "6+2",
+     "overrides": "",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 343,
+      "win_pct": 38.78,
+      "net_pips": 25289.8,
+      "profit_factor": 1.068,
+      "avg_R": 0.0463,
+      "max_dd_pips": 57921.8,
+      "pos_windows": "12/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    },
+    {
+     "date": "2026-11-26",
+     "test": "iso_pnn_XAUUSD_H4_pnn",
+     "mode": "dev",
+     "role": "sensitivity",
+     "pair": "XAUUSD",
+     "timeframe": "H4",
+     "scheme": "6+2",
+     "overrides": "model_mode=1.000000",
+     "dev": {
+      "segment": "dev",
+      "from": "2020-07-01",
+      "to": "2024-12-31",
+      "trades": 368,
+      "win_pct": 38.86,
+      "net_pips": 38858.7,
+      "profit_factor": 1.099,
+      "avg_R": 0.0383,
+      "max_dd_pips": 35531.6,
+      "pos_windows": "12/27"
+     },
+     "verdict": "FAIL",
+     "tester": "tester 2.0"
+    }
+   ]
   }
  ]
 }

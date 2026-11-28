@@ -18,18 +18,26 @@ except ImportError:
 
 GOLDEN_DIR = os.getenv("XGB_GOLDEN") or os.path.join(jury.DATA_DIR, "golden")
 OUT_DIR = os.getenv("XGB_GOLDEN_OUT") or os.path.join(jury.DATA_DIR, "golden_runs")
-ACCEPTED = os.path.join(GOLDEN_DIR, "accepted.txt")
+ACCEPTED = jury.ACCEPTED_PATH
 MIN_ARTICLES = 10
+DEFAULT_MODEL = "qwen-plus"  # на нём жюри работает, если другая связка не принята
+
+
+def record(sha: str, model: str, line: str) -> None:
+    """Переписывает строку этой пары (задания, модель): пустая line - принятие отозвано."""
+    try:
+        with open(ACCEPTED, encoding="utf-8") as fh:
+            rows = [r for r in fh.read().splitlines() if r.split() and r.split()[:2] != [sha, model]]
+    except OSError:
+        rows = []
+    os.makedirs(os.path.dirname(ACCEPTED), exist_ok=True)
+    with open(ACCEPTED, "w", encoding="utf-8") as fh:
+        fh.write("".join(r + "\n" for r in rows + ([line] if line else [])))
 
 
 def check_accepted() -> int:
-    try:
-        with open(ACCEPTED, encoding="utf-8") as fh:
-            known = fh.read().split()
-    except OSError:
-        known = []
     sha = jury.prompt_sha()
-    if known and known[0] == sha:
+    if (sha, DEFAULT_MODEL) in jury.accepted_versions():
         print(f"[GOLDEN] задания {sha} приняты эталонным набором")
         return 0
     print(f"[GOLDEN] задания {sha} НЕ приняты эталонным набором: запустите python -m src.golden")
@@ -57,9 +65,10 @@ def run() -> int:
         print("[GOLDEN] нет ключа жюри")
         return 2
     client, model, _ = cl
+    name_of_model = jury.model_id(client, model)
     run_id = time.strftime("%Y%m%d-%H%M%S")
     os.makedirs(OUT_DIR, exist_ok=True)
-    lines = [f"Эталонный набор {run_id}, модель {model}, отпечаток заданий {jury.prompt_sha()}"]
+    lines = [f"Эталонный набор {run_id}, модель {name_of_model}, отпечаток заданий {jury.prompt_sha()}"]
     right = failed = 0
     for f in files:
         name = os.path.splitext(os.path.basename(f))[0]
@@ -72,7 +81,7 @@ def run() -> int:
             failed += 1
             lines.append(f"СБОЙ  {name}: {e}")
             print(lines[-1], flush=True)
-            if "HTTP 429" in str(e):
+            if "HTTP 429" in str(e) or "HTTP 402" in str(e):
                 break
             continue
         diff = compare(d["expected"], verdict, result)
@@ -88,12 +97,14 @@ def run() -> int:
         fh.write("\n".join(lines) + "\n")
     with open(os.path.join(OUT_DIR, "history.txt"), "a", encoding="utf-8") as fh:
         fh.write("\n".join(lines) + "\n\n")
+    sha = jury.prompt_sha()
     if right == len(files) >= MIN_ARTICLES:
-        with open(ACCEPTED, "w", encoding="utf-8") as fh:
-            fh.write(f"{jury.prompt_sha()} {model} {run_id} верно {right} из {len(files)}\n")
-        print("[GOLDEN] версия заданий принята")
+        record(sha, name_of_model, f"{sha} {name_of_model} {run_id} верно {right} из {len(files)}")
+        print(f"[GOLDEN] принято: задания {sha}, модель {name_of_model}")
     else:
-        print("[GOLDEN] версия заданий НЕ принята: исправьте задания или верните прежние")
+        if not failed:  # настоящие расхождения отзывают прежнее принятие, обрыв связи - нет
+            record(sha, name_of_model, "")
+        print(f"[GOLDEN] версия НЕ принята (модель {name_of_model}): исправьте задания или оставьте прежнюю связку")
     return 0 if right == len(files) else 1
 
 

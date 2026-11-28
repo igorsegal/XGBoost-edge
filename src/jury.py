@@ -18,6 +18,7 @@ JURY_LIMIT = int(os.getenv("JURY_LIMIT", "0"))  # 0 = по умолчанию д
 PAUSE_SEC = float(os.getenv("JURY_PAUSE", "6"))
 LOG_PATH = os.path.join(DATA_DIR, "jury_log.txt")
 RAW_DIR = os.path.join(DATA_DIR, "jury_raw")  # журнал «запрос - ответ» по статьям
+ACCEPTED_PATH = os.path.join(os.getenv("XGB_GOLDEN") or os.path.join(DATA_DIR, "golden"), "accepted.txt")
 MIN_QUOTES = 2
 EDGE_TYPES = ("Strategy", "Feature_Or_Filter")
 CHECK_NAMES = ("repaint", "higher_tf", "tick_volume")
@@ -121,8 +122,46 @@ def _read_key_file(name: str) -> str:
         return ""
 
 
+OPENROUTER_MODEL = "z-ai/glm-5.3-flash"
+REASONING_ROOM = 6000  # GLM всегда "думает", и эти токены входят в ответ: без запаса JSON обрывается
+
+
+def model_id(cfg: Dict, model: str) -> str:
+    """Имя связки для журнала и эталонной проверки: поставщик, рабочая модель и модель судьи."""
+    if cfg.get("provider") != "openrouter":
+        return model
+    judge = cfg.get("judge_model") or model
+    return "openrouter:" + model + ("" if judge == model else "+" + judge)
+
+
+def accepted_versions() -> set:
+    """Пары (отпечаток заданий, связка), прошедшие эталонный набор."""
+    try:
+        with open(ACCEPTED_PATH, encoding="utf-8") as f:
+            return {tuple(line.split()[:2]) for line in f if len(line.split()) >= 2}
+    except OSError:
+        return set()
+
+
+def _openrouter():
+    key = os.getenv("OPENROUTER_API_KEY") or _read_key_file("openrouter_key.txt")
+    if not key:
+        return None
+    worker = os.getenv("JURY_WORKER_MODEL") or OPENROUTER_MODEL
+    return {"base": "https://openrouter.ai/api/v1", "key": key, "json_mode": True, "provider": "openrouter",
+            "judge_model": os.getenv("JURY_JUDGE_MODEL") or worker}, worker, 20
+
+
 def _client():
-    """Возвращает (cfg, model, лимит_статей) или None. Без библиотеки openai: обычный HTTP."""
+    """Возвращает (cfg, model, лимит_статей) или None. Без библиотеки openai: обычный HTTP.
+    OpenRouter берётся сам только после того, как эта связка прошла эталонный набор с нынешними заданиями;
+    JURY_PROVIDER=openrouter включает его принудительно (для самой эталонной проверки)."""
+    want = (os.getenv("JURY_PROVIDER") or "").strip().lower()
+    router = _openrouter()
+    if want == "openrouter":
+        return router
+    if router and (prompt_sha(), model_id(router[0], router[1])) in accepted_versions():
+        return router
     dash = os.getenv("DASHSCOPE_API_KEY") or _read_key_file("dashscope_key.txt")
     if dash:
         return {"base": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
@@ -174,12 +213,20 @@ def _ask(cfg, model: str, role: str, content: str, trace: Optional[Dict] = None)
                          {"role": "user", "content": content}]}
     if cfg.get("json_mode"):
         body["response_format"] = {"type": "json_object"}
+    if cfg.get("provider") == "openrouter":
+        if role == "judge" and cfg.get("judge_model"):
+            body["model"] = cfg["judge_model"]
+        body["reasoning"] = {"effort": os.getenv("JURY_REASONING") or "low"}
+        body["max_tokens"] += REASONING_ROOM
+        if body["model"].startswith("z-ai/"):
+            # у модели десятки поставщиков с разным качеством: берём одного, чтобы эталонная проверка что-то значила
+            body["provider"] = {"only": [os.getenv("JURY_OR_UPSTREAM") or "z-ai"], "allow_fallbacks": False}
     req = urllib.request.Request(
         cfg["base"] + "/chat/completions", data=json.dumps(body).encode("utf-8"), method="POST",
         headers={"Authorization": "Bearer " + cfg["key"], "Content-Type": "application/json",
                  "Accept": "application/json", "X-GitHub-Api-Version": "2022-11-28"})
     try:
-        with urllib.request.urlopen(req, timeout=120) as r:
+        with urllib.request.urlopen(req, timeout=300 if cfg.get("provider") == "openrouter" else 120) as r:
             raw = r.read().decode("utf-8", "replace")
     except urllib.error.HTTPError as e:
         if e.code == 401 and cfg.get("alt_base"):
@@ -311,7 +358,7 @@ def judge_article(client, model: str, d: Dict, trace: Optional[Dict] = None) -> 
                 verdict = "REJECT"
                 ver["verdict"] = "REJECT"
                 ver["reject_reason"] = "программа не приняла PASS: " + "; ".join(([fatal] if fatal else []) + defects)
-    result = {"advocate": adv, "prosecutor": pro, "judge": ver, "model": model, "prompt_sha": prompt_sha(),
+    result = {"advocate": adv, "prosecutor": pro, "judge": ver, "model": model_id(client, model), "prompt_sha": prompt_sha(),
               "time": time.strftime("%Y-%m-%d %H:%M:%S")}
     if check:
         result["program_check"] = check
@@ -410,6 +457,9 @@ def run_pending() -> None:
             time.sleep(PAUSE_SEC)
         except Exception as e:
             _log(f"[JURY] сбой на {d.get('url')}: {e} - останется в очереди")
+            if "HTTP 402" in str(e):
+                _log("[JURY] на счёте поставщика нет средств - остановка")
+                break
             if "HTTP 429" in str(e) or "rate limit" in str(e).lower():
                 _log("[JURY] лимит запросов исчерпан - остановка, продолжим в следующий запуск")
                 break
