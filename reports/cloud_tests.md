@@ -1,6 +1,6 @@
 # Облачная сборка и тесты
 
-Запуск: 2026-11-25 22:01 UTC, версия программ: 6cde9c2.
+Запуск: 2026-11-28 12:47 UTC, версия программ: a5ab70f.
 Экзамен (с 2025 года) в облаке не открывается.
 
 ## База: сверка с локальной
@@ -75,12 +75,27 @@
 | hedge_EURUSD_M15_wf | HEDGE_ENS_01 | 2920 | -1715.0 | 0.931 | FAIL | совпал |
 | hedge_GBPUSD_H1_wf | HEDGE_ENS_01 | 923 | 1268.0 | 1.064 | FAIL | совпал |
 | hedge_GBPUSD_M15_wf | HEDGE_ENS_01 | 2929 | -4146.6 | 0.882 | FAIL | совпал |
+| iso_pnn_AUDUSD_H4 | ISO_PNN_01 | 323 | -3621.8 | 0.664 | FAIL | совпал |
+| iso_pnn_AUDUSD_H4_pnn | ISO_PNN_01 | 362 | -2601.9 | 0.777 | FAIL | совпал |
+| iso_pnn_EURUSD_H4 | ISO_PNN_01 | 335 | -2096.3 | 0.815 | FAIL | совпал |
+| iso_pnn_EURUSD_H4_pnn | ISO_PNN_01 | 381 | -2121.8 | 0.834 | FAIL | совпал |
+| iso_pnn_GBPUSD_H4 | ISO_PNN_01 | 361 | -696.1 | 0.956 | FAIL | совпал |
+| iso_pnn_GBPUSD_H4_pnn | ISO_PNN_01 | 391 | -463.3 | 0.973 | FAIL | совпал |
+| iso_pnn_USDJPY_H4 | ISO_PNN_01 | 369 | 1437.5 | 1.086 | FAIL | совпал |
+| iso_pnn_USDJPY_H4_pnn | ISO_PNN_01 | 391 | 986.9 | 1.055 | FAIL | совпал |
+| iso_pnn_XAUUSD_H4 | ISO_PNN_01 | 343 | 25289.8 | 1.068 | FAIL | совпал |
+| iso_pnn_XAUUSD_H4_pnn | ISO_PNN_01 | 368 | 38858.7 | 1.099 | FAIL | совпал |
 | london_trap_EURUSD_M5_wf | LONDON_TRAP_01 | 225 | -175.8 | 0.784 | FAIL | совпал |
 | london_trap_GBPUSD_M5_wf | LONDON_TRAP_01 | 202 | -59.6 | 0.942 | FAIL | совпал |
 | london_trap_USDJPY_M5_wf | LONDON_TRAP_01 | 107 | -276.0 | 0.483 | FAIL | совпал |
 | ny_continuation_EURUSD_M5_wf | NY_CONTINUATION_01 | 26 | -299.0 | 0.378 | FAIL | совпал |
 | ny_continuation_GBPUSD_M5_wf | NY_CONTINUATION_01 | 35 | 197.6 | 1.256 | FAIL | совпал |
 | ny_continuation_USDJPY_M5_wf | NY_CONTINUATION_01 | 24 | -489.8 | 0.182 | FAIL | совпал |
+| savgol_EURUSD_H1 | SAVGOL_01 | 1012 | -1900.1 | 0.846 | FAIL | совпал |
+| savgol_GBPUSD_M15 | SAVGOL_01 | 4227 | -11592.0 | 0.657 | FAIL | совпал |
+| savgol_XAUUSD_M5 | SAVGOL_01 | 12002 | -550423.1 | 0.628 | FAIL | совпал |
+| tokyo_break_EURUSD_M15 | TOKYO_BREAK_01 | 164 | -73.1 | 0.941 | FAIL | совпал |
+| tokyo_break_GBPUSD_M15 | TOKYO_BREAK_01 | 141 | 80.6 | 1.063 | FAIL | совпал |
 
 ## XGBoost (XGB_WF_01), разработка 2020–2024
 
