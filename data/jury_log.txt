@@ -244,3 +244,17 @@
 2026-11-27 17:43:33 [JURY] REJECT: Price Action Analysis Toolkit Development (Part 83): Building a Reusable Double-Bottom Pattern Library
 2026-11-27 17:44:14 [JURY] PASS [Strategy]: Master the Z-Score: Building Mean-Reverting MQL5 Trading Systems
 2026-11-27 17:44:20 [JURY] обработано: 14
+2026-11-28 02:05:34 [JURY] в очереди: 12
+2026-11-28 02:05:55 [JURY] REJECT: Market Simulation: Position View (XIX)
+2026-11-28 02:06:25 [JURY] REJECT: Market Simulation: Unity Is Strength (III)
+2026-11-28 02:06:53 [JURY] REJECT: Replay and Market Simulation: The Grand Finale
+2026-11-28 02:07:28 [JURY] REJECT: Developing a Multi-Currency Expert Advisor (Part 32): Secrets of the Optimization Project Creation Step (II)
+2026-11-28 02:08:34 [JURY] PASS [Strategy]: Automating Trading Strategies in MQL5 (Part 53): Double Top and Double Bottom Reversal Model
+2026-11-28 02:09:02 [JURY] REJECT: Encoding Candlestick Patterns (Part 5): Expanding Taxonomy of Candlestick for General Pattern Frequency Analysis
+2026-11-28 02:09:31 [JURY] REJECT: Building a News Filter Engine in MQL5 Using a Local Economic Calendar File
+2026-11-28 02:10:21 [JURY] PASS [Feature_Or_Filter]: Developing a Reusable Dynamic Volatility Trailing Stop Engine in MQL5
+2026-11-28 02:11:03 [JURY] REJECT: Python-MetaTrader 5 Strategy Tester (Part 06): MQL5-Style Backtesting for Python Expert Advisors
+2026-11-28 02:11:26 [JURY] REJECT: Practical Modules from Other Languages in MQL5 (Part 07): The OS Module from Python
+2026-11-28 02:12:17 [JURY] PASS [Strategy]: Automating Classic Market Methods in MQL5 (Part 8): Ed Seykota's Trend Following System
+2026-11-28 02:12:56 [JURY] REJECT: Position Management: Deriving a Self-Calibrating Exit Ladder From Historical MFE in MQL5
+2026-11-28 02:13:02 [JURY] обработано: 12

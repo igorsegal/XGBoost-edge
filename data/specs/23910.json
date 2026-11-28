@@ -1,0 +1,64 @@
+{
+ "url": "https://www.mql5.com/en/articles/23910",
+ "title": "Developing a Reusable Dynamic Volatility Trailing Stop Engine in MQL5",
+ "published_year": 2026,
+ "verdict": "PASS",
+ "edge_type": "Feature_Or_Filter",
+ "reject_reason": "",
+ "formula_and_logic": "Статья описывает детерминированный рыночный признак — динамическое расстояние для трейлинг-стопа, вычисляемое как произведение среднего истинного диапазона (TR_avg) за N закрытых баров и заданного мультипликатора волатильности M. Признак используется как входной параметр для модификации стоп-лосса: для лонг-позиции — SL_long = Bid − TR_avg × M (с ретчером вверх), для шорт-позиции — SL_short = Ask + TR_avg × M (с ретчером вниз). Значение признака не является сигналом входа, но служит точным, воспроизводимым, вычислимым по закрытым барам фильтром/условием выхода или корректировки позиции. Отсутствие правил входа не является пороком — статья явно заявляет, что решает задачу выхода, а не входа.",
+ "entry_long": "",
+ "entry_short": "",
+ "exit_rule": "Для лонг-позиции: обновить стоп-лосс на уровень Bid − TR_avg × M, если он выше текущего стоп-лосса и прошёл все фильтры (открытая цена, минимальный шаг, STOPS_LEVEL, FREEZE_LEVEL). Для шорт-позиции: обновить стоп-лосс на уровень Ask + TR_avg × M, если он ниже текущего стоп-лосса и прошёл все фильтры. Не указан в статье — условие полного закрытия позиции (не только модификация SL).",
+ "stop_rule": "Не указан в статье — отдельное правило стоп-лосса для первоначального размещения (до начала трейлинга). Статья описывает только механизм динамической модификации уже установленного SL.",
+ "feature_output": "Динамическое расстояние (в пунктах или ценовых единицах) между текущей ценой (Bid/Ask) и уровнем трейлинг-стопа. Вычисляется строго по закрытым барам как TR_avg × M, где TR_avg — арифметическое среднее истинного диапазона за N баров, M — положительный мультипликатор. Значение всегда ≥ 0, масштабируется с волатильностью: растёт при увеличении TR_avg, уменьшается при снижении. Применяется как входной параметр для расчёта уровня стоп-лосса в реальном времени, но не как самостоятельный торговый сигнал.",
+ "parameters": {
+  "tr_period": 14,
+  "tr_multiplier": 2.0,
+  "min_step_points": 10,
+  "only_in_profit": true
+ },
+ "timeframes": [
+  "M15"
+ ],
+ "forex_pairs": [
+  "EURUSD"
+ ],
+ "checks": {
+  "repaint": {
+   "status": "нет",
+   "note": "Расчёт TR_avg выполняется строго по закрытым барам (shift=1 в CopyRates), индикатор Ind_Volatility_Trailing также использует close[i-1] и объявлен как неперерисовывающийся."
+  },
+  "higher_tf": {
+   "status": "нет",
+   "note": "Статья не использует данные старшего таймфрейма; вся волатильность считается на одном выбранном таймфрейме (например, PERIOD_CURRENT или M15)."
+  },
+  "tick_volume": {
+   "status": "не нужен",
+   "note": "В расчёте TR_avg и всех ключевых формулах не используется tick_volume; используются только high, low, close из MqlRates."
+  }
+ },
+ "source_quotes": [
+  {
+   "about": "Правило обновления для лонг-позиции",
+   "quote": "For a long position, the trailing stop level (SL_long) can only move upward. If the candidate trailing level is higher than the current position stop-loss, the stop-loss is updated:"
+  },
+  {
+   "about": "Правило обновления для шорт-позиции",
+   "quote": "For a short position, the trailing stop level (SL_short) can only move downward. If the candidate trailing level is lower than the current position stop-loss, the stop-loss is updated:"
+  },
+  {
+   "about": "Расчёт TR_avg по закрытым барам",
+   "quote": "Volatility Measurement (Strictly Closed Bars): True Range calculations exclusively sample completed bars. When requesting history via CopyRates(), we set the start position to shift 1 in the terminal's historical series."
+  },
+  {
+   "about": "Определение TR_avg как арифметического среднего",
+   "quote": "The Simple True Range average (TR_avg) over a period N is calculated as the arithmetic mean:"
+  },
+  {
+   "about": "Фильтр защиты по цене открытия",
+   "quote": "Open Price Protection Filter: Controlled by the m_only_in_profit parameter. When enabled, the trailing stop only engages once candidate prices lock in profit above (for buys) or below (for sells) the entry price."
+  }
+ ],
+ "author_oos_metrics": "Статья не содержит метрик вне выборки в виде статистических показателей (Sharpe, drawdown, walk-forward), но предоставляет функциональные тесты и телеметрию выполнения (84 подтверждённых модификации, 382 пропуска по минимальному шагу и др.), что соответствует заявленной цели — верификации работы движка, а не оценки прогнозной силы.",
+ "summary": "Статья представляет собой техническую реализацию динамического трейлинг-стопа на основе среднего истинного диапазона (ATR), рассчитываемого строго по закрытым барам. Она не предлагает правила входа, но определяет точную, детерминированную формулу рыночного признака — расстояния до стоп-лосса, зависящего от волатильности и настраиваемых параметров. Признак применим как фильтр для модификации существующих позиций и может служить входом в модели управления рисками или XGBoost-модели, предсказывающие вероятность срабатывания стопа."
+}

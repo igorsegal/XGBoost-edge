@@ -1,0 +1,73 @@
+{
+ "url": "https://www.mql5.com/en/articles/23576",
+ "title": "Automating Trading Strategies in MQL5 (Part 53): Double Top and Double Bottom Reversal Model",
+ "published_year": 2026,
+ "verdict": "PASS",
+ "edge_type": "Strategy",
+ "reject_reason": "",
+ "formula_and_logic": "Вход в длинную позицию при подтверждённом double bottom: закрытие бара выше necklineLevel (цены подтверждённого свинг-хая между двумя свинг-лоу), при условии, что оба свинг-лоу находятся в пределах допуска MathAbs(trough1 - trough2) <= (InpPeakTolerancePercent/100) * height, где height = necklineLevel - (trough1 + trough2)/2; ноги сбалансированы: 100.0 * min(legA, legB) / max(legA, legB) >= InpLegBalancePercent; расстояние между пиками в барах >= InpMinPatternBars (если включено); наличие предшествующего тренда (если включено): свинг-хай до первого лоу с ценой > necklineLevel. Вход в короткую позицию — зеркально для double top: закрытие бара ниже necklineLevel (цены подтверждённого свинг-лоу между двумя свинг-хай), с аналогичными фильтрами. Допущение: направление входа однозначно определяется знаком patternDirection (-1 для short, +1 для long), а условие входа — строго по закрытию бара (iClose(...,1)), без заглядывания в будущее.",
+ "entry_long": "Закрытие бара выше necklineLevel при подтверждённом double bottom, прошедшем все фильтры (пиковое совпадение, баланс ног, минимальное расстояние, при необходимости — предшествующий тренд).",
+ "entry_short": "Закрытие бара ниже necklineLevel при подтверждённом double top, прошедшем все фильтры (пиковое совпадение, баланс ног, минимальное расстояние, при необходимости — предшествующий тренд).",
+ "exit_rule": "не указан в статье",
+ "stop_rule": "Стоп размещается за крайним пиком (patternExtreme) с буфером: stop = patternExtreme ± (InpStopBufferPoints × symbolPoint), нормализованный и скорректированный на минимальное расстояние брокера.",
+ "feature_output": "",
+ "parameters": {
+  "InpSwingLength": 5,
+  "InpPeakTolerancePercent": 10.0,
+  "InpMinPatternBars": 10,
+  "InpLegBalancePercent": 50.0,
+  "InpRequirePriorTrend": false,
+  "InpStopBufferPoints": 3000,
+  "InpTradePullback": false,
+  "InpMaxConfirmBars": 50,
+  "InpMaxRetestBars": 24
+ },
+ "timeframes": [
+  "PERIOD_CURRENT"
+ ],
+ "forex_pairs": [
+  "не указано"
+ ],
+ "checks": {
+  "repaint": {
+   "status": "нет",
+   "note": "Все свинг-пивоты подтверждаются только по закрытым барам с использованием iBarShift и проверки соседних закрытых баров, перерисовки нет."
+  },
+  "higher_tf": {
+   "status": "исправимо",
+   "note": "Статья использует только текущий таймфрейм (PERIOD_CURRENT), старшие таймфреймы не упоминаются — требование выполнено."
+  },
+  "tick_volume": {
+   "status": "не нужен",
+   "note": "В коде отсутствуют обращения к объёму, используются только OHLCV-данные."
+  }
+ },
+ "source_quotes": [
+  {
+   "about": "Условие входа — закрытие бара через шею",
+   "quote": "The trade triggers only on a bar closing through the neckline, with the option to wait for a pullback to that level instead, and it is abandoned if price violates the paired extreme or the confirmation window expires."
+  },
+  {
+   "about": "Определение шеи как подтверждённого пивота между пиками",
+   "quote": "The neckline is the pivot between the two peaks, and nothing else. A shape is rejected when the peaks sit closer together than the minimum spacing, when the two legs differ in bar count by more than the leg-balance allowance, or when an optional prior trend into the pattern is absent."
+  },
+  {
+   "about": "Формула допуска для пиков как процент от высоты паттерна",
+   "quote": "Two peaks pair into a double top or double bottom only when their prices sit within a tolerance expressed as a percentage of the pattern height, so one setting means the same thing on a tall pattern and a shallow one."
+  },
+  {
+   "about": "Фильтр баланса ног",
+   "quote": "Leg balance compares bar counts on each leg to reject lopsided shapes. Spacing and an optional prior-trend requirement filter out peaks too close together or patterns that appear mid-range with nothing to reverse."
+  },
+  {
+   "about": "Определение направления входа через patternDirection",
+   "quote": "The general strategy architecture is shown below. When trading the model, wait for the second peak to form and confirm it stalls near the first rather than pushing decisively past it. Treat the neckline as your line in the sand, and let a close through it, not a mere touch, mark the reversal."
+  },
+  {
+   "about": "Стоп размещается за экстремумом с буфером",
+   "quote": "The program also defines stop placement (stop beyond the paired extreme with a buffer), target rules (measured-move or reward-to-risk), lot sizing modes, and optional trailing stops."
+  }
+ ],
+ "author_oos_metrics": "не указано",
+ "summary": "Статья описывает детерминированное торговое правило на основе формализованного паттерна «двойное дно/двойная вершина», где вход определяется строгим закрытием бара через подтверждённую шею, а все фильтры (пиковое совпадение, баланс ног, расстояние, тренд) выражены точными формулами по закрытым барам. Правило полностью воспроизводимо, не требует данных, недоступных на спот-форексе, и не содержит мартингейла, перерисовки или неприменимых элементов."
+}

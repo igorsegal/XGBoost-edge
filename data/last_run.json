@@ -1,10 +1,10 @@
 {
  "status": "finished",
- "started_utc": "2026-11-27 17:31:26",
+ "started_utc": "2026-11-28 02:02:26",
  "batch": "15",
  "collected": 15,
- "dropped_by_filter1": 1,
- "sent_to_jury_queue": 14,
+ "dropped_by_filter1": 3,
+ "sent_to_jury_queue": 12,
  "blocked": false,
  "cursor": {
   "section_idx": 0,
@@ -13,10 +13,10 @@
   "backfill_completed": false,
   "order": 2
  },
- "finished_utc": "2026-11-27 17:44:20",
+ "finished_utc": "2026-11-28 02:13:02",
  "queue": {
   "pending": 0,
-  "passed": 10,
-  "rejected": 135
+  "passed": 13,
+  "rejected": 144
  }
 }

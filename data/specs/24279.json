@@ -1,0 +1,76 @@
+{
+ "url": "https://www.mql5.com/en/articles/24279",
+ "title": "Automating Classic Market Methods in MQL5 (Part 8): Ed Seykota's Trend Following System",
+ "published_year": 2026,
+ "verdict": "PASS",
+ "edge_type": "Strategy",
+ "reject_reason": "",
+ "formula_and_logic": "Двойной EMA-сигнал входа: длинная позиция открывается при быстром пересечении вверх медленной EMA (fast_prev < slow_prev && fast_curr > slow_curr); короткая — при пересечении вниз (fast_prev > slow_prev && fast_curr < slow_curr). Вход разрешён только при выполнении двух условий одновременно: (1) ADX >= InpADXMinLevel (по умолчанию 20.0), (2) текущая суммарная портфельная теплота (residual risk как % от equity) < InpMaxHeatPct (по умолчанию 10.0%). Направление тренда дополнительно фильтруется направлением медленной EMA (упомянуто как тренд-фильтр, но не используется в логике входа напрямую — допущение: вход разрешён только при совпадении направления кроссовера и направления медленной EMA, однако в коде и тексте это не требуется; следовательно, направление медленной EMA — не часть правила входа, а лишь описательный элемент — допущение не требуется, так как правило входа строго определено через кроссовер и фильтры).",
+ "entry_long": "fast_prev < slow_prev && fast_curr > slow_curr && adx >= InpADXMinLevel && current_heat < InpMaxHeatPct",
+ "entry_short": "fast_prev > slow_prev && fast_curr < slow_curr && adx >= InpADXMinLevel && current_heat < InpMaxHeatPct",
+ "exit_rule": "Первичный выход: обратное пересечение EMA (для длинной позиции — fast_curr < slow_curr; для короткой — fast_curr > slow_curr). Вторичный выход: стоп-лосс на расстоянии ATR × InpATRMultiplier от цены входа.",
+ "stop_rule": "ATR × InpATRMultiplier от цены входа (для длинной — ниже ask, для короткой — выше bid). Не указан в статье как динамический трейлинг — стоп фиксированный на входе.",
+ "feature_output": "",
+ "parameters": {
+  "InpFastEMA": 20,
+  "InpSlowEMA": 200,
+  "InpADXPeriod": 14,
+  "InpADXMinLevel": 20.0,
+  "InpATRPeriod": 20,
+  "InpATRMultiplier": 3.0,
+  "InpRiskPct": 1.0,
+  "InpMaxHeatPct": 10.0
+ },
+ "timeframes": [
+  "D1"
+ ],
+ "forex_pairs": [
+  "EURUSD",
+  "GBPUSD",
+  "AUDUSD",
+  "USDCHF",
+  "USDJPY"
+ ],
+ "checks": {
+  "repaint": {
+   "status": "нет",
+   "note": "Все индикаторы (EMA, ADX, ATR) вычисляются по закрытым барам PERIOD_D1 с использованием CopyBuffer с оффсетами 0 и 1 — перерисовки и заглядывания вперёд нет."
+  },
+  "higher_tf": {
+   "status": "исправимо",
+   "note": "Используется только PERIOD_D1 — старший таймфрейм не применяется, все расчёты строго по закрытому дневному бару."
+  },
+  "tick_volume": {
+   "status": "не нужен",
+   "note": "В расчётах не используется tick_volume — только цена закрытия, bid/ask, ATR, ADX, EMA."
+  }
+ },
+ "source_quotes": [
+  {
+   "about": "Условие длинного входа: пересечение быстрой EMA вверх медленной",
+   "quote": "When the fast EMA crosses above the slow EMA, the trend is up and long entries are permitted."
+  },
+  {
+   "about": "Условие короткого входа: пересечение быстрой EMA вниз медленной",
+   "quote": "When the fast EMA crosses below the slow EMA, the trend is down and short entries are permitted."
+  },
+  {
+   "about": "Фильтр ADX: вход разрешён только при ADX >= 20",
+   "quote": "A reading above 20 indicates a trending market. A reading below 20 indicates a ranging market. Seykota blocked entries when the market was not trending."
+  },
+  {
+   "about": "Портфельная теплота как фильтр входа: новые позиции блокируются при достижении капа",
+   "quote": "He capped total portfolio heat at a defined threshold and refused to open new positions once that cap was reached regardless of how compelling the signal was."
+  },
+  {
+   "about": "Выход по обратному кроссоверу EMA",
+   "quote": "Seykota exited positions in two ways. The primary exit was the reversal of the EMA crossover—when the fast EMA crossed back through the slow EMA against the position."
+  },
+  {
+   "about": "Выход по стоп-лоссу на основе ATR",
+   "quote": "The secondary exit was the stop-loss at ATR × multiplier below the entry price."
+  }
+ ],
+ "author_oos_metrics": "Не указано в статье",
+ "summary": "Статья описывает полностью детерминированную торговую стратегию на основе двойного EMA-кроссовера с фильтрацией по ADX и портфельной теплоте. Все компоненты — вход, выход, размер позиции, управление риском — заданы точными формулами и условиями, вычисляемыми исключительно по закрытым дневным барам. Стратегия применима на спот-форексе без использования данных будущего, мартингейла или сетки."
+}
